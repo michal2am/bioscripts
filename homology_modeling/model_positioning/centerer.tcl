@@ -1,4 +1,4 @@
-set all [atomselect top all]
+set all [atomselect top protein]
 set old [measure center $all]
 
 set xmov [expr {-[lindex $old 0]} ]
