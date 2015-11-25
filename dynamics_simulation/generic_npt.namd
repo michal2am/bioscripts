@@ -1,0 +1,125 @@
+# GABA_r a1b2y2 Bergmann model with Kraszewski GABA and DZP in POPC
+
+# short NON-CONSTRAINED
+
+# ----- adjustable parameters -----
+
+set myinput	   gabar_gabadzp.000
+set mystruc	   06.gabar_ionized_gabadzp
+set myoutput  	   gabar_gabadzp.001
+set mytemp 	   300
+
+# ----- simulation parameters -----
+
+
+### input PSF and PDB files
+
+structure	   $mystruc.psf
+coordinates        ${myinput}.coor
+extendedsystem     ${myinput}.xsc
+#velocities         ${myinput}.vel
+
+### organize your output
+
+binaryoutput        no
+outputname          ${myoutput}
+outputenergies      25000
+outputtiming        25000
+outputpressure      25000
+binaryrestart       no
+dcdfile             ${myoutput}.dcd
+dcdfreq             25000
+XSTFreq             25000
+restartname         ${myoutput}r
+restartfreq         25000
+DCDunitcell         yes
+
+### force-field parameters
+
+paraTypeCharmm	    on
+parameters          ../../../ff/par_all27_prot_lipid_na.inp
+parameters          ../../../ff/par_all27_prot_lipuni_surf.inp
+parameters	    ../../../ff/gaba_dft.par
+parameters	    ../../../ff/diazepam.par
+exclude   	    scaled1-4
+1-4scaling          1.0
+switching           on
+cutoff              11.	
+switchdist          8.	
+pairlistdist        13.	
+stepspercycle	    16
+splitpatch          hydrogen
+hgroupcutoff        2.8
+
+#  harmonic constraints  #
+constraints         on
+consexp             20
+consref             06.gabar_ionized_gabadzp.notH.hrm
+conskfile           06.gabar_ionized_gabadzp.notH.hrm
+conskcol            B
+selectConstraints   off
+selectConstrX       off
+selectConstrY       off
+selectConstrZ       off	
+
+### integrator parameters
+
+timestep            1.0	
+rigidBonds          all
+rigidtolerance      0.00001
+rigiditerations     400
+nonbondedFreq       1	
+fullElectFrequency  2	 
+			
+temperature         $mytemp
+
+### control of constant temperature
+
+langevin            on		
+langevinDamping     0.1   	
+langevinTemp        $mytemp	
+
+### control of constant pressure (variable volume)
+ 
+useGroupPressure     yes 	
+useFlexibleCell      yes	
+useConstantArea      no
+
+langevinPiston       on		
+langevinPistonTarget 1.01325 	
+langevinPistonPeriod 200.0	
+langevinPistonDecay  100.0	
+langevinPistonTemp   $mytemp	
+
+
+# ----- additional parameters -----
+
+### periodic boundary conditions & PME
+
+cellBasisVector1   150.0   0.0   0.0	
+cellBasisVector2     0.0 150.0   0.0
+cellBasisVector3     0.0   0.0 165.0
+cellOrigin           0.0   0.0   0.0	
+
+wrapAll             on
+
+PME                 on
+PMETolerance        10e-6
+PMEInterpOrder      4
+PMEGridspacing 	    1.3			#tu zmienic na 1.2
+twoAwayX no
+twoAwayY no
+twoAwayZ no
+
+# -----   execution script   -----
+
+### minimization
+
+#minimize            480
+#reinitvels          $mytemp 
+
+
+### molecular dynamics
+
+run 		   5000000 	
+

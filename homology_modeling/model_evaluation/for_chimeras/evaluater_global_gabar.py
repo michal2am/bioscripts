@@ -1,7 +1,10 @@
 import subprocess as sp
 import copy
 import matplotlib.pyplot as plt
-import argparse
+
+logFile = 'create_gabar.log'
+outFile = 'models_hybrid_4COF4tnv'
+modelNum = 64
 
 orange = '#f69855'
 blue = '#3a81ba'
@@ -38,25 +41,11 @@ def md_table(title, data):
         print('{0:5d}\t{1:7.0f}\t{2:9.0f}'.format(*line))
     print('------------------------------------------------')
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-l", "--logFile", dest="logFile", action="store")
-parser.add_argument("-o", "--outFile", dest="outFile", action="store")
-parser.add_argument("-n", "--modelNum", dest="modelNum", action="store", type=int)
-args = parser.parse_args()
-
-
-logFile = args.logFile
-outFile = args.outFile
-modelNum = args.modelNum
-
-
 # read mark table from log into list of lists
 modelList = [ model.split() for model in sp.check_output([ 'grep', 'Summary of successfully produced models:', logFile, '-A', str(modelNum+2) ]).decode('utf-8').split('\n')[3:-1] ]
 
-print(modelList)
-
 # format each list of log
-modelList = [ [ int(model[0][-6:-4]), float(model[1]), float(model[2]) ] for model in modelList ]
+modelList = [ [ int(model[0][19:21]), float(model[1]), float(model[2]) ] for model in modelList ]
 
 # finds best models
 bestMolPDF = copy.deepcopy(min(modelList, key=lambda x: x[1]))

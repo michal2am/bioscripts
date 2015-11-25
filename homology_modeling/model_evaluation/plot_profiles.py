@@ -1,37 +1,25 @@
 #import pylab
 import modeller
 import matplotlib.pyplot as plt
+import argparse
 
-plot_range = 'all'
 
-def md_plot(template, models_mod, xlab, ylab, models, plot_range, fontsize=10):
+def md_plot(template, models_mod, xlab, ylab, models, fontsize=10):
 
     fig, ax = plt.subplots()
     ax.set_color_cycle(['#4D4D4D','#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
 
-    if plot_range == 'all':
-        ax.plot(template, lw=0.6, color='#f69855', label='template')
-        for model, number in zip(models_mod, models): 
-            ax.plot(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
+    ax.plot(template, lw=0.6, color='#f69855', label='template')
+    for model, number in zip(models_mod, models): 
+        ax.plot(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
     
-    if plot_range == '1':
-       ax.plot(range(12,350), template[674:1012], ls='-', color='#f69855', label='template')
-       for model, number in zip(models_mod, models):
-            ax.plot(range(12,350), model[0:338], lw=1, label='open hybrid model {0:02d}'.format(number))
-
-    if plot_range == '2':
-        ax.plot(range(12,350), template[0:338], ls='-', color='#f69855', label='template')
-        for model, number in zip(models_mod, models):
-            ax.plot(range(12,350), model[674:1012], lw=1, label='open hybrid model {0:02d}'.format(number))
-
     ax.locator_params(nbins=10)
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
     
-    if plot_range == 'all': ax.set_xlim(0, 1700)
-    else: ax.set_xlim(0, 370)
-    ax.set_ylim(-0.08, -0.015)
+    # ax.set_xlim(0, 1700)
+    # ax.set_ylim(-0.08, -0.015)
 
     handles, labels = ax.get_legend_handles_labels()
    #lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
@@ -39,7 +27,7 @@ def md_plot(template, models_mod, xlab, ylab, models, plot_range, fontsize=10):
     ax.grid('on')
 
     fig.set_size_inches(6, 4)
-    fig.savefig('dope_profile_{}.png'.format(plot_range), dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight' )
+    fig.savefig('dope_profile.png', dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight' )
 
 
 def r_enumerate(seq):
@@ -68,16 +56,24 @@ def get_profile(profile_file, seq):
     vals.insert(0, None)
     return vals
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-a", "--aligFile")
+parser.add_argument("-t", "--aligTemplate")
+parser.add_argument("-s", "--aligSequence")
+parser.add_argument("-m", "--selectedNames", nargs='+', type=int)
+args = parser.parse_args()
+
 e = modeller.environ()
-a = modeller.alignment(e, file='gabar_MM.01chimeric.pir')
+a = modeller.alignment(e, file=args.aligFile)
 
-template = get_profile('chimeric.profile', a['chimeric'])
+template = get_profile('template.profile', a[args.aligTemplate])
 
-models = [1, 34, 53, 60, 42, 24, 49]
+models = args.selectedNames
 models_mod = []
 
 for model in models:
-    model_mod = get_profile('model_{0:02d}.profile'.format(model), a['gabar_MM.01'])
+    model_mod = get_profile('model_{0:02d}.profile'.format(model), a[args.aligSequence])
     models_mod.append(model_mod)
 
     profile_mod = open('dope_profile_model_{0:02d}.dat'.format(model), 'w')
@@ -85,20 +81,5 @@ for model in models:
         profile_mod.write(str(i) + '   ' + str(res) + '\n')
     profile_mod.close()
 
-# Plot the template and model profiles in the same plot for comparison:
-#pylab.figure(1, figsize=(12,8))
-#pylab.xlabel('Alignment position')
-#pylab.ylabel('DOPE per-residue score')
-#for model, number in zip(models_mod, models):
-#   pylab.plot(model, linewidth=1, marker='o', ls='', label='open hybrid model {0:02d}'.format(number))
-#pylab.plot(template, color='orange', linewidth=2, label='open hybrid template')
-#pylab.legend()
-#pylab.savefig('dope_profile.png', dpi=600)
-
-print len(models_mod[0])
-if plot_range == 'all': x_title = 'alignment position'
-if plot_range == '1': x_title = 'residue number - first alpha subunit'
-if plot_range == '2': x_title = 'residue number - second alpha subunit'
-md_plot(template, models_mod, x_title, 'DOPE per residue score', models, plot_range)
-#md_plot(template, models_mod, 'alignment position', 'DOPE per residue score', models)
+md_plot(template, models_mod, 'alignment posiition', 'DOPE per residue score', models)
 

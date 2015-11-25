@@ -1,25 +1,29 @@
 from modeller import *
 from modeller.scripts import complete_pdb
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-n", "--nameTemplate")
+parser.add_argument("-t", "--template")
+parser.add_argument("-s", "--selectedNames", nargs='+')
+args = parser.parse_args()
 
 log.verbose()    # request verbose output
 env = environ()
 env.libs.topology.read(file='$(LIB)/top_heav.lib') # read topology
 env.libs.parameters.read(file='$(LIB)/par.lib') # read parameters
 
-models = ['chimeric', 1, 34, 53, 60, 42, 24, 49]
+models=[args.nameTemplate+selected+'_fit.pdb' for selected in args.selectedNames]
+models.append(args.template)
+profiles=['model_'+selected+'.profile' for selected in args.selectedNames]
+profiles.append('template.profile')
 
-for model in models:
+for model, profile in zip(models, profiles):
     
-    if model == 'chimeric':
-        infile = 'chimeric_fit.pdb'
-        outfile = 'chimeric.profile'
-    else:
-        infile = 'gabar_MM.01.B999900{0:02d}_fit.pdb'.format(model)
-        outfile = 'model_{0:02d}.profile'.format(model)
-
     # read model file
-    mdl = complete_pdb(env, infile)
+    mdl = complete_pdb(env, model)
 
     # Assess with DOPE:
     s = selection(mdl)   # all atom selection
-    s.assess_dope(output='ENERGY_PROFILE NO_REPORT', file=outfile, normalize_profile=True, smoothing_window=15)
+    s.assess_dope(output='ENERGY_PROFILE NO_REPORT', file=profile, normalize_profile=True, smoothing_window=15)
