@@ -4,7 +4,7 @@
 # 25.11.15 - refactor
 
 import argparse
-import matplotlib as mpl
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -43,6 +43,10 @@ def parse_xst(xst, leaf_size, timestep, save_freq):
     apl_all = [row[1]*row[5]/leaf_size for row in par_xst]
     sym_all = [row[1]/row[5] for row in par_xst]
     thc_all = [row[9] for row in par_xst]
+
+    print("Area per lipid: AVR: {0}, SD: {1}".format(np.mean(apl_all), np.std(apl_all)))
+    print("Total thickness: AVR: {0}, SD: {1}".format(np.mean(thc_all), np.std(thc_all)))
+    print("Patch symmetry: AVR: {0}, SD: {1}".format(np.mean(sym_all), np.std(sym_all)))
 
     return [tim_all, apl_all, sym_all, thc_all, ste_all]
 
