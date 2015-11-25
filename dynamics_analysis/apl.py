@@ -6,15 +6,6 @@
 import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-# mpl.use('Agg')
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--template", help="constant xst file name prefix")
-parser.add_argument("-s", "--selected_sims", nargs='+', help="iterative xst file name suffixes")
-parser.add_argument("-l", "--leaf_size", type=int, help="number of lipids in one leaf")
-parser.add_argument("-ts", "--timestep", type=int, help="time step in fs")
-parser.add_argument("-sf", "--save_freq", type=int, help="xst file save frequency")
-args = parser.parse_args()
 
 
 def read_xst(template, selected_sims):
@@ -24,15 +15,14 @@ def read_xst(template, selected_sims):
     :return: concatenated xst file
     """
     xst = open(template+selected_sims[0]+".xst", 'r').readlines()
+
     for sim in selected_sims[1:]:
         xst.extend(open(template+sim+".xst", 'r').readlines()[2:])
 
     with open(template+"all.xst", mode='wt', encoding='utf-8') as all_xst:
         all_xst.write(''.join(xst))
+
     return xst
-
-xst = read_xst(args.template, args.selected_sims)
-
 
 
 def parse_xst(xst, leaf_size, timestep, save_freq):
@@ -41,37 +31,73 @@ def parse_xst(xst, leaf_size, timestep, save_freq):
     :param leaf_size: number of lipids in one leaf
     :param timestep: time step in fs
     :param save_freq: xst file save frequency
-    :return:
+    :return: list of parsed xst parameters [time, apl, symmetry, total thickness, step number]
     """
     # time = 0
     # dtime = timestep*save_freq/1000000.
 
     par_xst = [[float(col) for col in row.split()] for row in xst[2:]]
 
-    timeAll = [row[0]*timestep*10e-6 for row in par_xst]
+    tim_all = [row[0]*timestep*10e-6 for row in par_xst]
+    ste_all = [row[0] for row in par_xst]
     apl_all = [row[1]*row[5]/leaf_size for row in par_xst]
     sym_all = [row[1]/row[5] for row in par_xst]
     thc_all = [row[9] for row in par_xst]
 
-parse_xst(xst, args.leaf_size, args.timestep, args.save_freq)
+    return [tim_all, apl_all, sym_all, thc_all, ste_all]
 
-"""
-fig = plt.figure(figsize=(6, 8))
-ax = fig.add_subplot(311)
-ax.plot(timeAll, aplAll, 'k-',  label="area per lipid")
-ax.legend(loc="best")
-ax.set_ylabel("APL [A]")
-ax.set_xlabel("time [ns]")
-ay = fig.add_subplot(312)
-ay.plot(timeAll, thcAll, 'k--', label="system thickness")
-ay.legend(loc="best")
-ay.set_ylabel("thickness [A]")
-ay.set_xlabel("time [ns]")
-az = fig.add_subplot(313)
-az.plot(timeAll, symAll, 'k--', label="system symmetry")
-az.legend(loc="best")
-az.set_ylabel("symmetry X:Y")
-az.set_xlabel("time (ps)")
 
-fig.savefig("apl.pdf")
-"""
+def plot_xst(parsed_xst):
+    """
+    :param parsed_xst: list of parsed xst parameters
+    :return: plots parsed xst parameters (no return)
+    """
+    plot_simple(parsed_xst[4], parsed_xst[1], "step", "APL [A]", "equilibration_apl")
+    plot_simple(parsed_xst[4], parsed_xst[2], "step", "symmetry", "equilibration_symmetry")
+    plot_simple(parsed_xst[4], parsed_xst[3], "step", "total thickness [A]", "equilibration_totthc")
+
+
+def plot_simple(x, y, xlab, ylab, labe, color='#f69855', fontsize=18, sizex=3.5, sizey=3.5):
+    """
+    :param x: x-axis data
+    :param y: y-axis data
+    :param xlab: x-axis label
+    :param ylab: y-axis label
+    :param labe: data label
+    :param color: data color
+    :param fontsize:
+    :return:
+    """
+    fig, ax = plt.subplots()
+    ax.plot(x, y, label=labe, lw=3, color=color)
+    ax.set_xlabel(xlab, fontsize=fontsize)
+    ax.set_ylabel(ylab, fontsize=fontsize)
+    ax.grid('on')
+    ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
+
+    # RANGE OPTIONS:
+    # ax.set_xlim([0, 120])
+    # ax.set_ylim([0.75, 1.02])
+
+    # LEGEND OPTIONS
+    # handles, labels = ax.get_legend_handles_labels()
+    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
+    # lgd = ax.legend(handles, labels, loc='best')
+
+    fig.set_size_inches(sizex, sizey)
+    # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    fig.savefig(labe+".png", dpi=300, bbox_inches='tight')
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-t", "--template", help="constant xst file name prefix")
+parser.add_argument("-s", "--selected_sims", nargs='+', help="iterative xst file name suffixes")
+parser.add_argument("-l", "--leaf_size", type=int, help="number of lipids in one leaf")
+parser.add_argument("-ts", "--timestep", type=int, help="time step in fs")
+parser.add_argument("-sf", "--save_freq", type=int, help="xst file save frequency")
+args = parser.parse_args()
+
+xst = read_xst(args.template, args.selected_sims)
+parsed_xst = parse_xst(xst, args.leaf_size, args.timestep, args.save_freq)
+plot_xst(parsed_xst)
