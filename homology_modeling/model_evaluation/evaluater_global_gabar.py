@@ -8,17 +8,28 @@ blue = '#3a81ba'
 grey = '#666666'
 
 
-def md_plot(outFile, x, y, xlab, ylab, labe, fontsize=12):
+def md_plot(out_file, x, y, xlab, ylab, labe, fontsize=12):
+    """
+    simple function to plot 2D scatter of two data series
+    :param out_file: file to save plot
+    :param x: x-data
+    :param y: y-data (list of two series)
+    :param xlab: x-label
+    :param ylab: y-label
+    :param labe: labels for y-data (list of two labels)
+    :param fontsize: select font size
+    :return: nothing
+    """
 
     fig, ax = plt.subplots()
 
     ax.plot(x, y[0], c='#f69855', marker='o', ls='', label=labe[0])
     ax.plot(x, y[1], c='#3a81ba', marker='o', ls='', label=labe[1])
  
-   #ax.locator_params(nbins=20)
+    # ax.locator_params(nbins=20)
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
-   #ax.set_xlim([0, 120])
+    # ax.set_xlim([0, 120])
     ax.set_ylim([0.75, 1.02])
 
     handles, labels = ax.get_legend_handles_labels()
@@ -26,9 +37,16 @@ def md_plot(outFile, x, y, xlab, ylab, labe, fontsize=12):
     ax.grid('on')
 
     fig.set_size_inches(7.5, 5)
-    fig.savefig(outFile, dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight' )
+    fig.savefig(out_file, dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
+
 
 def md_table(title, data):
+    """
+    simple function to draw table summary
+    :param title: name of the table
+    :param data: list of model entries [model_number, molpdf, DOPE]
+    :return: nothing
+    """
 
     print('------------------------------------------------')
     print(title)
@@ -51,14 +69,14 @@ modelNum = args.modelNum
 
 
 # read mark table from log into list of lists
-modelList = [ model.split() for model in sp.check_output([ 'grep', 'Summary of successfully produced models:', logFile, '-A', str(modelNum+2) ]).decode('utf-8').split('\n')[3:-1] ]
+modelList = [model.split() for model in sp.check_output(['grep', 'Summary of successfully produced models:', logFile, '-A', str(modelNum+2)]).decode('utf-8').split('\n')[3:-1]]
 
 print(modelList)
 
 # format each list of log
-modelList = [ [ int(model[0][-6:-4]), float(model[1]), float(model[2]) ] for model in modelList ]
+modelList = [[int(model[0][19:21]), float(model[1]), float(model[2])] for model in modelList]
 
-# finds best models
+# find best models
 bestMolPDF = copy.deepcopy(min(modelList, key=lambda x: x[1]))
 bestDOPE = copy.deepcopy(min(modelList, key=lambda x: x[2]))
 print('Best molpdf: {}'.format(bestMolPDF))
