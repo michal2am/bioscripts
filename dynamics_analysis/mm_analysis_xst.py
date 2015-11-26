@@ -1,3 +1,4 @@
+# python 3
 # script for calculating area per lipid and system thickness
 # michaladammichalowski@gmail.com
 # xx.xx.14 - creation
@@ -5,7 +6,7 @@
 
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
+import mm_lib_plots as mmplt
 
 
 def read_xst(template, selected_sims):
@@ -56,43 +57,9 @@ def plot_xst(parsed_xst):
     :param parsed_xst: list of parsed xst parameters
     :return: plots parsed xst parameters (no return)
     """
-    plot_simple(parsed_xst[4], parsed_xst[1], "step", "APL [A]", "equilibration_apl")
-    plot_simple(parsed_xst[4], parsed_xst[2], "step", "symmetry", "equilibration_symmetry")
-    plot_simple(parsed_xst[4], parsed_xst[3], "step", "total thickness [A]", "equilibration_totthc")
-
-
-def plot_simple(x, y, xlab, ylab, labe, color='#f69855', fontsize=18, sizex=3.5, sizey=3.5):
-    """
-    :param x: x-axis data
-    :param y: y-axis data
-    :param xlab: x-axis label
-    :param ylab: y-axis label
-    :param labe: data label
-    :param color: data color
-    :param fontsize:
-    :return:
-    """
-    fig, ax = plt.subplots()
-    ax.plot(x, y, label=labe, lw=3, color=color)
-    ax.set_xlabel(xlab, fontsize=fontsize)
-    ax.set_ylabel(ylab, fontsize=fontsize)
-    ax.grid('on')
-    ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
-
-    # RANGE OPTIONS:
-    # ax.set_xlim([0, 120])
-    # ax.set_ylim([0.75, 1.02])
-
-    # LEGEND OPTIONS
-    # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
-    # lgd = ax.legend(handles, labels, loc='best')
-
-    fig.set_size_inches(sizex, sizey)
-    # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
-    fig.savefig(labe+".png", dpi=300, bbox_inches='tight')
-
-
+    mmplt.plot_simple(parsed_xst[4], parsed_xst[1], "step", "APL [A]", "equilibration_apl")
+    mmplt.plot_simple(parsed_xst[4], parsed_xst[2], "step", "symmetry", "equilibration_symmetry")
+    mmplt.plot_simple(parsed_xst[4], parsed_xst[3], "step", "total thickness [A]", "equilibration_totthc")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--template", help="constant xst file name prefix")
