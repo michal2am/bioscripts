@@ -22,8 +22,6 @@ def read_rdf(rad_files):
         dist_rdf.append([row[0] for row in par_rdf])  # second: select x columns from rows and add to container
         dens_rdf.append([row[1] for row in par_rdf])  # second: select y columns from rows and add to container
 
-        # tog_rdf = [[float(row.split()[0]) for row in rdf[0:-1]], [float(row.split()[1]) for row in rdf[0:-1]]] # or select from string rows
-
     return [dist_rdf, dens_rdf]
 
 
