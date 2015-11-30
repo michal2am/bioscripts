@@ -27,7 +27,7 @@ def md_plot(template, models_mod, xlab, ylab, models, fontsize=10):
     ax.grid('on')
 
     fig.set_size_inches(6, 4)
-    fig.savefig('dope_profile.png', dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight' )
+    fig.savefig('dope_profile.png', dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
 
 
 def r_enumerate(seq):
