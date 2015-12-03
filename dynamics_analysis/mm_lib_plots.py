@@ -96,10 +96,7 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     ax.set_color_cycle(['#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
 
     for serie in range(len(labe)):
-        print(data)
-        print(type(data))
-        n, bins, patches = plt.hist(data)
-        ax.plot(bins, data[serie], label=labe[serie], lw=3)
+        n, bins, patches = plt.hist(data[serie], bins=50, label=labe[serie], alpha=0.5, normed=True)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
@@ -114,9 +111,10 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     # handles, labels = ax.get_legend_handles_labels()
     # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
     # lgd = ax.legend(handles, labels, loc='best', fontsize=fontsize)
+
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=5, fontsize=fontsize)
+    ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=5, fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')

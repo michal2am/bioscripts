@@ -2,6 +2,7 @@
 # script for plotting vmd average lipid markers positions
 # michaladammichalowski@gmail.com
 # 30.11.15 - creation
+# EXAMPLE CALL: python3 mm_analysis_plotthx.py --psf step5_assembly.xplor_ext.psf --dcd step7.1_production.dcd -s "resname POPC and name P" "resname POPC and name N" --position_files "tmp_POPC_P" "tmp_POPC_N" --position_plot "tmp_POPC_P" --labels "POPC phosphorus" "POPC sodium
 
 import subprocess
 import argparse
@@ -100,21 +101,24 @@ def plot_thc_hist(parseds_thc):
     :param parseds_thc:
     :return:
     """
-    mmplt.plot_histogram(parseds_thc, "membrane axis coordinate [A]", "density [rel]", args.selections, args.position_plot)
+    mmplt.plot_histogram(parseds_thc, "membrane axis coordinate [A]", "density [norm]", args.labels, args.position_plot)
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--psf", help="psf file name")
 parser.add_argument("--dcd", help="dcd file name")
 parser.add_argument("-s", "--selections", nargs='+', help="vmd atom selections")
+parser.add_argument("-l", "--labels", nargs='+', help="labels for plots")
 parser.add_argument("-pf", "--position_files", nargs='+', help="names to save positions")
 parser.add_argument("-pp", "--position_plot", help="names to save plots")
 args = parser.parse_args()
-
+'''
 read_traj = tcl_trajectory(args.psf, args.dcd)
 profiles = []
 for file, selection in zip(args.position_files, args.selections):
     profiles.append(tcl_allpos_z(file, selection))
 create_tcl_script("complete_script.tcl", read_traj, *profiles)
 run_tcl("complete_script.tcl")
-plot_thc_hist(profiles)
+'''
+parseds_thc = read_thc_hist(args.position_files)
+plot_thc_hist(parseds_thc)
