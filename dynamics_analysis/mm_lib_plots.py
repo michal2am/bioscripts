@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_simple(x, y, xlab, ylab, labe, out_file, color='#f69855', fontsize=12, sizex=3.5, sizey=3.5):
+def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, sizex=3.5, sizey=3.5):
     """
     :param x: x-axis data
     :param y: y-axis data
@@ -26,16 +26,15 @@ def plot_simple(x, y, xlab, ylab, labe, out_file, color='#f69855', fontsize=12, 
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # RANGE OPTIONS:
-    # ax.set_xlim([0, 120])
-    # ax.set_ylim([0.75, 1.02])
+    # ax.set_xlim([a, b])
+    # ax.set_ylim([a, b])
 
     # LEGEND OPTIONS
     # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
-    # lgd = ax.legend(handles, labels, loc='best')
+    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=fontsize)
+    # lgd = ax.legend(handles, labels, loc='best', fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
-    # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
 
@@ -52,7 +51,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
     """
     fig, ax = plt.subplots()
     # ax.set_color_cycle(['#4D4D4D','#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
-    ax.set_color_cycle(['#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
+    ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
         ax.plot(x[serie], y[serie], label=labe[serie], lw=3)
@@ -63,16 +62,17 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # RANGE OPTIONS:
-    # ax.set_xlim([0, 120])
-    # ax.set_ylim([0.75, 1.02])
+    # ax.set_xlim([a, b])
+    # ax.set_ylim([a, b])
 
     # LEGEND OPTIONS
     # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
+    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=fontsize)
     # lgd = ax.legend(handles, labels, loc='best', fontsize=fontsize)
+
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=5, fontsize=fontsize)
+    ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=5, fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
@@ -93,7 +93,7 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     """
     fig, ax = plt.subplots()
     # ax.set_color_cycle(['#4D4D4D','#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
-    ax.set_color_cycle(['#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
+    ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
         n, bins, patches = plt.hist(data[serie], bins=50, label=labe[serie], alpha=0.5, normed=True)
@@ -104,12 +104,12 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # RANGE OPTIONS:
-    # ax.set_xlim([0, 120])
-    # ax.set_ylim([0.75, 1.02])
+    # ax.set_xlim([a, b])
+    # ax.set_ylim([a, b])
 
     # LEGEND OPTIONS
     # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=10)
+    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=fontsize)
     # lgd = ax.legend(handles, labels, loc='best', fontsize=fontsize)
 
     box = ax.get_position()

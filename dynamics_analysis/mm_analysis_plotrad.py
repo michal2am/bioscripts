@@ -2,6 +2,7 @@
 # script for plotting vmd radial distribution
 # michaladammichalowski@gmail.com
 # 25.11.15 - creation
+# EXAMPLE CALL: python3 mm_analysis_plotrad.py -r gr_N_Cl.dat gr_N_Na.dat -l "rdf_Cl(POPC_N)" "rdf_Na(POPC_N)" -o rdf
 
 import argparse
 import mm_lib_plots as mmplt
@@ -18,6 +19,7 @@ def read_rdf(rad_files):
     for rad_file in rad_files:
         rdf = open(rad_file).readlines()
         par_rdf = [[float(col) for col in row.split()] for row in rdf[0:-1]]  # first: create list rows
+
         dist_rdf.append([row[0] for row in par_rdf])  # second: select x columns from rows and add to container
         dens_rdf.append([row[1] for row in par_rdf])  # second: select y columns from rows and add to container
 
