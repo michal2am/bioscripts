@@ -8,7 +8,7 @@ import argparse
 import mm_lib_plots as mmplt
 
 
-def create_tcl_trajectory(psf, dcd):
+def tcl_trajectory(psf, dcd):
     """
     :param psf: psf file path
     :param dcd: dcd file path
@@ -21,7 +21,7 @@ mol addfile {1} type dcd step 10 waitfor all molid $mol
     return script
 
 
-def create_tcl_selection(position_file, selection):
+def tcl_avpos_z(position_file, selection):
     """
     :param position_file: name to save atom average coordinates
     :param selection: selection of atoms
@@ -33,6 +33,25 @@ set selection [atomselect top "{1}"]
 set positions [measure avpos $selection]
 foreach sublist $positions {{
 set z_position [lindex $sublist 2]
+puts $file $z_position
+}}
+""".format(position_file, selection)
+    return script
+
+
+def tcl_allpos_z(position_file, selection):
+    """
+    :param position_file:
+    :param selection:
+    :return:
+    """
+    script = """
+set file [open {0} "w"]
+set selection [atomselect top "{1}"]
+set nf [molinfo top get numframes]
+for {{set i 0}} {{$i < $nf}} {{incr i}} {{
+$selection frame $i
+set z_position [$selection get z]
 puts $file $z_position
 }}
 """.format(position_file, selection)
@@ -63,46 +82,39 @@ def run_tcl(script_file):
     subprocess.call(["vmd", "-e", script_file])
 
 
-def read_thc(*args):
+def read_thc_hist(thc_files):
     """
     :param args:
     :return:
     """
+    thcs = []  # container for z positions
+    for thc_file in thc_files:
+        thc = open(thc_file).readlines()
+        par_thc = [[float(col) for col in row.split()] for row in thc]  # first: create list rows
+        thcs.append([item for sublist in par_thc for item in sublist])  # second: put rows alltogether
+    return thcs
 
-    '''
-    dist_rdf = []  # container for distances x
-    dens_rdf = []  # container for densities y
 
-    for rad_file in rad_files:
-        rdf = open(rad_file).readlines()
-        par_rdf = [[float(col) for col in row.split()] for row in rdf[0:-1]]  # first: create list rows
-        dist_rdf.append([row[0] for row in par_rdf])  # second: select x columns from rows and add to container
-        dens_rdf.append([row[1] for row in par_rdf])  # second: select y columns from rows and add to container
-
-    return [dist_rdf, dens_rdf]
-    '''
-    pass
-
-def plot_thc():
+def plot_thc_hist(parseds_thc):
     """
+    :param parseds_thc:
     :return:
     """
+    mmplt.plot_histogram(parseds_thc, "membrane axis coordinate [A]", "density [rel]", args.selections, args.position_plot)
 
-    '''
-    mmplt.plot_simple_multiple(parseds_rdf[0], parseds_rdf[1], "distance [A]", "density [rel]", args.labels, args.out_file)
-    '''
-    pass
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--psf", help="psf file name")
 parser.add_argument("--dcd", help="dcd file name")
 parser.add_argument("-s", "--selections", nargs='+', help="vmd atom selections")
 parser.add_argument("-pf", "--position_files", nargs='+', help="names to save positions")
-parser.add_argument("-pp", "--position_plots", nargs='+', help="names to save plots")
+parser.add_argument("-pp", "--position_plot", help="names to save plots")
 args = parser.parse_args()
 
-read_traj = create_tcl_trajectory(args.psf, args.dcd)
-prof1 = create_tcl_selection("POPC_P_top.dat", "resname POPC and name P and x > 0")
-prof2 = create_tcl_selection("POPC_P_bot.dat", "resname POPC and name P and x < 0")
-create_tcl_script("complete_script.tcl", read_traj, prof1, prof2)
+read_traj = tcl_trajectory(args.psf, args.dcd)
+profiles = []
+for file, selection in zip(args.position_files, args.selections):
+    profiles.append(tcl_allpos_z(file, selection))
+create_tcl_script("complete_script.tcl", read_traj, *profiles)
 run_tcl("complete_script.tcl")
+plot_thc_hist(profiles)
