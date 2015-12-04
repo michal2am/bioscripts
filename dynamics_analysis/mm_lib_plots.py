@@ -96,7 +96,7 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
-        n, bins, patches = plt.hist(data[serie], bins=50, label=labe[serie], alpha=0.5, normed=True)
+        n, bins, patches = plt.hist(data[serie], bins=150, label=labe[serie], normed=True, histtype='step', lw=3)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)

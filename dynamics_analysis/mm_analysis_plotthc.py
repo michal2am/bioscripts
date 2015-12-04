@@ -2,7 +2,7 @@
 # script for plotting vmd average lipid markers positions
 # michaladammichalowski@gmail.com
 # 30.11.15 - creation
-# EXAMPLE CALL: python3 mm_analysis_plotthx.py --psf step5_assembly.xplor_ext.psf --dcd step7.1_production.dcd -s "resname POPC and name P" "resname POPC and name N" --position_files "tmp_POPC_P" "tmp_POPC_N" --position_plot "tmp_POPC_P" --labels "POPC phosphorus" "POPC sodium
+# EXAMPLE CALL: python3 mm_analysis_plotthc.py --psf step5_assembly.xplor_ext.psf --dcd step7.1_production.dcd -s "resname POPC and name P" "resname POPC and name N" --position_files "tmp_POPC_P" "tmp_POPC_N" --position_plot "tmp_POPC_P" --labels "POPC phosphorus" "POPC sodium
 
 import subprocess
 import argparse
@@ -17,7 +17,7 @@ def tcl_trajectory(psf, dcd):
     """
     script = """
 set mol [mol new {0} type psf waitfor all]
-mol addfile {1} type dcd step 10 waitfor all molid $mol
+mol addfile {1} type dcd step 5 waitfor all molid $mol
 """.format(psf, dcd)
     return script
 
@@ -46,13 +46,15 @@ def tcl_allpos_z(position_file, selection):
     :param selection:
     :return:
     """
-    script = """
+    position_file += ".dat"
+    script = """vi co
 set file [open {0} "w"]
 set selection [atomselect top "{1}"]
 set nf [molinfo top get numframes]
 for {{set i 0}} {{$i < $nf}} {{incr i}} {{
 $selection frame $i
-set z_position [$selection get z]
+set all_position [measure center $selection]
+set z_position [lindex $all_position 2]
 puts $file $z_position
 }}
 """.format(position_file, selection)
@@ -90,7 +92,7 @@ def read_thc_hist(thc_files):
     """
     thcs = []  # container for z positions
     for thc_file in thc_files:
-        thc = open(thc_file).readlines()
+        thc = open(thc_file+".dat").readlines()
         par_thc = [[float(col) for col in row.split()] for row in thc]  # first: create list rows
         thcs.append([item for sublist in par_thc for item in sublist])  # second: put rows alltogether
     return thcs
@@ -112,13 +114,12 @@ parser.add_argument("-l", "--labels", nargs='+', help="labels for plots")
 parser.add_argument("-pf", "--position_files", nargs='+', help="names to save positions")
 parser.add_argument("-pp", "--position_plot", help="names to save plots")
 args = parser.parse_args()
-'''
+
 read_traj = tcl_trajectory(args.psf, args.dcd)
 profiles = []
 for file, selection in zip(args.position_files, args.selections):
     profiles.append(tcl_allpos_z(file, selection))
 create_tcl_script("complete_script.tcl", read_traj, *profiles)
 run_tcl("complete_script.tcl")
-'''
 parseds_thc = read_thc_hist(args.position_files)
 plot_thc_hist(parseds_thc)
