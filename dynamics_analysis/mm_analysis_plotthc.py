@@ -117,7 +117,6 @@ def para_thc_hist(parseds_thc):
         print("Density peaks of {0}: {1:.1f} SD: {2:.1f} and {3:.1f} SD: {4:.1f}, thickness: {5:.1f} SD: {6:.3f} ".format(selection, np.mean(top_profile), np.std(top_profile), np.mean(bot_profile), np.std(bot_profile), np.mean(top_profile) - np.mean(bot_profile),  (np.std(top_profile)**2 + np.std(bot_profile)**2)**0.5))
 
 
-
 def plot_thc_hist(parseds_thc):
     """
     :param parseds_thc:
@@ -137,14 +136,13 @@ parser.add_argument("-pf", "--position_files", nargs='+', help="names to save po
 parser.add_argument("-pp", "--position_plot", help="names to save plots")
 args = parser.parse_args()
 
-'''
+
 read_traj = tcl_trajectory(args.psf, args.dcd)
 profiles = []
 for file, selection in zip(args.position_files, args.selections):
     profiles.append(tcl_allpos_z(file, selection))
 create_tcl_script("complete_script.tcl", read_traj, *profiles)
 run_tcl("complete_script.tcl")
-'''
 parseds_thc = read_thc_hist(args.position_files)
 para_thc_hist(parseds_thc)
 plot_thc_hist(parseds_thc)

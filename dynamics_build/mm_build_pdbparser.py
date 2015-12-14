@@ -3,6 +3,7 @@
 # michaladammichalowski@gmail.com
 # 25.11.15 - creation
 # 10.12.15 - refactor
+# EXAMPLE CALL: python3 mm_build_pdbparser.py --old_pdb smth.pdb --new_pdb new_smth.pdb --constrain "name H"
 
 import argparse
 

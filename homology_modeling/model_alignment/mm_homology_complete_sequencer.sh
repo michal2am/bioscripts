@@ -1,4 +1,9 @@
 #!/bin/bash
+# gets sequences of all pdb files in given directory
+# michaladammichalowski@gmail.com
+# ? - creation
+# 14.12.15 - refactor
+# EXAMPLE CALL: ./mm_homology_complete_sequencer.sh some_dir
 
 pdbDir="$1"
 pdbAll="${pdbDir}/*.pdb"
@@ -15,7 +20,7 @@ for pdb in $pdbAll; do
 
         echo "info: processing file "$pdbName" "
 
-        python pdb2fasta.py --pdbFile "$pdbFile" --pdbCode "$pdbName" --seqName "$pdbName"
+        python mm_homology_pdb2fasta.py --pdbFile "$pdbFile" --pdbCode "$pdbName" --seqName "$pdbName"
 
 done
 

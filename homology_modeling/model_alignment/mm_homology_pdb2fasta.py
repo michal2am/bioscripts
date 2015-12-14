@@ -1,3 +1,10 @@
+# python 2
+# script for transcripting pdb to fasta
+# michaladammichalowski@gmail.com
+# ? - creation
+# 14.12.15 - refactor
+# EXAMPLE CALL: mm_pdb2fasta.py --pdbFile smth.pdb --pdbCode smth --seqName smth_seq
+
 import argparse
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB.Polypeptide import PPBuilder
