@@ -54,7 +54,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
     ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
-        ax.plot(x[serie], y[serie], label=labe[serie], lw=3)
+        ax.plot(x[serie], y[serie], label=labe[serie], lw=2)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
@@ -72,7 +72,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
 
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=5, fontsize=fontsize)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')

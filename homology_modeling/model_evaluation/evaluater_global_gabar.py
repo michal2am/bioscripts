@@ -74,7 +74,7 @@ modelList = [model.split() for model in sp.check_output(['grep', 'Summary of suc
 print(modelList)
 
 # format each list of log
-modelList = [[int(model[0][19:21]), float(model[1]), float(model[2])] for model in modelList]
+modelList = [[int(model[0][17:19]), float(model[1]), float(model[2])] for model in modelList]
 
 # find best models
 bestMolPDF = copy.deepcopy(min(modelList, key=lambda x: x[1]))
