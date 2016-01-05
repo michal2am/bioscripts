@@ -52,7 +52,10 @@ def plot_xst(par_out):
     :param parsed_xst: list of parsed xst parameters
     :return: plots parsed xst parameters (no return)
     """
-    mmplt.plot_simple([row['TS'] for row in par_out], [row['POTENTIAL'] for row in par_out], "step [ns]", "total energy [kcal/mol]", "total", args.out_file + "_total")
+    mmplt.plot_simple([row['TS'] for row in par_out][500:], [row['POTENTIAL'] for row in par_out][500:], "step []", "potential energy [kcal/mol]", "potential", args.out_file + "_potential")
+    mmplt.plot_simple([row['TS'] for row in par_out][500:], [row['TOTAL'] for row in par_out][500:], "step []", "total energy [kcal/mol]", "total", args.out_file + "_total")
+    mmplt.plot_simple([row['TS'] for row in par_out][500:], [row['TEMP'] for row in par_out][500:], "step []", "temperature [K]", "temperature", args.out_file + "_temp")
+    mmplt.plot_simple([row['TS'] for row in par_out][500:], [row['PRESSURE'] for row in par_out][500:], "step []", "pressure [bar]", "pressure", args.out_file + "_press")
 
 
 parser = argparse.ArgumentParser()

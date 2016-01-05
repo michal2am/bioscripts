@@ -26,8 +26,8 @@ def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, 
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # SCALE OPTIONS:
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    # ax.set_xscale('log')
+    # ax.set_yscale('log')
 
     # RANGE OPTIONS:
     # ax.set_xlim([a, b])
