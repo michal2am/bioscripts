@@ -42,7 +42,7 @@ def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, 
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
 
-def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, sizey=3.5):
+def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsize=12, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
     """
     :param x: x-axis data
     :param y: y-axis data
@@ -58,7 +58,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
     ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
-        ax.plot(x[serie], y[serie], label=labe[serie], lw=2)
+        ax.plot(x[serie], y[serie], label=labe[serie], lw=2, linestyle=linestyle, marker=marker)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
@@ -66,8 +66,9 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, fontsize=12, sizex=3.
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # RANGE OPTIONS:
+    if ylimit:
+        ax.set_ylim(ylimit[0], ylimit[1])
     # ax.set_xlim([a, b])
-    # ax.set_ylim([a, b])
 
     # LEGEND OPTIONS
     # handles, labels = ax.get_legend_handles_labels()

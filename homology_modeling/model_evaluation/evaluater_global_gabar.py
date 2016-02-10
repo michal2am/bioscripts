@@ -2,43 +2,21 @@ import subprocess as sp
 import copy
 import matplotlib.pyplot as plt
 import argparse
+import mm_lib_plots as mmplt
 
 orange = '#f69855'
 blue = '#3a81ba'
 grey = '#666666'
 
 
-def md_plot(out_file, x, y, xlab, ylab, labe, fontsize=12):
+def plot_profile(parseds_profs,  outfile):
     """
-    simple function to plot 2D scatter of two data series
-    :param out_file: file to save plot
-    :param x: x-data
-    :param y: y-data (list of two series)
-    :param xlab: x-label
-    :param ylab: y-label
-    :param labe: labels for y-data (list of two labels)
-    :param fontsize: select font size
-    :return: nothing
+    :param parseds_profs: list of parsed rdf profiles
+    :return: plots parsed rdf profiles (no return)
     """
-
-    fig, ax = plt.subplots()
-
-    ax.plot(x, y[0], c='#f69855', marker='o', ls='', label=labe[0])
-    ax.plot(x, y[1], c='#3a81ba', marker='o', ls='', label=labe[1])
- 
-    # ax.locator_params(nbins=20)
-    ax.set_xlabel(xlab, fontsize=fontsize)
-    ax.set_ylabel(ylab, fontsize=fontsize)
-    # ax.set_xlim([0, 120])
-    ax.set_ylim([0.75, 1.02])
-
-    handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 1.025))
-    ax.grid('on')
-
-    fig.set_size_inches(7.5, 5)
-    fig.savefig(out_file, dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
-
+    mmplt.plot_simple_multiple([parseds_profs[0], parseds_profs[0]], parseds_profs[1:3], \
+                               "model []", "quality relative to best [rel]", ['molpdf', 'dope'], \
+                               outfile, marker='.', linestyle='None', ylimit=[0, 1.1])
 
 def md_table(title, data):
     """
@@ -102,4 +80,4 @@ for model in modelList:
 
 # plots all models normalized (closer to one - better)
 toPlot = list(zip(*modelList))
-md_plot(outFile, toPlot[0], toPlot[1:3], 'model', 'quality relative to best', ['molpdf', 'dope'])
+plot_profile(toPlot, args.outFile)
