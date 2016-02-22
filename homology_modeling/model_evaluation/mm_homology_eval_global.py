@@ -115,9 +115,10 @@ class ModelList:
 
         cols = '        model    molpdf      DOPE'
         sep = '-' * len(cols)
-        for table, models in zip(['best by MOLPDF', 'best by DOPE', 'best common by MOLPDF'], \
+        for table, models in zip(['{} best by MOLPDF'.format([self.out_file]), '{} best by DOPE'. \
+                                 format(self.out_file), '{} best common'.format(self.out_file)], \
                                  [self.get_top(self.best_molpdf, self.tresh), \
-                                  self.get_top(self.best_dope, self.tresh), self.best_common]):
+                                 self.get_top(self.best_dope, self.tresh), self.best_common]):
             print('{}\n{}\n{}\n{}\n{}'.format(sep, table, sep, cols, sep))
             for line in models:
                 print('{0:>s}\t{1:5d}\t{2:7.0f}\t{3:9.0f}'.format(str(line[0]), *line[1:]))
