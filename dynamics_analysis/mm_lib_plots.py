@@ -124,3 +124,44 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     fig.set_size_inches(sizex, sizey)
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
+
+
+def plot_ticker(data, xlab, ylab, out_file, color='#405952', fontsize=12, sizex=3.5, sizey=3.5):
+    """
+    :param data:
+    :param xlab:
+    :param ylab:
+    :param out_file:
+    :param color:
+    :param fontsize:
+    :param sizex:
+    :param sizey:
+    :return:
+    """
+
+    fig, ax = plt.subplots()
+    x = np.arange(len(data))
+    y = data.values()
+    ax.bar(x, y, align='center', width=0.5, color=color)
+    ax.xticks(x, data.keys())
+    ax.set_xlabel(xlab, fontsize=fontsize)
+    ax.set_ylabel(ylab, fontsize=fontsize)
+    ax.grid('on')
+
+    # ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
+
+    # SCALE OPTIONS:
+    # ax.set_xscale('log')
+    # ax.set_yscale('log')
+
+    # RANGE OPTIONS:
+    # ax.set_xlim([a, b])
+    # ax.set_ylim([a, b])
+
+    # LEGEND OPTIONS
+    # handles, labels = ax.get_legend_handles_labels()
+    # lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,-0.1), fontsize=fontsize)
+    # lgd = ax.legend(handles, labels, loc='best', fontsize=fontsize)
+
+    fig.set_size_inches(sizex, sizey)
+    fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
