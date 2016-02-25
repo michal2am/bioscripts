@@ -9,16 +9,18 @@ import argparse
 import re
 import collections
 import mm_lib_plots as mmplt
+import mm_lib_analysis as mmanl
+
 
 class RamachandranResidue:
 
     def __init__(self, chains, chains_seq, chain, reisd, resname):
         """
-        :param chains:
-        :param chains_seq:
-        :param chain:
-        :param reisd:
-        :param resname:
+        :param chains: list of chains as in pdb
+        :param chains_seq: list of chain proper naming
+        :param chain: pdb chain
+        :param reisd: pdb resid
+        :param resname: pdb resname
         :return:
         """
         self.chains = chains
@@ -27,19 +29,19 @@ class RamachandranResidue:
         self.chain = chain
         self.schain = self.map_subunit()
         self.resid = reisd
-        self.resname = resname[1:]  #remove ':' before residue name
+        self.resname = resname[1:]  # remove ':' before residue name
         self.name = '{}{}{}'.format(self.resname, self.resid, self.chain)
         self.sname = '{}{}{}'.format(self.resname, self.resid, self.schain)
 
     def __str__(self):
         """
-        :return:
+        :return: resnameResidChain in proper naming manner
         """
-        return '{}{}{}'.format(self.resname, self.resid, self.chain)
+        return '{}{}{}'.format(self.resname, self.resid, self.schain)
 
     def map_subunit(self):
         """
-        :return:
+        :return: maps pdb chains to proper chain naming
         """
         subunit = ''
         for ch, chs in zip(self.chains, self.chains_seq):
@@ -53,10 +55,10 @@ class RamachandranEval:
 
     def __init__(self, model, rampage_file, chains, chains_seq):
         """
-        :param model:
-        :param rampage_file:
-        :param chains:
-        :param chains_seq:
+        :param model: model name
+        :param rampage_file: rampage outfile name
+        :param chains: list of chains as in pdb
+        :param chains_seq: list of chain proper naming
         :return:
         """
 
@@ -65,33 +67,65 @@ class RamachandranEval:
         self.chains = chains
         self.chains_seq = chains_seq
         self.residues = self.read_residues()
+        self.summary = self.read_summary()
+
+    def read_file(self, phrase):
+        """
+        :param phrase:
+        :return:
+        """
+        parsed = []
+        with open(self.file) as rf:
+            rf_residues = [res.rstrip('\n') for res in rf]
+            for res in rf_residues:
+                if phrase in res:
+                    parsed.append(res)
+        return parsed
 
     def read_residues(self):
         """
         :return:
         """
         residues = {'allowed': [], 'outlier': []}
-        with open(self.file) as rf:
-            rf_residues = [res.rstrip('\n') for res in rf]
-            for res in rf_residues:
-                if 'Residue' in res:
-                    res_info = re.search('\[(.*)\]', res).group(1).split()
-                    if 'Allowed' in res:
-                        residues['allowed'].append(RamachandranResidue(self.chains, self.chains_seq, *res_info))
-                    if 'Outlier' in res:
-                        residues['outlier'].append(RamachandranResidue(self.chains, self.chains_seq, *res_info))
+        for res in self.read_file('Residue'):
+            res_info = re.search('\[(.*)\]', res).group(1).split()
+            if 'Allowed' in res:
+                residues['allowed'].append(RamachandranResidue(self.chains, self.chains_seq, *res_info))
+            if 'Outlier' in res:
+                residues['outlier'].append(RamachandranResidue(self.chains, self.chains_seq, *res_info))
         return residues
+
+    def read_summary(self):
+        """
+        :return:
+        """
+        summary = {'favoured': '', 'allowed': '', 'outlier': ''}
+        for res in self.read_file('Number of residues in'):
+            persc = re.search(':.*\((.*%)\)', res).group(1)
+            if 'favoured' in res:
+                summary['favoured'] = persc
+            if 'allowed' in res:
+                summary['allowed'] = persc
+            if 'outlier' in res:
+                summary['outlier'] = persc
+        return summary
+
 
 class RamachandranEvals:
 
-    def __init__(self, evals, frequencies):
+    def __init__(self, model, evals, chains_seq, frequencies):
         """
+        :param model:
         :param evals:
+        :param chains_seq:
+        :param frequencies:
         :return:
         """
+        self.gen_model = model
         self.evals = evals
         self.freqs = frequencies
-        self.bads = {'allowed': self.get_worst('allowed'), 'outlier': self.get_worst('outlier'), \
+        self.chains = chains_seq
+        self.bads = {'allowed': self.get_worst('allowed'), 'outlier': self.get_worst('outlier'),
                      'both': self.get_worst('both')}
 
     def find_worst(self, which):
@@ -102,10 +136,12 @@ class RamachandranEvals:
         bad_resis = {}
         for model in self.evals:
             for res in model.residues[which]:
+                chain_ind = self.chains.index(res.schain)
+                equiv = self.freqs[chain_ind]
                 if res.sname in bad_resis.keys():
-                    bad_resis[res.sname] += 1
+                    bad_resis[res.sname] += 1*equiv
                 else:
-                    bad_resis.update({res.sname: 1})
+                    bad_resis.update({res.sname: equiv})
         return bad_resis
 
     def get_worst(self, which):
@@ -131,27 +167,44 @@ class RamachandranEvals:
         """
         mmplt.plot_ticker(self.bads[which], 'residue', 'in {} region'.format(which), which, sizex=size)
 
-    def get_print(self, which):
+    def get_print_worst(self, which):
         """
         :param which:
-        :param treshold:
         :return:
         """
-        counts = collections.Counter(self.bads[which]).most_common()
-        print(counts)
+        print('Residues in {} region:'.format(which))
+        for res in collections.Counter(self.bads[which]).most_common():
+            print(*res, sep=' ', end=', ')
+        print('\n')
+
+    def get_print_sum(self):
+        """
+        :return:
+        """
+        sums = [[evl.model, evl.summary['favoured'], evl.summary['allowed'], evl.summary['outlier']]
+                for evl in self.evals]
+        sums = mmanl.get_sort(sums, 3)
+        cols = '   model favoured allowed outlier'
+        sep = '-' * len(cols)
+        print('{}\n{} rampage evaluation\n{}\n{}\n{}'.format(sep, self.gen_model, sep, cols, sep))
+        for sm in sums:
+            print('{}  {}\t{}\t{}\t{}'.format(*sm))
+        print(sep)
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--model", help="general name of the model")
 parser.add_argument("--rmf", nargs='+', help="rampage file name")
 parser.add_argument("--chains", nargs='+', help="chains in pdb")
 parser.add_argument("--chains_seq", nargs='+', help="chains subunit naming")
-parser.add_argument("--chains_frq", nargs='+', help="chains frequencies")
+parser.add_argument("--chains_frq", nargs='+', type=int, help="chains frequencies")
 args = parser.parse_args()
 
 models = [RamachandranEval('m'+rfile, rfile, args.chains, args.chains_seq) for rfile in args.rmf]
-cmodels =RamachandranEvals(models, args.chains_frq)
+cmodels = RamachandranEvals(args.model, models, args.chains_seq, args.chains_frq)
 cmodels.get_plot('outlier', 8.0)
 cmodels.get_plot('allowed', 12.0)
 cmodels.get_plot('both', 12.0)
-cmodels.get_print('outlier')
-
-
+cmodels.get_print_worst('allowed')
+cmodels.get_print_worst('outlier')
+cmodels.get_print_worst('both')
+cmodels.get_print_sum()

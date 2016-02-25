@@ -126,7 +126,7 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
 
-def plot_ticker(data, xlab, ylab, out_file, color='#405952', fontsize=12, sizex=3.5, sizey=3.5):
+def plot_ticker(data, xlab, ylab, out_file, color='#405952', fontsize=10, sizex=3.5, sizey=3.5):
     """
     :param data:
     :param xlab:
@@ -140,22 +140,26 @@ def plot_ticker(data, xlab, ylab, out_file, color='#405952', fontsize=12, sizex=
     """
 
     fig, ax = plt.subplots()
-    x = np.arange(len(data))
-    y = data.values()
-    ax.bar(x, y, align='center', width=0.5, color=color)
-    ax.xticks(x, data.keys())
+    x = list(range(len(data)))
+    y = []
+    labels = []
+    for key in data:
+        labels.append(key)
+        y.append(data[key])
+
+    ax.bar(x, y, align='center', width=1, color=color)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation='vertical', fontsize=fontsize)
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
     ax.grid('on')
-
-    # ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # SCALE OPTIONS:
     # ax.set_xscale('log')
     # ax.set_yscale('log')
 
     # RANGE OPTIONS:
-    # ax.set_xlim([a, b])
+    ax.set_xlim([-1, len(x)])
     # ax.set_ylim([a, b])
 
     # LEGEND OPTIONS
