@@ -3,7 +3,8 @@
 # michaladammichalowski@gmail.com
 # 15.02.16 - creation
 #
-# EXAMPLE CALL:
+# EXAMPLE CALL: python3 mm_homology_parse_rama.py --model glucl_3JADcl  --rmf 31 167 231 242 39  --chains A B C D E --chains_seq B2 A1 B2 A1 Y2 --chains_frq 1 1 1 1 2
+
 
 import argparse
 import re
@@ -71,8 +72,8 @@ class RamachandranEval:
 
     def read_file(self, phrase):
         """
-        :param phrase:
-        :return:
+        :param phrase: phrase to look for in file
+        :return: list of file lines containing phrase
         """
         parsed = []
         with open(self.file) as rf:
@@ -84,7 +85,7 @@ class RamachandranEval:
 
     def read_residues(self):
         """
-        :return:
+        :return: dict of two lists with resiudes from allowed and outlier region
         """
         residues = {'allowed': [], 'outlier': []}
         for res in self.read_file('Residue'):
@@ -97,7 +98,7 @@ class RamachandranEval:
 
     def read_summary(self):
         """
-        :return:
+        :return: dict fot total percent of favoured, allowed and outlier residues
         """
         summary = {'favoured': '', 'allowed': '', 'outlier': ''}
         for res in self.read_file('Number of residues in'):
@@ -161,16 +162,16 @@ class RamachandranEvals:
 
     def get_plot(self, which, size):
         """
-        :param which:
-        :param size:
+        :param which: allowed, outlier or both residues
+        :param size: plot of number of residues in selected region
         :return:
         """
         mmplt.plot_ticker(self.bads[which], 'residue', 'in {} region'.format(which), which, sizex=size)
 
     def get_print_worst(self, which):
         """
-        :param which:
-        :return:
+        :param which: allowed, outlier or both residues
+        :return: numerical summary of number of residues in selected region
         """
         print('Residues in {} region:'.format(which))
         for res in collections.Counter(self.bads[which]).most_common():
@@ -179,7 +180,7 @@ class RamachandranEvals:
 
     def get_print_sum(self):
         """
-        :return:
+        :return: total summary of models
         """
         sums = [[evl.model, evl.summary['favoured'], evl.summary['allowed'], evl.summary['outlier']]
                 for evl in self.evals]
@@ -201,7 +202,7 @@ args = parser.parse_args()
 
 models = [RamachandranEval('m'+rfile, rfile, args.chains, args.chains_seq) for rfile in args.rmf]
 cmodels = RamachandranEvals(args.model, models, args.chains_seq, args.chains_frq)
-cmodels.get_plot('outlier', 8.0)
+cmodels.get_plot('outlier', 5.0)
 cmodels.get_plot('allowed', 12.0)
 cmodels.get_plot('both', 12.0)
 cmodels.get_print_worst('allowed')
