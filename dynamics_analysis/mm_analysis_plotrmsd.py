@@ -10,7 +10,7 @@ import numpy as np
 import mm_lib_plots as mmplt
 
 
-def read_rmsd(rmsd_files, timestep=False, frequency=False):
+def read_rmsd(rmsd_files, timestep=False, frequency=False, period=False):
     """
     :param rmsd_files: rmsd files to read
     :param timestep: optional timestep for real time axis
@@ -23,11 +23,14 @@ def read_rmsd(rmsd_files, timestep=False, frequency=False):
     for rmsd_file in rmsd_files:
         rmsd = open(rmsd_file).readlines()
         par_rmsd = [[float(col) for col in row.split()] for row in rmsd[2:-1]]  # first: create list rows
+        if period:
+            par_rmsd = [[float(col) for col in row.split()] for row in rmsd[period:-1]]  # first: create list rows
 
         if timestep:
             step_rmsd.append(np.arange(0, timestep*frequency*0.000001*len(par_rmsd), timestep*frequency*0.000001))
         else:
             step_rmsd.append([row[0] for row in par_rmsd])  # second: select x columns from rows and add to container
+
         vale_rmsd.append([row[1] for row in par_rmsd])  # second: select y columns from rows and add to container
 
     return [step_rmsd, vale_rmsd]
@@ -45,7 +48,7 @@ def plot_rdf(parseds_rmsd, labels, out_file, timestep=False):
         x_label = "time [ns]"
     else:
         x_label = "step []"
-    mmplt.plot_simple_multiple(parseds_rmsd[0], parseds_rmsd[1], x_label, "RMSD [A]", labels, out_file)
+    mmplt.plot_simple_multiple(parseds_rmsd[0], parseds_rmsd[1], x_label, "RMSD [A]", labels, out_file, sizex=3.75, sizey=3.0)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--rmsd_files", nargs='+', help="rmsd mfiles to plot")
@@ -53,7 +56,8 @@ parser.add_argument("-l", "--labels", nargs='+', help="labels for data series")
 parser.add_argument("-o", "--out_file", help="outfile name")
 parser.add_argument("-t", "--timestep", type=float, help="timestep")
 parser.add_argument("-f", "--frequency", type=int, help="dcd save frequency")
+parser.add_argument("-p", "--period", type=int, help="custom start frame")
 args = parser.parse_args()
 
-rmsds = read_rmsd(args.rmsd_files, args.timestep, args.frequency)
+rmsds = read_rmsd(args.rmsd_files, args.timestep, args.frequency, args.period)
 plot_rdf(rmsds, args.labels, args.out_file, args.timestep)

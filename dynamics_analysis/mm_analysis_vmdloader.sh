@@ -27,6 +27,10 @@ case $key in
     prod="$2"
     shift
     ;;
+    -s|--stride)
+    stride="$2"
+    shift
+    ;;
     *)
     echo "Not known argument"
     ;;
@@ -54,7 +58,7 @@ mol addrep 0\n\
 "
 
 for traj in $dcds; do
-    vmd_config="${vmd_config}mol addfile ${traj} type dcd first 0 last -1 step 1 filebonds 1 autobonds 1 waitfor all \n"
+    vmd_config="${vmd_config}mol addfile ${traj} type dcd first 0 last -1 step ${stride} filebonds 1 autobonds 1 waitfor all \n"
 done
 
 echo -e $vmd_config > visual.vmd
