@@ -83,6 +83,42 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsiz
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
+def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, xlimit=False, ylimit=False, fontsize=8, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
+    """
+    :param data: list of numpy arrays with rows for single data points
+    :param xlab: x-axis label
+    :param ylab: y-axis label
+    :param labe: data label
+    :param color: data color
+    :param fontsize:
+    :return:
+    """
+    fig, ax = plt.subplots()
+    colors = ['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29']
+
+    for serie in range(len(labe)):
+        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=1, linestyle=linestyle, marker=marker, color=colors[serie])
+        for adds in range(data[serie].shape[1] - 2):
+            ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle, marker=marker, color=colors[serie])
+
+    ax.set_xlabel(xlab, fontsize=fontsize)
+    ax.set_ylabel(ylab, fontsize=fontsize)
+    ax.grid('on')
+    ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
+    ax.tick_params(labelsize=fontsize)
+
+    if ylimit:
+        ax.set_ylim(ylimit[0], ylimit[1])
+    if xlimit:
+        ax.set_xlim(xlimit[0], xlimit[2])
+
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=fontsize)
+
+    fig.set_size_inches(sizex, sizey)
+    fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
+
 
 def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, sizey=3.5):
     """

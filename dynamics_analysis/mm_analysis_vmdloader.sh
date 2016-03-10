@@ -4,7 +4,7 @@
 # vmd dcd read wrapper
 # michaladammichalowski@gmail.com
 # 01.03.16 - creation
-# EXAMPLE CALL: mm_analysis_vmdloader.sh -pdb ../step5_assembly.namd.pdb -psf ../step5_assembly.xplor_ext.psf --equi '*_equilibration.dcd' --prod '*_production.dcd'
+# EXAMPLE CALL: mm_analysis_vmdloader.sh -pdb ../step5_assembly.namd.pdb -psf ../step5_assembly.xplor_ext.psf --equi '*_equilibration.dcd' --prod '*_production.dcd' --stride 1
 
 while [[ $# > 1 ]]
 do
