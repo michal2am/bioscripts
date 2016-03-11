@@ -96,7 +96,7 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, xlimit=False, y
     fig, ax = plt.subplots()
     colors = ['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29']
 
-    for serie in range(len(labe)):
+    for serie in range(len(labe) - 1):
         ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=1, linestyle=linestyle, marker=marker, color=colors[serie])
         for adds in range(data[serie].shape[1] - 2):
             ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle, marker=marker, color=colors[serie])

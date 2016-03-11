@@ -74,7 +74,6 @@ class RMSD:
         """
         :return: plots parsed rdf profiles
         """
-
         x_label = "time [ns]" if self.timestep else "step []"
         mmplt.plot_simple_multiple_numpy(self.rmsds, x_label, "RMSD [A]", self.labels, self.out_file, sizex=3.75, sizey=3.0)
 
