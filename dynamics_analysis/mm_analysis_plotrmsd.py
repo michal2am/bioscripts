@@ -66,11 +66,11 @@ class RMSD:
             fit = rmsd[:, 0:1] * slope + intercept  # select vs slice notation here to get column vector
             self.rmsds[i] = np.append(rmsd, fit, axis=1)  # enumeration for list element replacement
 
-            deriv = np.append(np.zeros(1), np.diff(rmsd[:, 1])) * 3
+            deriv = np.append(np.zeros(1), np.diff(rmsd[:, 1])) * 3  # magic scaling factor
             deriv.shape = (len(deriv), 1)
             self.rmsds[i] = np.append(self.rmsds[i], deriv, axis=1)
 
-    def plot_rdf(self):
+    def plot_rmsd(self):
         """
         :return: plots parsed rdf profiles
         """
@@ -89,4 +89,4 @@ args = parser.parse_args()
 
 rmsds = RMSD(args.rmsd_files, args.out_file, args.labels, args.timestep, args.frequency, args.period, args.stabper)
 rmsds.check_stab()
-rmsds.plot_rdf()
+rmsds.plot_rmsd()
