@@ -1,5 +1,8 @@
 #!/bin/bash
 
+orienter='/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/orienter.tcl'
+centerer='/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/centerer.tcl'
+
 pdbDir="$1"
 pdbAll="${pdbDir}/*.pdb"
 
@@ -17,8 +20,8 @@ for pdb in $pdbAll; do
 
 
 	vmdConfig="mol load pdb "$pdbFile"\n\
-source orienter.tcl\n\
-source centerer.tcl\n\
+source "$orienter"\n\
+source "$centerer"\n\
 [atomselect top protein] writepdb "$newPdbFile"\n\
 mol delete top\n\
 resetpsf\n\
