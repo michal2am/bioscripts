@@ -22,10 +22,11 @@ class PoreModel:
     def __init__(self, pdb_dir, name):
         self.pdb_dir = pdb_dir
         self.name = name
+        self.labels = self.set_names()
 
         # self.set_position()
         # self.get_profile()
-        self.parsed_profiles, self.min_Rads = self.parse_profile()
+        self.parsed_profiles, self.min_Rads = self.parse_profiles()
 
     @staticmethod
     def find_files(directory, extension):
@@ -41,6 +42,13 @@ class PoreModel:
                     relDir = os.path.relpath(dir_, directory)
                     file_list.append(os.path.join(relDir, file))
         return file_list
+
+    def set_names(self):
+        """
+        :return:
+        """
+        #return [os.path.splitext(os.path.split(pdb)[1])[0] for pdb in self.find_files(self.pdb_dir, '.pdb')]
+        return [str(i) for i in range(12)]
 
     def set_position(self):
         """
@@ -71,7 +79,7 @@ class PoreModel:
 
         return profiles
 
-    def parse_profile(self):
+    def parse_profiles(self):
         """
         :return:
         """
@@ -87,10 +95,15 @@ class PoreModel:
                         parsed_profile.append([float(col) for col in line[0:2]])
                     if len(line) == 5 and line[0] == 'Minimum':
                         min_rads.append(float(line[3]))
-                parsed_profiles.append(parsed_profile)
-        print(parsed_profiles)
-        print(min_rads)
+                parsed_profiles.append(np.array(parsed_profile))
         return [parsed_profiles, min_rads]
+
+    def plot_profiles(self):
+        """
+        :return:
+        """
+        mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Z-axis [A]", "Radius [A]", self.labels,
+                                         self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True)
 
 parser = ap.ArgumentParser()
 parser.add_argument("-d", "--pdb_dirs", nargs='+', help="directories with pdb files to analyze")
@@ -100,3 +113,4 @@ args = parser.parse_args()
 lg.basicConfig(level=lg.INFO)
 log = lg.getLogger('mm_analysis_pore')
 models = PoreModel(args.pdb_dirs[0], args.pdb_names[0])
+models.plot_profiles()

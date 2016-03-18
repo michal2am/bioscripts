@@ -4,6 +4,7 @@
 # 25.11.15 - creation
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
@@ -83,7 +84,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsiz
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
-def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, xlimit=False, ylimit=False, fontsize=8, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
+def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, xlimit=False, ylimit=False, fontsize=8, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
     """
     :param data: list of numpy arrays with rows for single data points
     :param xlab: x-axis label
@@ -94,11 +95,20 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, xlimit=False, y
     :return:
     """
     fig, ax = plt.subplots()
-    colors = ['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29', '#B38F73']
+    colors = ['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29', '#B38F73', '#3A4012', '#C4D8F2', '#5F6F82',
+              '#3E4048', '#C1DBBD', '#6B85B5', '#30507E']
+    if ranges:
+        color_map = mpl.cm.get_cmap('inferno')
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(labe))
+
     for serie in range(len(labe)):
-        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=1, linestyle=linestyle, marker=marker, color=colors[serie])
+        print(serie)
+        color = color_map(norm(serie)) if ranges else colors[serie]
+        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=1, linestyle=linestyle,
+                marker=marker, color=color)
         for adds in range(data[serie].shape[1] - 2):
-            ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle, marker=marker, color=colors[serie])
+            ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
+                    marker=marker, color=colors[serie])
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
