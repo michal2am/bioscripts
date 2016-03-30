@@ -6,6 +6,8 @@
 # EXAMPLE CALL: python3 mm_build_pdbparser.py --old_pdb smth.pdb --new_pdb new_smth.pdb --constrain "name H"
 
 import argparse
+import re
+import mm_lib_filer as mmfil
 
 
 class PDBLine:
@@ -26,15 +28,24 @@ class PDBLine:
         self.temp = float(atom_line[60:66])
         self.extra = atom_line[66:]
 
-    def write_pdbline(self, temp=''):
+    def change_atom(self, temp=False, chain=False):
         """
         :param temp:
+        :param chain:
         :return:
         """
-        if temp == '':
-            temp = self.temp
+        self.temp = temp if temp else self.temp
+        self.chainID = chain if chain else self.chainID
 
-        line = '{0:s}{1:5d}{2:s}{3:s}{4:s}{5:4d}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.format \
+    def write_pdbline(self):
+        """
+        :param temp:
+        :param chain:
+        :return:
+        """
+
+        line = '{0:s}{1:5d}{2:s}{3:s}{4:s}{5:4d}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
+            format\
             (self.prefix,
              self.serial,
              self.name,
@@ -46,7 +57,7 @@ class PDBLine:
              self.coors[1],
              self.coors[2],
              self.occup,
-             temp,
+             self.temp,
              self.extra)
 
         return line
@@ -59,29 +70,71 @@ class PDBFile:
         :param new_pdbfile:
         :return:
         """
-        self.old = open(old_pdbfile, 'r')
-        self.new = open(new_pdbfile, 'w')
-        self.old_lines = [PDBLine(atom_line) for atom_line in self.old.readlines() if atom_line[0:4] == 'ATOM']
+        self.new = new_pdbfile
+        with open(old_pdbfile) as infile:
+            self.lines = [PDBLine(atom_line) for atom_line in infile.readlines() if atom_line[0:4] == 'ATOM']
 
-    def constrain(self, atom_name=''):
+    def save(self):
+        """
+        :return:
+        """
+        with open(self.new, 'w') as outfile:
+            for atom_line in self.lines:
+                outfile.write(atom_line.write_pdbline())
+
+    def resegname(self, pattern):
+        """
+        :param pattern:
+        :return:
+        """
+
+        # in loop: change mutable objects, not working with immutables
+        for atom_line in self.lines:
+            atom_line.change_atom(chain=' ' + re.search('{}(.*)'.format(pattern), atom_line.extra.strip()).group(1))
+
+    def remove_name(self, pattern):
+        """
+        :param pattern:
+        :return:
+        """
+
+        # in comprehension: avoid removing in loop because of iteration mess
+        self.lines = [atom_line for atom_line in self.lines if pattern not in atom_line.name]
+
+    def constrain(self, pattern):
         """
         :param atom_name:
         :return:
         """
-        for atom_line in self.old_lines:
-            if atom_name in atom_line.name:
-                self.new.write(atom_line.write_pdbline(temp=1.00))
-            else:
-                self.new.write(atom_line.write_pdbline())
+
+        for atom_line in self.lines:
+            if pattern in atom_line.name:
+                atom_line.change_atom(temp=1.00)
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-o", "--old_pdb", help="old pdb file")
-parser.add_argument("-n", "--new_pdb", help="new pdb file")
+parser.add_argument("-o", "--old_pdb", help="old pdb file extension")
+parser.add_argument("-n", "--new_pdb", help="new pdb file extension")
 parser.add_argument("-c", "--constrain", help="atom name to constrain")
+parser.add_argument("-r", "--remove", help="atom name to remove")
+parser.add_argument("-s", "--segname", help="parse segname for chain name, specify prefix to remove")
 args = parser.parse_args()
 
 
-pdb = PDBFile(args.old_pdb, args.new_pdb)
-if args.constrain:
-    pdb.constrain(args.constrain)
+old_files = mmfil.find_files('.', args.old_pdb)
+new_files = mmfil.create_outnames(old_files, args.new_pdb)
+
+pdbs = [PDBFile(new, old) for new, old in zip(old_files, new_files)]
+
+for pdb in pdbs:
+
+    if args.constrain:
+        pdb.constrain(args.constrain)
+
+    if args.segname:
+        pdb.resegname(args.segname)
+
+    if args.remove:
+        pdb.remove_name(args.remove)
+
+    pdb.save()

@@ -102,9 +102,8 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
         norm = mpl.colors.Normalize(vmin=0, vmax=len(labe))
 
     for serie in range(len(labe)):
-        print(serie)
         color = color_map(norm(serie)) if ranges else colors[serie]
-        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=1, linestyle=linestyle,
+        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
                 marker=marker, color=color)
         for adds in range(data[serie].shape[1] - 2):
             ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
