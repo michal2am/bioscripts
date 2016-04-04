@@ -92,6 +92,7 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
     :param labe: data label
     :param color: data color
     :param fontsize:
+    :param ranges: turn on for colormap scaling instead of "random" colors
     :return:
     """
     fig, ax = plt.subplots()

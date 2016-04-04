@@ -15,3 +15,20 @@ def get_sort(values, index):
     """
     return [[i+1] + element[:] for i, element in enumerate(sorted(values, key=lambda x: x[index]))]
 
+
+def filter_out(values, index, how, treshold):
+    """
+    :param values: line-like values iterable
+    :param index: property to check
+    :param treshold: upper limit to remove
+    :return:
+    """
+    if how == 'up':
+        compare = lambda x, trsh: True if x < trsh else False
+    elif how == 'bottom':
+        compare = lambda x, trsh: True if x > trsh else False
+    elif how == 'out':
+        compare = lambda x, trsh: True if (x > trsh[0] and x < trsh[1]) else False
+
+    return [element[:] for element in values if compare(float(element[index]), treshold)]
+
