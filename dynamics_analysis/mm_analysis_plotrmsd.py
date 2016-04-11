@@ -20,7 +20,8 @@ class RMSD:
         :param out_file: file to save plot
         :param timestep: optional timestep for real time axis
         :param frequency: optional dcd frequency for real time axis
-        :param period:
+        :param period: cut data from
+        :param speriod: approximate data from
         :param labels: data series labels
         :return:
         """
@@ -31,7 +32,10 @@ class RMSD:
         self.period = period
         self.speriod = speriod
         self.labels = labels
-        self.rmsds = self.read_rmsd()
+
+        self.rmsds = self.read_rmsd()[0]
+        self.approx_sta = self.read_rmsd()[1]
+        self.approx_len = self.read_rmsd()[2]
 
     def read_rmsd(self):
         """
@@ -39,23 +43,32 @@ class RMSD:
         """
         rmsds = list()
 
+
         for rmsd_file in self.in_files:
 
             par_rmsd = np.genfromtxt(rmsd_file, skip_header=2)
 
-            if self.timestep:
-                par_rmsd[:, 0] *= self.timestep*self.frequency*0.000001
-
             if self.period:
                 par_rmsd = par_rmsd[self.period:]
 
+            if self.timestep:
+                par_rmsd[:, 0] *= self.timestep*self.frequency*0.000001
+
             rmsds.append(par_rmsd)
-        return rmsds
+
+            approx_sta = self.speriod*self.timestep*self.frequency*0.000001 if self.timestep else self.speriod
+            approx_len = rmsds[0][-1][0] - approx_sta
+
+        return rmsds, approx_sta, approx_len
 
     def check_stab(self):
         """
         :return: calculates linear regression for selected period and first derivative for whole trajectory
         """
+
+        if self.timestep:
+            print('Stability check from step {} equal to {} ns'.format(self.speriod, self.approx_sta))
+            print('Stability period length {} ns'.format(self.approx_len))
 
         for i, rmsd in enumerate(self.rmsds):
 
@@ -65,16 +78,20 @@ class RMSD:
             fit = rmsd[:, 0:1] * slope + intercept  # select vs slice notation here to get column vector
             self.rmsds[i] = np.append(rmsd, fit, axis=1)  # enumeration for list element replacement
 
-            deriv = np.append(np.zeros(1), np.diff(rmsd[:, 1])) * 3  # magic scaling factor
-            deriv.shape = (len(deriv), 1)
-            self.rmsds[i] = np.append(self.rmsds[i], deriv, axis=1)
+            if args.deriv:
+                deriv = np.append(np.zeros(1), np.diff(rmsd[:, 1])) * 3  # magic scaling factor
+                deriv.shape = (len(deriv), 1)
+                self.rmsds[i] = np.append(self.rmsds[i], deriv, axis=1)
 
     def plot_rmsd(self):
         """
         :return: plots parsed rdf profiles
         """
         x_label = "time [ns]" if self.timestep else "step []"
-        mmplt.plot_simple_multiple_numpy(self.rmsds, x_label, "RMSD [A]", self.labels, self.out_file, sizex=6, sizey=6)
+        mmplt.plot_simple_multiple_numpy(self.rmsds, x_label, "RMSD [A]", self.labels, self.out_file,
+                                         sizex=1.5, sizey=1.5, ylimit=[args.ranges[0], args.ranges[1]],
+                                         back=[[(self.approx_sta, self.approx_len)],
+                                               (args.ranges[0], args.ranges[1] - args.ranges[0])])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--rmsd_files", nargs='+', help="rmsd files to plot")
@@ -83,7 +100,9 @@ parser.add_argument("-o", "--out_file", help="outfile name")
 parser.add_argument("-t", "--timestep", type=float, help="timestep")
 parser.add_argument("-f", "--frequency", type=int, help="dcd save frequency")
 parser.add_argument("-p", "--period", type=int, help="custom start frame")
-parser.add_argument("-s", "--stabper", type=float, help="stability check start")
+parser.add_argument("-s", "--stabper", type=float, help="stability check start frame")
+parser.add_argument("-d", "--deriv", help="add derivative")
+parser.add_argument("-a", "--ranges", nargs='+', type=float, help="RMSD plot range")
 args = parser.parse_args()
 
 rmsds = RMSD(args.rmsd_files, args.out_file, args.labels, args.timestep, args.frequency, args.period, args.stabper)

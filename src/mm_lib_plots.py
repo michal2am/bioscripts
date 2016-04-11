@@ -6,6 +6,7 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.collections as cls
 
 
 def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, sizex=3.5, sizey=3.5):
@@ -84,7 +85,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsiz
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
-def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, xlimit=False, ylimit=False, fontsize=8, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
+def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, xlimit=False, ylimit=False, back=False, fontsize=6, sizex=3.5, sizey=3.5, linestyle='-', marker='None'):
     """
     :param data: list of numpy arrays with rows for single data points
     :param xlab: x-axis label
@@ -96,11 +97,15 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
     :return:
     """
     fig, ax = plt.subplots()
-    colors = ['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29', '#B38F73', '#3A4012', '#C4D8F2', '#5F6F82',
+    colors = ['#9C9B7A', '#405952', '#703030', '#2F343B','#FFD393', '#FF974F', '#F54F29', '#B38F73', '#3A4012', '#C4D8F2', '#5F6F82',
               '#3E4048', '#C1DBBD', '#6B85B5', '#30507E']
     if ranges:
         color_map = mpl.cm.get_cmap('inferno')
         norm = mpl.colors.Normalize(vmin=0, vmax=len(labe))
+
+    if back:
+        c1 = cls.BrokenBarHCollection(back[0], back[1], facecolor='orange', alpha=0.3)
+        ax.add_collection(c1)
 
     for serie in range(len(labe)):
         color = color_map(norm(serie)) if ranges else colors[serie]
@@ -123,13 +128,13 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
 
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=fontsize)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol=2, fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
     fig.savefig(out_file+".png", dpi=300, bbox_inches='tight')
 
 
-def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, sizey=3.5):
+def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, sizey=3.5, ranges=False):
     """
     :param data:
     :param xlab:
@@ -142,15 +147,22 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
     :return:
     """
     fig, ax = plt.subplots()
-    # ax.set_color_cycle(['#4D4D4D','#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
-    ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
+
+    colors = ['#9C9B7A', '#405952', '#703030', '#2F343B','#FFD393', '#FF974F', '#F54F29', '#B38F73', '#3A4012', '#C4D8F2', '#5F6F82',
+              '#3E4048', '#C1DBBD', '#6B85B5', '#30507E']
+    if ranges:
+        color_map = mpl.cm.get_cmap('inferno')
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(labe))
 
     for serie in range(len(labe)):
-        n, bins, patches = plt.hist(data[serie], bins=150, label=labe[serie], normed=True, histtype='step', lw=3)
+        color = color_map(norm(serie)) if ranges else colors[serie]
+        n, bins, patches = plt.hist(data[serie], bins=50, label=labe[serie], normed=True, histtype='step', lw=0.7, color=color)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
+    ax.tick_params(labelsize=fontsize)
     ax.grid('on')
+    ax.tick_params()
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # RANGE OPTIONS:
@@ -164,7 +176,7 @@ def plot_histogram(data, xlab, ylab, labe, out_file, fontsize=12, sizex=3.5, siz
 
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.2, box.width, box.height * 0.8])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, fontsize=fontsize)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol=2, fontsize=fontsize)
 
     fig.set_size_inches(sizex, sizey)
     # fig.savefig(labe+".png", dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')

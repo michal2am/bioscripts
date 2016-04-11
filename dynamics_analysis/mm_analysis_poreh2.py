@@ -25,8 +25,8 @@ class PoreModel:
         self.name = name
         self.labels = self.set_names()
 
-        self.set_position()
-        self.get_profile()
+        # self.set_position()
+        # self.get_profile()
         self.parsed_profiles, self.min_Rads = self.parse_profiles()
 
     @staticmethod
