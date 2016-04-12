@@ -74,7 +74,7 @@ class RMSD:
 
             slope, intercept, r_value, p_value, std_err = stats.linregress(rmsd[self.speriod:, 0], rmsd[self.speriod:, 1])
             print("DATA: {} Slope: {:.4f} Intercept: {:.4f} R value: {:.3f} P value: {:.3f}"
-                  .format(self.labels[i], slope, intercept, r_value, p_value))
+                  .format(self.labels[i], slope, intercept, r_value, 1 - p_value))
             fit = rmsd[:, 0:1] * slope + intercept  # select vs slice notation here to get column vector
             self.rmsds[i] = np.append(rmsd, fit, axis=1)  # enumeration for list element replacement
 

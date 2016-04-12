@@ -35,6 +35,7 @@ class Coordinates:
                 coors = coors.readlines()
                 coors = [[float(col) for col in row.split()] for row in coors]  # first: create list rows
                 coors = [item for sublist in coors for item in sublist]       # second: put rows alltogether
+                coors = [ coor for coor in coors if (-25 < coor < 35)]
                 coordinates.append(coors)
         return coordinates
 
@@ -43,7 +44,7 @@ class Coordinates:
         :param parseds_thc:
         :return:
         """
-        mmplt.plot_histogram(self.coors, "pore axis coordinate [A]", "density [norm]", self.label, self.outfile,
+        mmplt.plot_histogram(self.coors, "density [norm]", "pore axis coordinate [A]", self.label, self.outfile,
                              sizex=1.5, sizey=1.5, fontsize=6, ranges=True)
 
 
