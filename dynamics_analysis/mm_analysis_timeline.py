@@ -16,7 +16,6 @@ class TimelineResidue:
         """
         :param resid: VMD resid number
         :param segname: VMD segment name
-        :return:
         """
 
         self.resid = resid
@@ -26,6 +25,9 @@ class TimelineResidue:
         self.means = {}
 
     def __str__(self):
+        """
+        prints single residue info
+        """
         return "Resid: {} Segname: {} Properties: {}".format(self.resid, self.segname, self.properties)
 
     def add_property(self, prop, ini_value):
@@ -48,9 +50,10 @@ class Timelines:
 
     def __init__(self, timeline_files, timeline_props, timestep, frequency):
         """
-        :param timeline_files:
-        :param timeline_props:
-        :return:
+        :param timeline_files: tml files
+        :param timeline_props: tml files properties
+        :param timestep: md timestep
+        :param frequency: md trajectory save frequency
         """
 
         self.timeline_files = timeline_files
@@ -84,7 +87,7 @@ class Timelines:
 
     def parse_tml(self):
         """
-        :return:
+        parse tml file
         """
 
         for file, prop in zip(self.timeline_files, self.timeline_props):
@@ -93,7 +96,7 @@ class Timelines:
                 timeline = [[int(line[0]), line[2], float(line[3])*self.timeframe, float(line[4])] for line in timeline]
 
                 for line in timeline:
-                    if line[2] > 5: break  # debug
+                    #if line[2] > 5: break  # debug
                     new_residue = TimelineResidue(line[0], line[1])
                     new_residue.add_property(prop, [line[2:4]])
                     if new_residue not in self:
@@ -104,14 +107,18 @@ class Timelines:
                 for resi in self.residues:
                     resi.mean_property(prop)
 
-    def print_prop(self, prop):
+    def print_prop(self, props):
         """
-        :param prop:
-        :return:
+        :param props: properties to plot
         """
         resids = [resi.resid for resi in self.residues]
-        props = [resi.means[prop] for resi in self.residues]
-        dataseries=[np.array([[resi, value] for (resi, value) in zip(resids, props)])]
+        prop_values = []
+
+        for prop in props:
+            prop_values.append([resi.means[prop] for resi in self.residues])
+
+        dataseries = [np.array(list(zip(resids, *prop_values)))]
+
         mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", prop, ["chain A"], "timeline_test",
                                          sizex=2.5, sizey=1.5)
 
@@ -123,7 +130,4 @@ parser.add_argument("-q", "--frequency", type=int, help="dcd save frequency")
 args = parser.parse_args()
 
 timelines = Timelines(args.timeline_files, args.timeline_properties, args.timestep, args.frequency)
-
-for resi in timelines.residues:
-    print("{}{}".format(resi.resid, resi.means))
-timelines.print_prop("RMSD")
+timelines.print_prop(["RMSD"])
