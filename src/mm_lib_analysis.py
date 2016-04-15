@@ -21,7 +21,7 @@ def filter_out(values, index, how, treshold):
     :param values: line-like values iterable
     :param index: property to check
     :param how: up (remove higher), bottom (remove lower), out (remove outside range)
-    :param treshold: upper limit to remove
+    :param treshold: limit(s) to remove
     :return:
     """
     if how == 'up':

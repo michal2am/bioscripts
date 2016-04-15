@@ -1,0 +1,129 @@
+# python 3
+# plots vmd timeline tml files
+# michaladammichalowski@gmail.com
+# 15.04.16 - creation
+# EXAMPLE CALL:
+
+import argparse as arp
+import numpy as np
+import mm_lib_plots as mmplt
+import mm_lib_analysis as mmaln
+
+
+class TimelineResidue:
+
+    def __init__(self, resid, segname):
+        """
+        :param resid: VMD resid number
+        :param segname: VMD segment name
+        :return:
+        """
+
+        self.resid = resid
+        self.segname = segname
+
+        self.properties = {}
+        self.means = {}
+
+    def __str__(self):
+        return "Resid: {} Segname: {} Properties: {}".format(self.resid, self.segname, self.properties)
+
+    def add_property(self, prop, ini_value):
+        """
+        :param prop: property to add
+        :param ini_value: initial value of property
+        """
+
+        self.properties.update({prop: ini_value})
+
+    def mean_property(self, prop):
+        """
+        :param prop: property to calculate mean
+        :return: mean value of properties
+        """
+        self.means.update({prop: np.mean([line[1] for line in self.properties[prop]])})
+
+
+class Timelines:
+
+    def __init__(self, timeline_files, timeline_props, timestep, frequency):
+        """
+        :param timeline_files:
+        :param timeline_props:
+        :return:
+        """
+
+        self.timeline_files = timeline_files
+        self.timeline_props = timeline_props
+        self.timeframe = timestep*frequency*0.000001
+
+        self.residues = []
+
+        self.parse_tml()
+
+    def __contains__(self, residue):
+        """
+        :param residue: check if residue present in timeline
+        :return: true if present
+        """
+
+        for resi in self.residues:
+            if residue.resid == resi.resid and residue.segname == resi.segname:
+                return True
+        return False
+
+    def get_resi(self, residue):
+        """
+        :param residue: selected residue
+        :return: get residue from timeline
+        """
+
+        for resi in self.residues:
+            if residue.resid == resi.resid and residue.segname == resi.segname:
+                return resi
+
+    def parse_tml(self):
+        """
+        :return:
+        """
+
+        for file, prop in zip(self.timeline_files, self.timeline_props):
+            with open(file) as fl:
+                timeline = [line.rstrip('\n').split() for line in fl.readlines() if "#" not in line]
+                timeline = [[int(line[0]), line[2], float(line[3])*self.timeframe, float(line[4])] for line in timeline]
+
+                for line in timeline:
+                    if line[2] > 5: break  # debug
+                    new_residue = TimelineResidue(line[0], line[1])
+                    new_residue.add_property(prop, [line[2:4]])
+                    if new_residue not in self:
+                        self.residues.append(new_residue)
+                    else:
+                        self.get_resi(new_residue).properties[prop].append(line[2:4])
+
+                for resi in self.residues:
+                    resi.mean_property(prop)
+
+    def print_prop(self, prop):
+        """
+        :param prop:
+        :return:
+        """
+        resids = [resi.resid for resi in self.residues]
+        props = [resi.means[prop] for resi in self.residues]
+        dataseries=[np.array([[resi, value] for (resi, value) in zip(resids, props)])]
+        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", prop, ["chain A"], "timeline_test",
+                                         sizex=2.5, sizey=1.5)
+
+parser = arp.ArgumentParser()
+parser.add_argument("-f", "--timeline_files", nargs="+", help="timeline files to plot")
+parser.add_argument("-p", "--timeline_properties", nargs="+", help="timeline property names")
+parser.add_argument("-t", "--timestep", type=float, help="timestep")
+parser.add_argument("-q", "--frequency", type=int, help="dcd save frequency")
+args = parser.parse_args()
+
+timelines = Timelines(args.timeline_files, args.timeline_properties, args.timestep, args.frequency)
+
+for resi in timelines.residues:
+    print("{}{}".format(resi.resid, resi.means))
+timelines.print_prop("RMSD")

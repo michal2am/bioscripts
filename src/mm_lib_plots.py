@@ -119,8 +119,17 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
     ax.grid('on')
-    ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
+
+    ### TICK CONFIGURATION ###
+
     ax.tick_params(labelsize=fontsize)
+    ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
+
+    # defaul tick values
+    ax.yaxis.set_major_locator(tck.MultipleLocator(2))
+    ax.yaxis.set_minor_locator(tck.MultipleLocator(0.5))
+    ax.xaxis.set_major_locator(tck.MultipleLocator(50))
+    ax.xaxis.set_minor_locator(tck.MultipleLocator(12.5))
 
     if ylimit:
         ax.set_ylim(ylimit[0], ylimit[1])

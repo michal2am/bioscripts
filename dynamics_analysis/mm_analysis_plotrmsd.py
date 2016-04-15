@@ -33,6 +33,7 @@ class RMSD:
         self.speriod = speriod
         self.labels = labels
 
+        if self.timestep: self.timeframe = self.timestep*self.frequency*0.000001
         self.rmsds = self.read_rmsd()[0]
         self.approx_sta = self.read_rmsd()[1]
         self.approx_len = self.read_rmsd()[2]
@@ -43,20 +44,19 @@ class RMSD:
         """
         rmsds = list()
 
-
         for rmsd_file in self.in_files:
 
             par_rmsd = np.genfromtxt(rmsd_file, skip_header=2)
 
             if self.period:
-                par_rmsd = par_rmsd[self.period:]
+                par_rmsd = par_rmsd[self.period[0]:self.period[1]]
 
             if self.timestep:
-                par_rmsd[:, 0] *= self.timestep*self.frequency*0.000001
+                par_rmsd[:, 0] *= self.timeframe
 
             rmsds.append(par_rmsd)
 
-            approx_sta = self.speriod*self.timestep*self.frequency*0.000001 if self.timestep else self.speriod
+            approx_sta = self.speriod*self.timeframe if self.timestep else self.speriod
             approx_len = rmsds[0][-1][0] - approx_sta
 
         return rmsds, approx_sta, approx_len
@@ -67,13 +67,18 @@ class RMSD:
         """
 
         if self.timestep:
-            print('Stability check from step {} equal to {} ns'.format(self.speriod, self.approx_sta))
-            print('Stability period length {} ns'.format(self.approx_len))
+            print('Stability check from step {:.0f} equal to {:.2f} ns'.format(self.speriod, self.approx_sta))
+            print('Stability period length {:.2f} ns'.format(self.approx_len))
+
+
+        print("fit                  slope    intercept R-value P-value")
+        print("                     [A^2/ns] [A^2]")
+
 
         for i, rmsd in enumerate(self.rmsds):
 
             slope, intercept, r_value, p_value, std_err = stats.linregress(rmsd[self.speriod:, 0], rmsd[self.speriod:, 1])
-            print("DATA: {} Slope: {:.4f} Intercept: {:.4f} R value: {:.3f} P value: {:.3f}"
+            print("{: <20} {:.5f}  {:.2f}      {:.3f}   {:.3f}"
                   .format(self.labels[i], slope, intercept, r_value, 1 - p_value))
             fit = rmsd[:, 0:1] * slope + intercept  # select vs slice notation here to get column vector
             self.rmsds[i] = np.append(rmsd, fit, axis=1)  # enumeration for list element replacement
@@ -99,7 +104,7 @@ parser.add_argument("-l", "--labels", nargs='+', help="labels for data series")
 parser.add_argument("-o", "--out_file", help="outfile name")
 parser.add_argument("-t", "--timestep", type=float, help="timestep")
 parser.add_argument("-f", "--frequency", type=int, help="dcd save frequency")
-parser.add_argument("-p", "--period", type=int, help="custom start frame")
+parser.add_argument("-p", "--period", nargs='+', type=int, help="custom start/stop frame")
 parser.add_argument("-s", "--stabper", type=float, help="stability check start frame")
 parser.add_argument("-d", "--deriv", help="add derivative")
 parser.add_argument("-a", "--ranges", nargs='+', type=float, help="RMSD plot range")

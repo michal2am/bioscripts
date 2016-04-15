@@ -27,8 +27,12 @@ case $key in
     prod="$2"
     shift
     ;;
-    -s|--stride)
-    stride="$2"
+    -se|--stride_eq)
+    stride_eq="$2"
+    shift
+    ;;
+    -sp|--stride_pr)
+    stride_pr="$2"
     shift
     ;;
     *)
@@ -58,6 +62,13 @@ mol addrep 0\n\
 "
 
 for traj in $dcds; do
+
+    if [[ $traj == *"equilibration"* ]] ; then
+        stride=${stride_eq}
+    elif [[ $traj == *"production"* ]] ; then
+        stride=${stride_pr};
+    fi
+
     vmd_config="${vmd_config}mol addfile ${traj} type dcd first 0 last -1 step ${stride} filebonds 1 autobonds 1 waitfor all \n"
 done
 
