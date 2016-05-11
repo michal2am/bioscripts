@@ -46,9 +46,9 @@ class TimelineResidue:
         self.means.update({prop: np.mean([line[1] for line in self.properties[prop]])})
 
 
-class Timelines:
+class TimelineSegment:
 
-    def __init__(self, timeline_files, timeline_props, timestep, frequency):
+    def __init__(self, timeline_files, timeline_props, timestep, frequency, name):
         """
         :param timeline_files: tml files
         :param timeline_props: tml files properties
@@ -56,6 +56,7 @@ class Timelines:
         :param frequency: md trajectory save frequency
         """
 
+        self.name = name
         self.timeline_files = timeline_files
         self.timeline_props = timeline_props
         self.timeframe = timestep*frequency*0.000001
@@ -107,6 +108,18 @@ class Timelines:
                 for resi in self.residues:
                     resi.mean_property(prop)
 
+    def get_prop(self, prop):
+        """
+        :param prop:
+        :return:
+        """
+
+        resids = [resi.resid for resi in self.residues]
+        prop_values = [[resi.means[prop] for resi in self.residues]]
+
+        return np.array(list(zip(resids, *prop_values)))
+
+
     def print_prop(self, props):
         """
         :param props: properties to plot
@@ -119,15 +132,41 @@ class Timelines:
 
         dataseries = [np.array(list(zip(resids, *prop_values)))]
 
-        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", prop, ["chain A"], "timeline_test",
+        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", prop, [self.name], self.name,
                                          sizex=2.5, sizey=1.5)
 
+class Timelines:
+
+    def __init__(self, files, properties, timestep, frequency, names):
+        self.names = names
+        self.files = files
+        self.properties = properties
+        self.timestep = timestep
+        self.frequency = frequency
+
+        timelines = []
+        split_files = [self.files[i:i+len(self.properties)] for i in range(0, len(self.files), len(self.properties))]
+
+        for name, segment in zip(self.names, split_files):
+            timelines.append(TimelineSegment(segment, self.properties, self.timestep, self.frequency, name))
+
+        #for timeline in timelines:
+            #timeline.print_prop(["RMSF"])
+
+        dataseries = [timeline.get_prop("RMSF") for timeline in timelines]
+        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", "RMSF", self.names, "test_RMSF",
+                                         sizex=2.5, sizey=1.5)
+
+
 parser = arp.ArgumentParser()
+parser.add_argument("-n", "--names", nargs="+", help="segment names")
 parser.add_argument("-f", "--timeline_files", nargs="+", help="timeline files to plot")
 parser.add_argument("-p", "--timeline_properties", nargs="+", help="timeline property names")
 parser.add_argument("-t", "--timestep", type=float, help="timestep")
 parser.add_argument("-q", "--frequency", type=int, help="dcd save frequency")
 args = parser.parse_args()
 
-timelines = Timelines(args.timeline_files, args.timeline_properties, args.timestep, args.frequency)
-timelines.print_prop(["RMSD"])
+#timelines = TimelineSegment(args.timeline_files, args.timeline_properties, args.timestep, args.frequency)
+#timelines.print_prop(["RMSD"])
+
+test = Timelines(args.timeline_files, args.timeline_properties, args.timestep, args.frequency, args.names)
