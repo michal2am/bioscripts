@@ -14,7 +14,7 @@ import mm_lib_plots as mmplt
 
 class RMSD:
 
-    def __init__(self, in_files, out_file, labels, timestep=False, frequency=False, period=False, speriod=False):
+    def __init__(self, in_files, out_file, labels, timestep=False, frequency=False, period=False, speriod=False, slength=0):
         """
         :param in_files: rmsd files to read
         :param out_file: file to save plot
@@ -31,12 +31,16 @@ class RMSD:
         self.frequency = frequency
         self.period = period
         self.speriod = speriod
+        self.slength = slength
         self.labels = labels
 
         if self.timestep: self.timeframe = self.timestep*self.frequency*0.000001
         self.rmsds = self.read_rmsd()[0]
         self.approx_sta = self.read_rmsd()[1]
-        self.approx_len = self.read_rmsd()[2]
+        if self.slength == 0:
+            self.approx_len = self.read_rmsd()[2]
+        else:
+            self.approx_len = self.slength
 
     def read_rmsd(self):
         """
@@ -71,14 +75,14 @@ class RMSD:
             print('Stability period length {:.2f} ns'.format(self.approx_len))
 
 
-        print("fit                  slope    intercept R-value P-value")
-        print("                     [A^2/ns] [A^2]")
+        print("fit   slope    intercept R-value P-value")
+        print("      [A^2/ns] [A^2]")
 
 
         for i, rmsd in enumerate(self.rmsds):
 
             slope, intercept, r_value, p_value, std_err = stats.linregress(rmsd[self.speriod:, 0], rmsd[self.speriod:, 1])
-            print("{: <20} {:.5f}  {:.2f}      {:.3f}   {:.3f}"
+            print("{: <5} {:.5f}  {:.2f}      {:.3f}   {:.3f}"
                   .format(self.labels[i], slope, intercept, r_value, 1 - p_value))
             fit = rmsd[:, 0:1] * slope + intercept  # select vs slice notation here to get column vector
             self.rmsds[i] = np.append(rmsd, fit, axis=1)  # enumeration for list element replacement
@@ -94,7 +98,8 @@ class RMSD:
         """
         x_label = "time [ns]" if self.timestep else "step []"
         mmplt.plot_simple_multiple_numpy(self.rmsds, x_label, "RMSD [A]", self.labels, self.out_file,
-                                         sizex=1.5, sizey=1.5, ylimit=[args.ranges[0], args.ranges[1]],
+                                         sizex=2.5, sizey=2, ylimit=[args.ranges[0], args.ranges[1]],
+                                         xlimit=[-5, 150],
                                          back=[[(self.approx_sta, self.approx_len)],
                                                (args.ranges[0], args.ranges[1] - args.ranges[0])])
 
@@ -106,10 +111,12 @@ parser.add_argument("-t", "--timestep", type=float, help="timestep")
 parser.add_argument("-f", "--frequency", type=int, help="dcd save frequency")
 parser.add_argument("-p", "--period", nargs='+', type=int, help="custom start/stop frame")
 parser.add_argument("-s", "--stabper", type=float, help="stability check start frame")
+parser.add_argument("-z", "--stablen", type=float, help="length of stability period, 0 for max")
 parser.add_argument("-d", "--deriv", help="add derivative")
 parser.add_argument("-a", "--ranges", nargs='+', type=float, help="RMSD plot range")
 args = parser.parse_args()
 
-rmsds = RMSD(args.rmsd_files, args.out_file, args.labels, args.timestep, args.frequency, args.period, args.stabper)
+rmsds = RMSD(args.rmsd_files, args.out_file, args.labels, args.timestep, args.frequency, args.period, args.stabper,
+             args.stablen)
 rmsds.check_stab()
 rmsds.plot_rmsd()

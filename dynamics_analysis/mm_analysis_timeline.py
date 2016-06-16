@@ -153,8 +153,8 @@ class Timelines:
         #for timeline in timelines:
             #timeline.print_prop(["RMSF"])
 
-        dataseries = [timeline.get_prop("RMSF") for timeline in timelines]
-        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", "RMSF", self.names, "test_RMSF",
+        dataseries = [timeline.get_prop("RMSD") for timeline in timelines]
+        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", "RMSD", self.names, "timeline_RMSD",
                                          sizex=2.5, sizey=1.5)
 
 

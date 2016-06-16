@@ -18,11 +18,11 @@ class PDBLine:
         """
         self.line = atom_line
         self.prefix = 'ATOM  '
-        self.serial = int(atom_line[6:11])
+        self.serial = str(atom_line[6:11])  # shall be int/hex
         self.name = atom_line[11:16]
         self.resName = atom_line[16:20]
         self.chainID = atom_line[20:22]
-        self.resSeq = int(atom_line[22:26])
+        self.resSeq = str(atom_line[22:26])  # shall be int/hex
         self.coors = [float(atom_line[30:38]), float(atom_line[38:46]), float(atom_line[46:54])]
         self.occup = float(atom_line[54:60])
         self.temp = float(atom_line[60:66])
@@ -44,7 +44,8 @@ class PDBLine:
         :return:
         """
 
-        line = '{0:s}{1:5d}{2:s}{3:s}{4:s}{5:4d}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
+        # line = '{0:s}{1:5d}{2:s}{3:s}{4:s}{5:4d}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
+        line = '{0:s}{1:s}{2:s}{3:s}{4:s}{5:s}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
             format\
             (self.prefix,
              self.serial,
@@ -108,8 +109,10 @@ class PDBFile:
         """
 
         for atom_line in self.lines:
-            if pattern in atom_line.name:
+            if pattern in atom_line.extra:
                 atom_line.change_atom(temp=1.00)
+            else:
+                atom_line.change_atom(temp=0.00)
 
 
 parser = argparse.ArgumentParser()

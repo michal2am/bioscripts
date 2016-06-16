@@ -50,15 +50,15 @@ echo -e "info: loading ${pdb} ${psf}"
 echo -e "info: loaded trajectory:\n${dcds}"
 
 # molrep hack added for proper cartoon representation if trajectory loaded in background
-
+# now psf&pdb called with vmd to avoid strange representation multiplication
 vmd_config="\
-mol new ${pdb} first 0 last -1 step 1 filebonds 1 autobonds 1 waitfor 1\n\
-mol addfile ${psf} type psf first 0 last -1 step 1 filebonds 1 autobonds 1 waitfor 1\n\
-mol representation NewCartoon\n\
-mol selection {protein}\n\
-mol color ColorID 3\n\
-mol material AOChalky\n\
-mol addrep 0\n\
+#mol new ${psf} first 0 last -1 step 1 filebonds 1 autobonds 1 waitfor all\n\
+#mol addfile ${pdb} type pdb first 0 last -1 step 1 filebonds 1 autobonds 1 waitfor all\n\
+#mol representation NewCartoon\n\
+#mol selection {protein}\n\
+#mol color ColorID 3\n\
+#mol material AOChalky\n\
+#mol addrep 0\n\
 "
 
 for traj in $dcds; do
@@ -73,4 +73,4 @@ for traj in $dcds; do
 done
 
 echo -e $vmd_config > visual.vmd
-vmd -e visual.vmd
+vmd ${psf} ${pdb} -e visual.vmd
