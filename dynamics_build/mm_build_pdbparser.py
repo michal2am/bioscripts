@@ -28,14 +28,14 @@ class PDBLine:
         self.temp = float(atom_line[60:66])
         self.extra = atom_line[66:]
 
-    def change_atom(self, temp=False, chain=False):
+    def change_atom(self, temp="default", chain="default"):
         """
         :param temp:
         :param chain:
         :return:
         """
-        self.temp = temp if temp else self.temp
-        self.chainID = chain if chain else self.chainID
+        self.temp = temp if not temp == 'default' else self.temp
+        self.chainID = chain if not chain == 'default' else self.chainID
 
     def write_pdbline(self):
         """
@@ -111,8 +111,10 @@ class PDBFile:
         for atom_line in self.lines:
             if pattern in atom_line.extra:
                 atom_line.change_atom(temp=1.00)
+                print('Constrained: '.format(atom_line.write_pdbline()))
             else:
                 atom_line.change_atom(temp=0.00)
+
 
 
 parser = argparse.ArgumentParser()

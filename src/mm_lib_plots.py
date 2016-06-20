@@ -110,7 +110,7 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
 
     for serie in range(len(labe)):
         color = color_map(norm(serie)) if ranges else colors[serie]
-        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.25, linestyle=linestyle,
+        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
                 marker=marker, color=color)
         for adds in range(data[serie].shape[1] - 2):
             ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
@@ -126,10 +126,10 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
     ax.ticklabel_format(style='sci', scilimits=(-3, 4), axis='both')
 
     # defaul tick values
-    ax.yaxis.set_major_locator(tck.MultipleLocator(1))
-    ax.yaxis.set_minor_locator(tck.MultipleLocator(0.5))
-    ax.xaxis.set_major_locator(tck.MultipleLocator(50))
-    ax.xaxis.set_minor_locator(tck.MultipleLocator(25))
+    ax.yaxis.set_major_locator(tck.MultipleLocator(10))
+    ax.yaxis.set_minor_locator(tck.MultipleLocator(5))
+    ax.xaxis.set_major_locator(tck.MultipleLocator(1.25))
+    ax.xaxis.set_minor_locator(tck.MultipleLocator(0.625))
 
     if ylimit:
         ax.set_ylim(ylimit[0], ylimit[1])

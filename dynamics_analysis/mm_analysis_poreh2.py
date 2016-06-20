@@ -23,11 +23,12 @@ class PoreModel:
     def __init__(self, pdb_dir, name):
         self.pdb_dir = pdb_dir
         self.name = name
-        self.labels = self.set_names()
 
-        # self.set_position()
-        # self.get_profile()
+        self.set_position()
+        self.get_profile()
         self.parsed_profiles, self.min_Rads = self.parse_profiles()
+
+        self.labels = self.set_names()
 
     @staticmethod
     def find_files_rec(directory, extension):
@@ -62,7 +63,8 @@ class PoreModel:
         """
         :return: list of pdb file names without extension
         """
-        return [os.path.splitext(os.path.split(pdb)[1])[0] for pdb in self.find_files_cur(self.pdb_dir, '.pdb')]
+        positioned = [os.path.splitext(os.path.split(pdb)[1])[0] for pdb in self.find_files_cur(self.pdb_dir + '/positioned', '.pdb')]
+        return [name.split('_')[0] for name in positioned]
 
     def set_position(self):
         """
@@ -84,6 +86,7 @@ class PoreModel:
             outfile = os.path.join('profiles', os.path.splitext(os.path.split(pdb)[1])[0] + '.dat')
             os.makedirs(os.path.dirname(outfile), exist_ok=True)
             log.info('Analyzing model {}'.format(pdb))
+            pdb = os.path.join('positioned', pdb)
             hole2_script = 'coord {0} \nradius {1} \ncvect 0.0 0.0 1.0 \ncpoint 0.  0.  -15.\n'.format(pdb, hole2_rads)
             with open(outfile, 'w') as pore_file:
                 pore_file.write(sp.check_output([hole2], input=hole2_script, universal_newlines=True))
@@ -99,8 +102,8 @@ class PoreModel:
         parsed_profiles = []
         min_rads = []
 
-        for profile in self.find_files_rec(self.pdb_dir, '_pos.dat'):
-            with open(profile, 'r') as prof:
+        for profile in self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'):
+            with open(os.path.join('profiles', profile), 'r') as prof:
                 parsed_profile = []
                 for line in prof.readlines():
                     line = line.split()
@@ -108,7 +111,7 @@ class PoreModel:
                         parsed_profile.append([float(col) for col in line[1::-1]])
                     if len(line) == 5 and line[0] == 'Minimum':
                         min_rads.append(float(line[3]))
-                parsed_profile = mmanl.filter_out(parsed_profile, 1, 'out', [-60, 0])
+                parsed_profile = mmanl.filter_out(parsed_profile, 1, 'out', [-65, -7.5])
                 parsed_profiles.append(np.array(parsed_profile))
         return [parsed_profiles, min_rads]
 
@@ -116,9 +119,9 @@ class PoreModel:
         """
         :return:
         """
-        print(self.labels)
-        mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Z-axis [A]", "Radius [A]", self.labels,
-                                         self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True)
+        mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Radius [A]", "Z-axis [A]", self.labels,
+                                         self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True,
+                                         xlimit=[-0.5, 6.5])
 
 parser = ap.ArgumentParser()
 parser.add_argument("-d", "--pdb_dirs", nargs='+', help="directories with pdb files to analyze")
