@@ -10,7 +10,7 @@ def rxn(C, t):
     A2D = C[3]
     A2O = C[4]
 
-    kon = 2.0 * imp(t)
+    kon = 2.0 #* imp(t)
     koff = 0.5
     r = 0.3
     d = 0.1
@@ -22,7 +22,6 @@ def rxn(C, t):
     dA2Rdt = kon * AR - 2*koff * A2R - d * A2R + r * A2D - b * A2R + a * A2O
     dA2Ddt = d * A2R - r * A2D
     dA2Odt = b * A2R - a * A2O
-
     return [dRdt, dARdt, dA2Rdt, dA2Ddt, dA2Odt]
 
 
@@ -32,8 +31,9 @@ def imp(t):
     else:
         return 0
 
-t =np.linspace(0, 10, 1000)
+t =np.linspace(0, 5, 100000)
 C0 = [1, 0, 0, 0, 0]
+rxn(C0, t)
 C = odeint(rxn, C0, t)
 
 plt.plot(t, C[:, 0], 'r--', linewidth=2.0)
