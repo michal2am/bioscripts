@@ -34,32 +34,31 @@ def imp(t, a, b, v):
         return 0
 
 
-def dpdt(t, P, A):
-    """
-    Differential equation: dP/dt = A * P
-    :param t: blank parameter for integrator and stimulus
-    :param P: zero-time + blank to fill matrix
-    :param A: transition rate matrix row normalized
-    :return: differential equation for integrator
-    """
-    return np.dot(P, A(t))
-
-
-def solveKFW(t, dpdt, A, P0, t0):
+def solveKFW(A, P0, t0, te):
     """
     Discretize and integrate the Kolmogorov Forward Equation.
-    :param t: main timeline (from integrator)
+    :param te: main timeline (from integrator)
     :param dpdt: differential equation for integrator
     :param A: normalized transition rate matrix with stimulus
     :param P0: starting conditions
     :param t0: starting time
-    :return:
+    :return: resulting matrix and time
     """
+
+    def dpdt(t, P, A):
+        """
+        Differential equation: dP/dt = A * P
+        :param t: blank parameter for integrator and stimulus
+        :param P: zero-time + blank to fill matrix
+        :param A: transition rate matrix row normalized
+        :return: differential equation for integrator
+        """
+        return np.dot(P, A(t))
 
     rk45 = ode(dpdt).set_integrator('dopri5')
     rk45.set_initial_value(P0, t0).set_f_params(A)
     samples = 1000
-    dt = t/samples
+    dt = te / samples
 
     P = np.zeros((samples + 1, 5))
     T = np.zeros(samples + 1)
@@ -67,7 +66,7 @@ def solveKFW(t, dpdt, A, P0, t0):
     T[0] = t0
 
     idx = 0
-    while rk45.successful() and rk45.t < t:
+    while rk45.successful() and rk45.t < te:
         rk45.integrate(rk45.t+dt)
         P[idx, :] = np.array(rk45.y)
         T[idx] = rk45.t
@@ -75,7 +74,8 @@ def solveKFW(t, dpdt, A, P0, t0):
 
     return P, T
 
-P, T = solveKFW(20, dpdt, A, np.array([1, 0, 0, 0, 0]), 0)
+
+P, T = solveKFW(A, np.array([1, 0, 0, 0, 0]), 0, 20)
 
 plt.plot(T, P[:, 0], 'r--', linewidth=2.0)
 plt.plot(T, P[:, 1], 'b--', linewidth=2.0)

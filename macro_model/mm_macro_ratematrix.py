@@ -57,3 +57,18 @@ test_border = [1.0, 0.0, 0.0, 0.0, 0.0]
 
 test_rates = RateMatrix(test_matrix, test_border)
 test_rates.derivatives()
+
+def A(t):
+    """
+    transition rate matrix
+    :param t: main timeline (from integrator)
+    :return: normalized transition rate matrix with stimulus
+    """
+
+    test_matrix = [[-4 * Stimulus.square(2, 5, 10)(t), 2 * 2 * Stimulus.square( 2, 5, 10)(t), 0, 0, 0],
+                   [0.5, -0.5 - 2 * Stimulus.square(2, 5, 10)(t), 2 * Stimulus.square(2, 5, 10)(t), 0, 0],
+                   [0,  2*0.5,  -2.6,   0.1,  1.5],
+                   [0,      0,   0.3,  -0.3,    0],
+                   [0,      0,     1,     0,   -1]]
+
+    return np.array(test_matrix)
