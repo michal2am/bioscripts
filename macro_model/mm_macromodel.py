@@ -3,64 +3,86 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
 
-def A():
-    '''
-    Transition probability matrix
-    '''
-    test_matrix = [[-4,    2*2,    0,     0,    0],
-                   [0.5,  -2.5,    2,     0,    0],
+def A(t):
+    """
+    transition rate matrix
+    :param t: main timeline (from integrator)
+    :return: normalized transition rate matrix with stimulus
+    """
+
+    test_matrix = [[-4 * imp(t, 2, 5, 10),    2*2 * imp(t, 2, 5, 10),    0,     0,    0],
+                   [0.5,  -0.5 - 2 * imp(t, 2, 5, 10),    2 * imp(t, 2, 5, 10),     0,    0],
                    [0,  2*0.5,  -2.6,   0.1,  1.5],
                    [0,      0,   0.3,  -0.3,    0],
                    [0,      0,     1,     0,   -1]]
 
     return np.array(test_matrix)
 
-def dPdt(t,P,A):
-    '''
+
+def imp(t, a, b, v):
+    """
+    time dependant transition rate step modification
+    :param t: main timeline (from integrator)
+    :param a: step start time
+    :param b: step end time
+    :param v: step height (rate multiplication)
+    :return: multiplier scalar for given time
+    """
+    if a < t < b:
+        return v
+    else:
+        return 0
+
+
+def dpdt(t, P, A):
+    """
     Differential equation: dP/dt = A * P
-    '''
-    return np.dot(P,A())
+    :param t: blank parameter for integrator and stimulus
+    :param P: zero-time + blank to fill matrix
+    :param A: transition rate matrix row normalized
+    :return: differential equation for integrator
+    """
+    return np.dot(P, A(t))
 
-def solveKFW(Tf):
-    '''
-    Discretize and integrate the Kolmogorov
-    Forward Equation.
-    '''
 
-    #Define initial conditions
-    P0 = np.array([1, 0, 0, 0, 0])
-    t0 = 0
-    dt = Tf/1000
+def solveKFW(t, dpdt, A, P0, t0):
+    """
+    Discretize and integrate the Kolmogorov Forward Equation.
+    :param t: main timeline (from integrator)
+    :param dpdt: differential equation for integrator
+    :param A: normalized transition rate matrix with stimulus
+    :param P0: starting conditions
+    :param t0: starting time
+    :return:
+    """
 
-    #set the integrator
-    rk45 = ode(dPdt).set_integrator('dopri5')
-    rk45.set_initial_value(P0,t0).set_f_params(A)
+    rk45 = ode(dpdt).set_integrator('dopri5')
+    rk45.set_initial_value(P0, t0).set_f_params(A)
+    samples = 1000
+    dt = t/samples
 
-    #integrate and store each solution in
-    #a numpy matrix, P and T.
-    P = np.zeros((1000000,5))
-    T = np.zeros(1000000)
-    P[0,:] = P0
-    T[0]   = t0
+    P = np.zeros((samples + 1, 5))
+    T = np.zeros(samples + 1)
+    P[0, :] = P0
+    T[0] = t0
 
-    idx    = 0
-    while rk45.successful() and rk45.t < Tf:
+    idx = 0
+    while rk45.successful() and rk45.t < t:
         rk45.integrate(rk45.t+dt)
-        P[idx,:] = np.array(rk45.y)
-        T[idx]   = rk45.t
-        idx     += 1
+        P[idx, :] = np.array(rk45.y)
+        T[idx] = rk45.t
+        idx += 1
 
-    return P,T
+    return P, T
 
-if __name__=='__main__':
-    P,T = solveKFW(5)
+P, T = solveKFW(20, dpdt, A, np.array([1, 0, 0, 0, 0]), 0)
 
-    plt.plot(T,P[:,0],'-r')
-    plt.plot(T,P[:,1],'-g')
-    plt.plot(T,P[:,2],'-k')
-    plt.plot(T,P[:,3],'-k')
-    plt.plot(T,P[:,4],'-k')
-    plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
-    plt.xlabel('Time (m)')
-    plt.ylabel('Pr of state, s')
-    plt.show()
+plt.plot(T, P[:, 0], 'r--', linewidth=2.0)
+plt.plot(T, P[:, 1], 'b--', linewidth=2.0)
+plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
+plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
+plt.plot(T, P[:, 4], 'c-', linewidth=4.0)
+plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
+plt.xlabel('time []')
+plt.ylabel('state probability')
+plt.show()
