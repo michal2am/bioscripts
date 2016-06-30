@@ -1,8 +1,8 @@
 import numpy as np
-from scipy.integrate import ode
+import scipy.integrate as itg
 
 
-class Solver:
+class SolverOde:
 
     def __init__(self, A, P0, t0, te):
         """
@@ -31,7 +31,7 @@ class Solver:
             """
             return np.dot(P, A(t))
 
-        rk45 = ode(dpdt).set_integrator('dopri5')
+        rk45 = itg.ode(dpdt).set_integrator('dopri5')
         rk45.set_initial_value(self.P0, self.t0).set_f_params(self.A)
         samples = 1000
         dt = self.te / samples

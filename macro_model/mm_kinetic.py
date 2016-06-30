@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mm_solver import Solver
+from mm_solver_ode import SolverOde
 
 
 class Kinetic:
@@ -41,6 +41,10 @@ class Kinetic:
         trm = [[rate for rate in state.rates] for state in self.states]       # rate object matrix
         trm_r = [[rate.value for rate in row]for row in trm]                  # rate value no time matrix
 
+        print("Zero time transition rates (i(row) -> j(column)")
+        print([state.name for state in self.states])
+        print(np.array(trm_r))
+
         def trm_f(t):
             trm_t = np.array([[rate.value * rate.stimulus(t) if rate.stimulus else rate.value for rate in row]
                               for row in trm])                                # rate value with stimulus
@@ -73,14 +77,18 @@ class Stimulus:
         return square_t
 
 
-r_kon   = Kinetic.State.Rate('kon', 2.0, Stimulus.square(2, 5, 10))
-r_2kon  = Kinetic.State.Rate('kon', 4.0, Stimulus.square(2, 5, 10))
-r_koff  = Kinetic.State.Rate('koff', 0.5)
-r_2koff = Kinetic.State.Rate('koff', 1.0)
-r_d     = Kinetic.State.Rate('d', 0.1)
-r_r     = Kinetic.State.Rate('koff', 0.3)
-r_b     = Kinetic.State.Rate('koff', 1.5)
-r_a     = Kinetic.State.Rate('koff', 1.0)
+# model definition #
+
+stimulus = Stimulus.square(2, 12, 10)
+
+r_kon   = Kinetic.State.Rate('kon',   2.0, stimulus)
+r_2kon  = Kinetic.State.Rate('2kon',  4.0, stimulus)
+r_koff  = Kinetic.State.Rate('koff',  0.5)
+r_2koff = Kinetic.State.Rate('2koff', 1.0)
+r_d     = Kinetic.State.Rate('d',     0.5)
+r_r     = Kinetic.State.Rate('r',     0.3)
+r_b     = Kinetic.State.Rate('b',     2.5)
+r_a     = Kinetic.State.Rate('a',     1.0)
 
 r_0     = Kinetic.State.Rate('block', 0.0)
 
@@ -92,7 +100,9 @@ st_a2o  = Kinetic.State(4, 'A2O', [r_0,     r_0,      r_a,    r_0,  r_0],   0)
 
 jwm = Kinetic([st_r, st_ar, st_a2r, st_a2d, st_a2o])
 
-solver = Solver(jwm.trm, np.array([1, 0, 0, 0, 0]), 0, 20)
+# ode solving & plot
+
+solver = SolverOde(jwm.trm, np.array([1, 0, 0, 0, 0]), 0, 25)
 T, P = solver.get_results()
 
 plt.plot(T, P[:, 0], 'r--', linewidth=2.0)
@@ -100,7 +110,7 @@ plt.plot(T, P[:, 1], 'b--', linewidth=2.0)
 plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
 plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
 plt.plot(T, P[:, 4], 'c-', linewidth=4.0)
-plt.plot(T, [0.01 * Stimulus.square(2, 5, 10)(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
+plt.plot(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
 plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
 plt.xlabel('time []')
 plt.ylabel('state probability')
