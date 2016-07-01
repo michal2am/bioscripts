@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as sta
-# from mm_kinetic import Kinetic
-
 
 
 class SolverGlp:
@@ -18,8 +16,11 @@ class SolverGlp:
         self.A, self.P0, self.t0, self.te = A, P0, t0, te
         self.parno = np.sum(P0)
         self.stano = len(P0)
-        print("### Initiating Gillspie Monte Carlo Solver")
-        print("Particles: {}, States: {}, Initial states: {}".format(self.parno, self.stano, self.P0))
+        print("### Initiating Gillespie Monte Carlo Solver")
+        print("Particles: {}, States: {}".format(self.parno, self.stano))
+        print("Initial concentrations: \n {}".format(self.P0))
+        print("Initial transition matrix: \n{}".format(self.A(0)))
+
         self.P, self.T = self.solve_glp()
 
     def solve_glp(self):
@@ -32,15 +33,35 @@ class SolverGlp:
         P[0, :] = self.P0
         T[0] = self.t0
 
-        print(self.A(0))
+        print("### Gillespie iteration begins!")
 
         for step in range(self.t0, self.te):
+            print("Step: {}, time: {}".format(step, T[step]))
+            print(" {}".format(P[step]))
             print(self.A(step))
 
-        print(P)
-        print(T)
+            current = np.where(P[step] > 0)
 
-        return 0, 0
+            current_rate = np.sum(self.A(T[step])[current])
+            if current_rate == 0:
+                print("Zero transition rate, staying in previous state")
+                P[step + 1, :] = P[step]
+            else:
+                P[step + 1, :] = [0, 0, 0, 0, 0]
+                new_state = self.get_uni((self.A(T[step])[current][0]))
+                print("Non zero transition rate, changing to state {}".format(new_state))
+                P[step + 1, new_state] = 1
+
+            T[step + 1] = T[step] + 0.1
+
+        return P, T
+
+    def get_results(self):
+        """
+        brings numeric results
+        :return: time array, probability array
+        """
+        return self.T, self.P
 
     def get_exp(self, rates, show=False):
         """

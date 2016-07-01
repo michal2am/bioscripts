@@ -81,7 +81,8 @@ class Stimulus:
         :return: time dependant function
         """
         def square_t(t):
-            if a < t < b:
+            if a <= t < b:
+                print('stimulus on')
                 return v
             else:
                 return 0
@@ -90,7 +91,7 @@ class Stimulus:
 
 # model definition #
 
-stimulus = Stimulus.square(2, 12, 10)
+stimulus = Stimulus.square(0, 5, 10)
 
 print("### New rate added:")
 
@@ -98,9 +99,9 @@ r_kon   = Kinetic.State.Rate('kon',   2.0, stimulus)
 r_2kon  = Kinetic.State.Rate('2kon',  4.0, stimulus)
 r_koff  = Kinetic.State.Rate('koff',  0.5)
 r_2koff = Kinetic.State.Rate('2koff', 1.0)
-r_d     = Kinetic.State.Rate('d',     0.5)
-r_r     = Kinetic.State.Rate('r',     0.3)
-r_b     = Kinetic.State.Rate('b',     2.5)
+r_d     = Kinetic.State.Rate('d',     0.3)
+r_r     = Kinetic.State.Rate('r',     0.2)
+r_b     = Kinetic.State.Rate('b',     3.5)
 r_a     = Kinetic.State.Rate('a',     1.0)
 r_0     = Kinetic.State.Rate('block', 0.0)
 
@@ -116,12 +117,12 @@ jwm = Kinetic([st_r, st_ar, st_a2r, st_a2d, st_a2o])
 
 # solving!
 
-solve_ode = True
+solve_ode = False
 solve_glp = True
 
-ini_conc = np.array([1, 0, 0, 0, 0])
+ini_conc = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 t0 = 0
-te = 25
+te = 10
 
 if solve_ode:
 
@@ -137,8 +138,26 @@ if solve_ode:
     plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
     plt.xlabel('time []')
     plt.ylabel('state probability')
-    plt.show()
+    # plt.show()
+
+t0 = 0
+te = 100
 
 if solve_glp:
     solver = SolverGlp(jwm.trm, ini_conc, t0, te)
+    T, P = solver.get_results()
+
+    plt.plot(T, P[:, 0], 'ro', linewidth=2.0)
+    plt.plot(T, P[:, 1], 'bo', linewidth=2.0)
+    plt.plot(T, P[:, 2], 'go', linewidth=2.0)
+    plt.plot(T, P[:, 3], 'yo', linewidth=2.0)
+    plt.plot(T, P[:, 4], 'co', linewidth=4.0)
+    print(T)
+
+    plt.plot(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
+    plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
+    plt.xlabel('time []')
+    plt.ylabel('state probability')
+    plt.show()
+
 
