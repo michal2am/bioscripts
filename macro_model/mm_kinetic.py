@@ -19,15 +19,17 @@ class Kinetic:
         self.trmn, self.trm = self.trm_create()
 
     class State:
-        def __init__(self, no, name, rates, border):
+        def __init__(self, no, name, rates, border, open):
             """
             :param no: state number (0 start convention)
             :param name: state name
             :param rates: vector of transition rates to other states
             :param border: initial probability of the state
+            :param open: boolean if state is open
             """
-            self.no, self.name, self.rates, self.border = no, name, rates, border
-            print("Name: {} Rates: {} Initial: {}".format(self.name, [rate.name for rate in self.rates], self.border))
+            self.no, self.name, self.rates, self.border, self.open, = no, name, rates, border, open
+            print("Name: {} Rates: {} Initial: {} Open: {}".format(
+                self.name, [rate.name for rate in self.rates], self.border, self.open))
 
         class Rate:
             def __init__(self, name, value, stimulus=False):
@@ -82,7 +84,22 @@ class Stimulus:
         """
         def square_t(t):
             if a <= t < b:
-                print('stimulus on')
+                return v
+            else:
+                return 0
+        return square_t
+
+    @staticmethod
+    def pair_square(a, b, v):
+        """
+        square stimulus
+        :param a: step start times
+        :param b: step end times
+        :param v: step height (rate multiplication)
+        :return: time dependant function
+        """
+        def square_t(t):
+            if a[0] <= t < b[0] or a[1] <= t < b[1]:
                 return v
             else:
                 return 0
@@ -91,38 +108,38 @@ class Stimulus:
 
 # model definition #
 
-stimulus = Stimulus.square(0, 5, 10)
+stimulus = Stimulus.pair_square([0, 7], [5, 12], 10.0)
 
 print("### New rate added:")
 
-r_kon   = Kinetic.State.Rate('kon',   2.0, stimulus)
-r_2kon  = Kinetic.State.Rate('2kon',  4.0, stimulus)
-r_koff  = Kinetic.State.Rate('koff',  0.5)
-r_2koff = Kinetic.State.Rate('2koff', 1.0)
-r_d     = Kinetic.State.Rate('d',     0.3)
-r_r     = Kinetic.State.Rate('r',     0.2)
-r_b     = Kinetic.State.Rate('b',     3.5)
-r_a     = Kinetic.State.Rate('a',     1.0)
-r_0     = Kinetic.State.Rate('block', 0.0)
+r_kon   = Kinetic.State.Rate('kon',     2.00, stimulus)
+r_2kon  = Kinetic.State.Rate('2kon',    4.00, stimulus)
+r_koff  = Kinetic.State.Rate('koff',    1.00)
+r_2koff = Kinetic.State.Rate('2koff',   2.00)
+r_d     = Kinetic.State.Rate('d',       1.00)
+r_r     = Kinetic.State.Rate('r',       0.20)
+r_b     = Kinetic.State.Rate('b',       3.00)
+r_a     = Kinetic.State.Rate('a',       2.00)
+r_0     = Kinetic.State.Rate('block',   0.00)
 
 print("### New state added:")
 
-st_r    = Kinetic.State(0, 'R',   [r_0,     r_2kon,   r_0,    r_0,  r_0],   1)
-st_ar   = Kinetic.State(1, 'AR',  [r_koff,  r_0,      r_kon,  r_0,  r_0],   0)
-st_a2r  = Kinetic.State(2, 'A2R', [r_0,     r_2koff,  r_0,    r_d,  r_b],   0)
-st_a2d  = Kinetic.State(3, 'A2D', [r_0,     r_0,      r_r,    r_0,  r_0],   0)
-st_a2o  = Kinetic.State(4, 'A2O', [r_0,     r_0,      r_a,    r_0,  r_0],   0)
+st_r    = Kinetic.State(0, 'R',   [r_0,     r_2kon,   r_0,    r_0,  r_0],   1, False)
+st_ar   = Kinetic.State(1, 'AR',  [r_koff,  r_0,      r_kon,  r_0,  r_0],   0, False)
+st_a2r  = Kinetic.State(2, 'A2R', [r_0,     r_2koff,  r_0,    r_d,  r_b],   0, False)
+st_a2d  = Kinetic.State(3, 'A2D', [r_0,     r_0,      r_r,    r_0,  r_0],   0, False)
+st_a2o  = Kinetic.State(4, 'A2O', [r_0,     r_0,      r_a,    r_0,  r_0],   0, True)
 
 jwm = Kinetic([st_r, st_ar, st_a2r, st_a2d, st_a2o])
 
 # solving!
 
-solve_ode = False
+solve_ode = True
 solve_glp = True
 
 ini_conc = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 t0 = 0
-te = 10
+te = 20
 
 if solve_ode:
 
@@ -134,30 +151,31 @@ if solve_ode:
     plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
     plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
     plt.plot(T, P[:, 4], 'c-', linewidth=4.0)
-    plt.plot(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
+
     plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
-    plt.xlabel('time []')
+    plt.xlabel('time [ms]')
     plt.ylabel('state probability')
     # plt.show()
 
-t0 = 0
-te = 100
-
 if solve_glp:
-    solver = SolverGlp(jwm.trm, ini_conc, t0, te)
+    solver = SolverGlp(jwm, ini_conc, t0, te)
+
     T, P = solver.get_results()
+    Pn = np.array([[float('nan') if state == 0.0 else state for state in step] for step in P])
 
-    plt.plot(T, P[:, 0], 'ro', linewidth=2.0)
-    plt.plot(T, P[:, 1], 'bo', linewidth=2.0)
-    plt.plot(T, P[:, 2], 'go', linewidth=2.0)
-    plt.plot(T, P[:, 3], 'yo', linewidth=2.0)
-    plt.plot(T, P[:, 4], 'co', linewidth=4.0)
-    print(T)
+    plt.plot(T, Pn[:, 0], 'ro', linewidth=2.0)
+    plt.plot(T, Pn[:, 1], 'bo', linewidth=2.0)
+    plt.plot(T, Pn[:, 2], 'go', linewidth=2.0)
+    plt.plot(T, Pn[:, 3], 'yo', linewidth=2.0)
+    plt.plot(T, Pn[:, 4], 'co', linewidth=2.0)
+    plt.step(T, P[:, 4], 'c-', linewidth=1.0, where='post')
 
-    plt.plot(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
     plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
-    plt.xlabel('time []')
+    plt.xlabel('time [ms]')
     plt.ylabel('state probability')
-    plt.show()
+    # plt.show()
 
-
+T = np.linspace(t0 - 0.25, te, 1e5)
+plt.step(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
+plt.xlim([t0 - 0.5, te + 0.25])
+plt.show()

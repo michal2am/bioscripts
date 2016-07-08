@@ -5,7 +5,7 @@ import scipy.stats as sta
 
 class SolverGlp:
 
-    def __init__(self,  A, P0, t0, te):
+    def __init__(self,  model, P0, t0, te):
         """
         Monte Carlo Gillespie solver
         :param A: normalized transition rate matrix with stimulus
@@ -13,7 +13,7 @@ class SolverGlp:
         :param t0: starting time
         :param te: ending time
         """
-        self.A, self.P0, self.t0, self.te = A, P0, t0, te
+        self.model, self.A, self.P0, self.t0, self.te = model, model.trm, P0, t0, te
         self.parno = np.sum(P0)
         self.stano = len(P0)
         print("### Initiating Gillespie Monte Carlo Solver")
@@ -28,31 +28,47 @@ class SolverGlp:
         Monte Carlo Gillespie solver
         :return: array of probabilities, array of times
         """
-        P = np.zeros((self.te + 1, self.stano))
-        T = np.zeros(self.te + 1)
+        P = np.zeros((1, self.stano))
+        T = np.zeros(1)
         P[0, :] = self.P0
         T[0] = self.t0
 
         print("### Gillespie iteration begins!")
+        initial = np.where(self.P0 > 0)[0]
+        print("Initial state: {}".format(self.model.states[initial].name))
 
-        for step in range(self.t0, self.te):
+        # TODO: add array to store occupancy times of each state
+        # TODO: add array to store cumulative times of each shut and open period
+        # TODO: plot histograms of all
+
+        step = 0
+        while T[step] < self.te:
+            current = np.where(P[step] > 0)
+            current_rate = self.A(T[step])[current]
+            current_rate_sum = np.sum(current_rate)
+            dt = self.get_exp(current_rate) if current_rate_sum > 0 else 0.01
+
             print("Step: {}, time: {}".format(step, T[step]))
             print(" {}".format(P[step]))
-            print(self.A(step))
+            print("Occupancy time: {}".format(dt))
+            print(self.A(T[step]))
 
-            current = np.where(P[step] > 0)
-
-            current_rate = np.sum(self.A(T[step])[current])
-            if current_rate == 0:
+            if current_rate_sum == 0:
                 print("Zero transition rate, staying in previous state")
-                P[step + 1, :] = P[step]
+                P = np.append(P, [P[step]], axis=0)
             else:
-                P[step + 1, :] = [0, 0, 0, 0, 0]
-                new_state = self.get_uni((self.A(T[step])[current][0]))
+                new = np.array([[0.0, 0.0, 0.0, 0.0, 0.0]])
+                new_state = self.get_uni(current_rate[0])
                 print("Non zero transition rate, changing to state {}".format(new_state))
-                P[step + 1, new_state] = 1
+                new[0][new_state] = 1.0
+                P = np.append(P, new, axis=0)
 
-            T[step + 1] = T[step] + 0.1
+            T = np.append(T, np.array([T[-1] + dt]))
+            step += 1
+
+        else:
+            print("### Gillespie iteration ends!")
+            print("Final time {} achieved after {} steps".format(self.te, step))
 
         return P, T
 
