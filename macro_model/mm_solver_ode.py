@@ -8,11 +8,11 @@ class SolverOde:
         """
         differential equation solver
         :param A: normalized transition rate matrix with stimulus
-        :param P0: starting conditions
+        :param P0: starting conditions (taking first row, if multiple specified)
         :param t0: starting time
         :param te: ending time
         """
-        self.A, self.P0, self.t0, self.te = A, P0, t0, te
+        self.A, self.P0, self.t0, self.te = A, P0[0], t0, te
         self.P, self.T = self.solve_kfw()
 
     def solve_kfw(self):

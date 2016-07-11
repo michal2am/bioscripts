@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time as tm
 from mm_solver_ode import SolverOde
 from mm_solver_glp import SolverGlp
 
@@ -108,7 +109,11 @@ class Stimulus:
 
 # model definition #
 
-stimulus = Stimulus.pair_square([0, 7], [5, 12], 10.0)
+all_time = tm.time()
+
+
+stimulus = Stimulus.pair_square([0., 7.], [5., 12.], 10.0)
+suspend = [[0., 5.], [7., 12.]]
 
 print("### New rate added:")
 
@@ -137,7 +142,8 @@ jwm = Kinetic([st_r, st_ar, st_a2r, st_a2d, st_a2o])
 solve_ode = True
 solve_glp = True
 
-ini_conc = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+ini_conc = np.array([[1.0, 0.0, 0.0, 0.0, 0.0]])
+part = 300
 t0 = 0
 te = 20
 
@@ -150,7 +156,7 @@ if solve_ode:
     plt.plot(T, P[:, 1], 'b--', linewidth=2.0)
     plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
     plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
-    plt.plot(T, P[:, 4], 'c-', linewidth=4.0)
+    plt.plot(T, P[:, 4], 'c--', linewidth=4.0)
 
     plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
     plt.xlabel('time [ms]')
@@ -158,9 +164,12 @@ if solve_ode:
     # plt.show()
 
 if solve_glp:
-    solver = SolverGlp(jwm, ini_conc, t0, te)
+    solver = SolverGlp(jwm, ini_conc, part, t0, te, suspend)
 
-    T, P = solver.get_results()
+    allT, allP, mcT, mcP = solver.get_results()
+
+    P = allP[0]
+    T = allT[0]
     Pn = np.array([[float('nan') if state == 0.0 else state for state in step] for step in P])
 
     plt.plot(T, Pn[:, 0], 'ro', linewidth=2.0)
@@ -168,6 +177,13 @@ if solve_glp:
     plt.plot(T, Pn[:, 2], 'go', linewidth=2.0)
     plt.plot(T, Pn[:, 3], 'yo', linewidth=2.0)
     plt.plot(T, Pn[:, 4], 'co', linewidth=2.0)
+
+    plt.plot(mcT, mcP[:, 0], 'r-', linewidth=2.0)
+    plt.plot(mcT, mcP[:, 1], 'b-', linewidth=2.0)
+    plt.plot(mcT, mcP[:, 2], 'g-', linewidth=2.0)
+    plt.plot(mcT, mcP[:, 3], 'y-', linewidth=2.0)
+    plt.plot(mcT, mcP[:, 4], 'c-', linewidth=4.0)
+
     plt.step(T, P[:, 4], 'c-', linewidth=1.0, where='post')
 
     plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
@@ -179,3 +195,6 @@ T = np.linspace(t0 - 0.25, te, 1e5)
 plt.step(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
 plt.xlim([t0 - 0.5, te + 0.25])
 plt.show()
+
+print("--- %s seconds ---" % (tm.time() - all_time))
+
