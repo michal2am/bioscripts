@@ -62,9 +62,9 @@ class SolverGlp:
                 current_rate = self.A(T[step])[current][0]
                 current_rate_sum = ne.evaluate('sum(current_rate)')
 
-                print("Step: {}, time: {}".format(step, T[step]))
-                print(" {}".format(P[step]))
-                print(" {}".format(current_rate))
+                print("#Step: {}, time: {}".format(step, T[step]))
+                print("Step state: {}".format(P[step]))
+                print("Step rates: {}".format(current_rate))
                 print(self.A(T[step]))
 
                 if current_rate_sum == 0:
@@ -72,7 +72,9 @@ class SolverGlp:
                     P = np.append(P, [P[step]], axis=0)
                     # dt = 0.01
                     for period in self.suspend:
+                        print("Check current time {} is in period {}".format(T[step], period))
                         if period[0] <= T[step] < period[1]:
+                            print("End of suspend period: {}".format(period[1]))
                             dt = period[1] - T[step]
                 else:
                     new = np.zeros(self.stano)
@@ -82,7 +84,7 @@ class SolverGlp:
                     P = np.append(P, [new], axis=0)
                     dt = self.get_exp(current_rate)
 
-                print("Occupancy time: {}".format(dt))
+                print("Step occupancy time: {}".format(dt))
 
                 T = np.append(T, np.array([T[-1] + dt]))
                 step += 1

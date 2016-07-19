@@ -1,8 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 import time as tm
 from mm_solver_ode import SolverOde
 from mm_solver_glp import SolverGlp
+
 
 
 class Kinetic:
@@ -113,7 +116,7 @@ all_time = tm.time()
 
 
 stimulus = Stimulus.pair_square([0., 7.], [5., 12.], 10.0)
-suspend = [[0., 5.], [7., 12.]]
+suspend = [[5., 7.], [12., 20.]]
 
 print("### New rate added:")
 
@@ -141,27 +144,40 @@ jwm = Kinetic([st_r, st_ar, st_a2r, st_a2d, st_a2o])
 
 solve_ode = True
 solve_glp = True
+solve_sto = False
 
 ini_conc = np.array([[1.0, 0.0, 0.0, 0.0, 0.0]])
-part = 300
+states = ini_conc.shape[1]
+part = 10
 t0 = 0
 te = 20
+
+# figure preparation
+
+sns.set(style="ticks")
+sns.set_palette('deep', states)
+colors = sns.color_palette('deep', states)
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(111)
 
 if solve_ode:
 
     solver = SolverOde(jwm.trmn, ini_conc, t0, te)
     T, P = solver.get_results()
 
-    plt.plot(T, P[:, 0], 'r--', linewidth=2.0)
-    plt.plot(T, P[:, 1], 'b--', linewidth=2.0)
-    plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
-    plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
-    plt.plot(T, P[:, 4], 'c--', linewidth=4.0)
+    T = np.array([T]).transpose()
+    conc = np.concatenate((T, P), axis=1)
+    states = [state.name for state in [st_r, st_ar, st_a2r, st_a2d, st_a2o]]
+    pandas = pd.DataFrame(data=conc, columns=['time'] + states)
 
-    plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
-    plt.xlabel('time [ms]')
-    plt.ylabel('state probability')
-    # plt.show()
+    pandas.plot(x='time', ax=ax1)
+
+
+    #plt.plot(T, P[:, 0], 'r--', linewidth=2.0)
+    #plt.plot(T, P[:, 1], 'b--', linewidth=2.0)
+    #plt.plot(T, P[:, 2], 'g--', linewidth=2.0)
+    #plt.plot(T, P[:, 3], 'y--', linewidth=2.0)
+    #plt.plot(T, P[:, 4], 'c--', linewidth=4.0)
 
 if solve_glp:
     solver = SolverGlp(jwm, ini_conc, part, t0, te, suspend)
@@ -170,30 +186,53 @@ if solve_glp:
 
     P = allP[0]
     T = allT[0]
+
     Pn = np.array([[float('nan') if state == 0.0 else state for state in step] for step in P])
+    Pnplot = 4
 
-    plt.plot(T, Pn[:, 0], 'ro', linewidth=2.0)
-    plt.plot(T, Pn[:, 1], 'bo', linewidth=2.0)
-    plt.plot(T, Pn[:, 2], 'go', linewidth=2.0)
-    plt.plot(T, Pn[:, 3], 'yo', linewidth=2.0)
-    plt.plot(T, Pn[:, 4], 'co', linewidth=2.0)
+    T = np.array([T]).transpose()
+    ###
+    conc = np.concatenate((T, Pn), axis=1)
+    states = [state.name for state in [st_r, st_ar, st_a2r, st_a2d, st_a2o]]
+    pandas = pd.DataFrame(data=conc, columns=['time'] + states)
+    ###
+    pandas.plot(x='time', style=['o']*5, ax=ax1)
 
-    plt.plot(mcT, mcP[:, 0], 'r-', linewidth=2.0)
-    plt.plot(mcT, mcP[:, 1], 'b-', linewidth=2.0)
-    plt.plot(mcT, mcP[:, 2], 'g-', linewidth=2.0)
-    plt.plot(mcT, mcP[:, 3], 'y-', linewidth=2.0)
-    plt.plot(mcT, mcP[:, 4], 'c-', linewidth=4.0)
+    ###
+    conc = np.concatenate((T, P), axis=1)
+    states = [state.name for state in [st_r, st_ar, st_a2r, st_a2d, st_a2o]]
+    pandas = pd.DataFrame(data=conc, columns=['time'] + states)
+    ###
 
-    plt.step(T, P[:, 4], 'c-', linewidth=1.0, where='post')
+    pandas.plot(x='time', y='A2O', drawstyle='steps-post', color=colors[Pnplot], ax=ax1)
 
-    plt.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
-    plt.xlabel('time [ms]')
-    plt.ylabel('state probability')
-    # plt.show()
+    #ax1.step(T, P[:, 4], '-', linewidth=1.0, where='post')
+
+    #plt.plot(T, Pn[:, 0], 'ro', linewidth=2.0)
+    #plt.plot(T, Pn[:, 1], 'bo', linewidth=2.0)
+    #plt.plot(T, Pn[:, 2], 'go', linewidth=2.0)
+    #plt.plot(T, Pn[:, 3], 'yo', linewidth=2.0)
+    #plt.plot(T, Pn[:, 4], 'co', linewidth=2.0)
+
+    # to do
+    #plt.plot(mcT, mcP[:, 0], 'r-', linewidth=2.0)
+    #plt.plot(mcT, mcP[:, 1], 'b-', linewidth=2.0)
+    #plt.plot(mcT, mcP[:, 2], 'g-', linewidth=2.0)
+    #plt.plot(mcT, mcP[:, 3], 'y-', linewidth=2.0)
+    #plt.plot(mcT, mcP[:, 4], 'c-', linewidth=4.0)
+
+if solve_sto:
+    pass
 
 T = np.linspace(t0 - 0.25, te, 1e5)
 plt.step(T, [0.01 * stimulus(ti) - 0.25 for ti in T], 'k-', linewidth=2.0)
-plt.xlim([t0 - 0.5, te + 0.25])
+plt.xlim([t0 - 0.5, te])
+#plt.ylim([-0.4, 1.0])
+
+sns.despine()
+ax1.legend(['R', 'AR', 'A2R', 'A2D', 'A2O'])
+ax1.set_xlabel('time [ms]')
+ax1.set_ylabel('state probability')
 plt.show()
 
 print("--- %s seconds ---" % (tm.time() - all_time))
