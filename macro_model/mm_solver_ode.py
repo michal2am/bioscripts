@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import scipy.integrate as itg
 
 
@@ -33,7 +34,7 @@ class SolverOde:
 
         rk45 = itg.ode(dpdt).set_integrator('dopri5')
         rk45.set_initial_value(self.P0, self.t0).set_f_params(self.A)
-        samples = 1000
+        samples = 10000
         dt = self.te / samples
 
         P = np.zeros((samples + 1, 5))

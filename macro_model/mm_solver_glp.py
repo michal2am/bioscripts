@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.stats as sta
+import pandas as pd
 import time as tm
 import numexpr as ne
 
