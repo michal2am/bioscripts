@@ -1,4 +1,6 @@
 import numpy as np
+import logging as log
+
 
 
 class Kinetic:
@@ -10,10 +12,17 @@ class Kinetic:
         :param states: vector of model states
         """
         self.states = states
-        print("### Starting concentrations:")
-        print([state.name for state in self.states])
-        print([state.border for state in self.states])
+        self.ini_conc = [state.border for state in self.states]
+        self.states_na = [state.name for state in self.states]
+        self.states_no = len(self.states_na)
+        self.states_op = [state.no for state in self.states if state.open]
+        self.states_sh = [state.no for state in self.states if not state.open]
         self.trmn, self.trm = self.trm_create()
+
+        log.info("### Starting concentrations:")
+        log.info(self.states_na)
+        log.info(self.ini_conc)
+
 
     class State:
         def __init__(self, no, name, rates, border, open):
@@ -25,7 +34,7 @@ class Kinetic:
             :param open: boolean if state is open
             """
             self.no, self.name, self.rates, self.border, self.open, = no, name, rates, border, open
-            print("Name: {} Rates: {} Initial: {} Open: {}".format(
+            log.info("Name: {} Rates: {} Initial: {} Open: {}".format(
                 self.name, [rate.name for rate in self.rates], self.border, self.open))
 
         class Rate:
@@ -36,29 +45,29 @@ class Kinetic:
                 :param stimulus: stimulus if rate is time dependant
                 """
                 self.name, self.value, self.stimulus = name, value, stimulus
-                print("Name: {} Value: {} Stimulus: {}".format(self.name, self.value, self.stimulus.__name__ if self.stimulus else "no"))
+                log.info("Name: {} Value: {} Stimulus: {}".format(self.name, self.value, self.stimulus.__name__ if self.stimulus else "no"))
 
     def trm_create(self):
         """
         creates transition rate matrix (Q-matrix)
         :return: function returning time dependant transition rate matrix
         """
-        trm = [[rate for rate in state.rates] for state in self.states]       # rate object matrix
-        trm_r = [[rate.value for rate in row]for row in trm]                  # rate value no time matrix
+        trm = [[rate for rate in state.rates] for state in self.states]          # rate object matrix
+        trm_r = [[rate.value for rate in row]for row in trm]                     # rate value no time matrix
 
-        print("### Zero time transition rates (i(row) -> j(column):")
-        print([state.name for state in self.states])
-        print(np.array(trm_r))
+        log.info("### Zero time transition rates (i(row) -> j(column):")
+        log.info([state.name for state in self.states])
+        log.info(np.array(trm_r))
 
         def trm_fn(t):
             trm_tn = np.array([[rate.value * rate.stimulus(t) if rate.stimulus else rate.value for rate in row]
-                              for row in trm])                                # rate value with stimulus
+                              for row in trm])                                   # rate value with stimulus
             trm_tn[np.diag_indices_from(trm_tn)] = -1 * np.sum(trm_tn, axis=1)   # row normalization
             return trm_tn
 
         def trm_f(t):
             trm_t = np.array([[rate.value * rate.stimulus(t) if rate.stimulus else rate.value for rate in row]
-                              for row in trm])                                # rate value with stimulus
+                              for row in trm])                                   # rate value with stimulus
             return trm_t
 
         return trm_fn, trm_f
