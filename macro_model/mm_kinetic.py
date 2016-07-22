@@ -14,9 +14,10 @@ class Kinetic:
         self.states = states
         self.ini_conc = [state.border for state in self.states]
         self.states_na = [state.name for state in self.states]
+        self.states_ca = set([state.category for state in self.states])
         self.states_no = len(self.states_na)
-        self.states_op = [state.no for state in self.states if state.open]
-        self.states_sh = [state.no for state in self.states if not state.open]
+        self.states_op = [state.no for state in self.states if state.category == 'open']
+        self.states_sh = [state.no for state in self.states if not state.category == 'open']
         self.trmn, self.trm = self.trm_create()
 
         log.info("### Starting concentrations:")
@@ -25,7 +26,7 @@ class Kinetic:
 
 
     class State:
-        def __init__(self, no, name, rates, border, open):
+        def __init__(self, no, name, rates, border, category):
             """
             :param no: state number (0 start convention)
             :param name: state name
@@ -33,9 +34,9 @@ class Kinetic:
             :param border: initial probability of the state
             :param open: boolean if state is open
             """
-            self.no, self.name, self.rates, self.border, self.open, = no, name, rates, border, open
+            self.no, self.name, self.rates, self.border, self.category, = no, name, rates, border, category
             log.info("Name: {} Rates: {} Initial: {} Open: {}".format(
-                self.name, [rate.name for rate in self.rates], self.border, self.open))
+                self.name, [rate.name for rate in self.rates], self.border, self.category))
 
         class Rate:
             def __init__(self, name, value, stimulus=False):

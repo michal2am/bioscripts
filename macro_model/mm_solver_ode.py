@@ -37,7 +37,7 @@ class SolverOde:
             if self.steady: t = 0
             return np.dot(P, A(t))
 
-        rk45 = itg.ode(dpdt).set_integrator('lsoda', nsteps=10000000)
+        rk45 = itg.ode(dpdt).set_integrator('lsoda', nsteps=1e4, atol=0.0001)
         rk45.set_initial_value(self.P0, self.t0).set_f_params(self.A)
         samples = 1e4
         dt = self.te / samples
