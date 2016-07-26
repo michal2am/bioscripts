@@ -17,7 +17,7 @@ class SolverOde:
         :param te: ending time
         :param steady:
         """
-        self.A, self.P0, self.names, self.t0, self.te, self.steady = A, P0[0], names, t0, te, steady
+        self.A, self.P0, self.names, self.t0, self.te, self.steady = A, P0, names, t0, te, steady
         self.TP = self.solve_kfw()
 
     def solve_kfw(self):
