@@ -18,17 +18,31 @@ class ModelBuilder:
         :return:
         """
         self.model = model
+        self.stimulus = stimulus
         self.agonist_concentrations = agonist_concentrations
 
         self.models = []
         self.stimuli = []
 
+        self.build_models()
+
+        self.states = self.models[0].states
+        self.states_names = self.models[0].states_names
+        self.states_categories = self.models[0].states_categories
+        self.states_belongs = self.models[0].states_belongs
+        self.states_number = self.models[0].states_number
+        self.states_ini_concentrations = self.models[0].states_ini_concentrations
+
+    def build_models(self):
+        """
+        :return:
+        """
         for conc in self.agonist_concentrations:
 
-            if stimulus == 'pair':
+            if self.stimulus == 'pair':
                 new_stimulus = Stimulus.pair_square([0., 10.], [5., 15.], 10.0)
                 # suspend = [[5., 10.], [15., 20.]]
-            if stimulus == 'single':
+            if self.stimulus == 'single':
                 new_stimulus = Stimulus.square(0., 25., conc)
                 # suspend = [[2.5], [10.]]
 
@@ -36,7 +50,7 @@ class ModelBuilder:
 
             log.info("### Adding rates:")
 
-            if model == 'kisiel':
+            if self.model == 'kisiel':
 
                 r_kon   = Kinetic.State.Rate('kon',     2 * 1e7 * 1e-6,     new_stimulus)
                 r_2kon  = Kinetic.State.Rate('2kon',    2 * 2 * 1e7 * 1e-6, new_stimulus)
@@ -62,7 +76,7 @@ class ModelBuilder:
                 r_g2    = Kinetic.State.Rate('g2',      4300*1e-3)
                 r_0     = Kinetic.State.Rate('block',   0.00*1e-3)
 
-            if model == 'jwm':
+            if self.model == 'jwm':
 
                 r_kon   = Kinetic.State.Rate('kon',     2.00, new_stimulus)
                 r_2kon  = Kinetic.State.Rate('2kon',    4.00, new_stimulus)
@@ -76,7 +90,7 @@ class ModelBuilder:
 
             log.info("### Adding states:")
 
-            if model == 'kisiel':
+            if self.model == 'kisiel':
 
                 #                                  A1O      A2O     A3O     A40     A50     R       A1R     A2R     A2F     A1D     A2D     A4D
                 st_a1o  = Kinetic.State(0, 'A1O', [r_0,     r_0,    r_0,    r_0,    r_0,    r_0,    r_a1,   r_0,    r_0,    r_d1,   r_0,    r_0],   0, 'open')
@@ -92,7 +106,7 @@ class ModelBuilder:
                 st_a2d  = Kinetic.State(10,'A2D', [r_0,     r_0,    r_0,    r_0,    r_0,    r_0,    r_0,    r_0,    r_r2,   r_0,    r_0,    r_0],   0, 'desensitized')
                 st_a4d  = Kinetic.State(11,'A4D', [r_0,     r_0,    r_0,    r_r4,   r_b5,   r_0,    r_0,    r_0,    r_0,    r_0,    r_0,    r_0],   0, 'desensitized')
 
-            if model == 'jwm':
+            if self.model == 'jwm':
 
                 st_r    = Kinetic.State(0, 'R',   [r_0,     r_2kon,   r_0,    r_0,  r_0],   1, False)
                 st_ar   = Kinetic.State(1, 'AR',  [r_koff,  r_0,      r_kon,  r_0,  r_0],   0, False)
@@ -100,12 +114,12 @@ class ModelBuilder:
                 st_a2d  = Kinetic.State(3, 'A2D', [r_0,     r_0,      r_r,    r_0,  r_0],   0, False)
                 st_a2o  = Kinetic.State(4, 'A2O', [r_0,     r_0,      r_a,    r_0,  r_0],   0, True)
 
-            if model == 'kisiel':
+            if self.model == 'kisiel':
 
                 self.states = [st_a1o, st_a2o, st_a3o, st_a4o, st_a5o, st_r, st_a1r, st_a2r, st_a2f, st_a1d, st_a2d, st_a4d]
                 model_kinetic = Kinetic(self.states)
 
-            if model == 'jwm':
+            if self.model == 'jwm':
                 self.states = [st_r, st_ar, st_a2r, st_a2d, st_a2o]
                 model_kinetic = Kinetic(self.states)
 
