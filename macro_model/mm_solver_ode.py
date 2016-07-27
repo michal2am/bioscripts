@@ -7,18 +7,18 @@ import logging as log
 
 class SolverOde:
 
-    def __init__(self, A, P0, names, t0, te, steady):
+    def __init__(self, a, p0, names, t0, te, steady):
         """
         differential equation solver
-        :param A: normalized transition rate matrix with stimulus
-        :param P0: starting conditions (taking first row, if multiple specified)
+        :param a: normalized transition rate matrix with stimulus
+        :param p0: starting conditions (taking first row, if multiple specified)
         :param names: names of states
         :param t0: starting time
         :param te: ending time
         :param steady:
         """
-        self.A, self.P0, self.names, self.t0, self.te, self.steady = A, P0, names, t0, te, steady
-        self.TP = self.solve_kfw()
+        self.a, self.p0, self.names, self.t0, self.te, self.steady = a, p0, names, t0, te, steady
+        self.tp = self.solve_kfw()
 
     def solve_kfw(self):
         """
@@ -26,26 +26,27 @@ class SolverOde:
         :return: array of probabilities, array of times
         """
 
-        def dpdt(t, P, A):
+        def dpdt(t, p, a):
             """
             differential equation: dP/dt = A * P
             :param t: blank parameter for integrator and stimulus
-            :param P: zero-time + blank to fill matrix
-            :param A: transition rate matrix row normalized
+            :param p: zero-time + blank to fill matrix
+            :param a: transition rate matrix row normalized
             :return: differential equation for integrator
             """
-            if self.steady: t = 0
-            return np.dot(P, A(t))
+            if self.steady:
+                t = 0
+            return np.dot(p, a(t))
 
         rk45 = itg.ode(dpdt).set_integrator('lsoda', nsteps=1e4, atol=0.0001)
-        rk45.set_initial_value(self.P0, self.t0).set_f_params(self.A)
+        rk45.set_initial_value(self.p0, self.t0).set_f_params(self.a)
         samples = 1e4
         dt = self.te / samples
 
-        P = np.zeros((samples + 1, len(self.P0)))
-        T = np.zeros(samples + 1)
-        P[0, :] = self.P0
-        T[0] = self.t0
+        p = np.zeros((samples + 1, len(self.p0)))
+        t = np.zeros(samples + 1)
+        p[0, :] = self.p0
+        t[0] = self.t0
 
         idx = 0
         log.info("### Initiating RK ODE Solver")
@@ -53,23 +54,24 @@ class SolverOde:
             rk45.integrate(rk45.t+dt)
             result = np.array(rk45.y)
             log.info("Step: {} Occupancies: {}".format(idx, result))
-            P[idx, :] = result
-            T[idx] = rk45.t
+            p[idx, :] = result
+            t[idx] = rk45.t
             idx += 1
         log.info("### Done RK ODE Solver")
 
-        P = P[0:-1]
-        T = T[0:-1]
+        p = p[0:-1]
+        t = t[0:-1]
 
-        T = np.array([T]).transpose()
-        TP = np.concatenate((T, P), axis=1)
-        TP = pd.DataFrame(data=TP, columns=['time'] + self.names)
+        t = np.array([t]).transpose()
+        tp = np.concatenate((t, p), axis=1)
+        tp = pd.DataFrame(data=tp, columns=['time'] + self.names)
+        tp = tp.set_index('time', drop=True)
 
-        return TP
+        return tp
 
     def get_results(self):
         """
         brings numeric results
-        :return: pandas data frame (columns: time and state names)
+        :return: pandas data frame (time + states)
         """
-        return self.TP
+        return self.tp

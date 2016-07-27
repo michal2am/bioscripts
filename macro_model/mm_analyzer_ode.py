@@ -12,10 +12,9 @@ class AnalyzerODE:
 
     def __init__(self, models, t0, te):
         """
-
-        :param models:
-        :param t0:
-        :param te:
+        :param models: ModelBuilder object
+        :param t0: simulation start time
+        :param te: simulation end time
         :return:
         """
         self.models = models.models
@@ -23,6 +22,7 @@ class AnalyzerODE:
         self.stimuli = models.stimuli
         self.t0, self.te = t0, te
 
+        # model parameters
         self.states = models.states
         self.states_names = models.states_names
         self.states_categories = models.states_categories
@@ -30,9 +30,16 @@ class AnalyzerODE:
         self.states_number = models.states_number
         self.states_ini_concentrations = models.states_ini_concentrations
 
+        # integration results
         self.results_dynamic = self.integrate_model(False)
         self.results_steady = self.integrate_model(True)
 
+        # parsed results
+        self.tp_bystate, self.tp_bycategory = self.trajectories()
+        self.ta_stimuli = self.trajectories_stimuli()
+        self.steady_bystate, self.steady_bycategory = self.steady_occupancies()
+
+        # global plot settings
         sns.set_style("ticks", {'legend.frameon': True})
         sns.set_context("poster")
         sns.set_palette('Paired', self.states_number)
@@ -73,15 +80,59 @@ class AnalyzerODE:
 
     def integrate_model(self, equi):
         """
-
+        runs ode solver for all models
         :param equi:
         :return:
         """
+
         return [SolverOde(model.trmn, self.states_ini_concentrations, self.states_names, self.t0, self.te, equi) for model in self.models]
 
-    def dynamic_response(self):
+    def trajectories(self):
+        """
+        parse results from ode solver
+        :return: list (concentrations) of dataframes (time + states/categories)
         """
 
+        tp_bystate, tp_bycategory = [], []
+        for idx, result in enumerate(self.results_dynamic):
+            tp_bystate.append(result.get_results())
+            tp_bycategory.append(pd.DataFrame({category: tp_bystate[idx][self.states_belongs[category]].sum(axis=1) for category in self.states_belongs}))
+        return [tp_bystate, tp_bycategory]
+
+    def trajectories_stimuli(self):
+        """
+        generate stimulus trajectory
+        :return: list (concentrations) of dataframes (time + stimuli)
+        """
+
+        ta_stimuli = []
+        for stimulus in self.stimuli:
+            time = np.linspace(self.t0 - 2, self.te, int(1e5))
+            df = pd.DataFrame({'time': time, 'stimuli': [stimulus(ti) for ti in time]})
+            ta_stimuli.append(df.set_index('time', drop=True))
+
+        return ta_stimuli
+
+    def steady_occupancies(self):
+        """
+        parse steady state occupancies
+        :return: list (concentrations) of dataframes (concentration + state/category)
+        """
+
+        steady_bystate, steady_bycategory = [], []
+        for idx, result in enumerate(self.results_steady):
+            steady = result.get_results().iloc[-1:]
+            steady['concentration'] = self.agonist_concentrations[idx]
+            steady = steady.set_index('concentration', drop=True)
+            steady_bystate.append(steady)
+            steady_bycategory.append(pd.DataFrame({category: steady_bystate[idx][self.states_belongs[category]].sum(axis=1) for category in self.states_belongs}))
+
+        return steady_bystate, steady_bycategory
+
+    def plot_dynamic_response(self, concentration_index):
+        """
+        plots complete panel for selected concentration index
+        :param concentration_index:
         :return:
         """
 
@@ -95,12 +146,8 @@ class AnalyzerODE:
         fig_ode.add_subplot(ax1, ax2, ax3, ax4)
 
         # ax1 trajectory
-        tp_bystate = self.results_dynamic[0].get_results()
-        tp_bystate.plot(x='time', ax=ax1, legend=True)
-
-        tp_bycategory = pd.DataFrame({category: tp_bystate.drop('time', 1)[self.states_belongs[category]].sum(axis=1) for category in self.states_belongs})
-        tp_bycategory = pd.concat([tp_bystate['time'], tp_bycategory], axis=1)
-        tp_bycategory.plot(x='time',  y='open',  ax=ax1, color='k', legend=True)
+        self.tp_bystate[concentration_index].plot(ax=ax1, legend=True)
+        self.tp_bycategory[concentration_index].plot(y='open',  ax=ax1, color='k', legend=True)
 
         ax1.legend(loc='upper center', ncol=5, borderaxespad=0.)
         ax1.set_xlim([self.t0 - 0.5, self.te + 0.5])
@@ -108,40 +155,40 @@ class AnalyzerODE:
         ax1.set_ylabel('state probability')
 
         # ax2 stimulus
-        time = np.linspace(self.t0 - 2, self.te, 1e5)
-        stim = [self.stimuli[0](ti) for ti in time]
-        ax2.step(time, stim, 'k-')
+        self.ta_stimuli[concentration_index].plot(ax=ax2, drawstyle='steps')
 
         ax2.set_xlim([self.t0 - 5, self.te + 2])
-        ax2.set_ylim([0, max(stim)])
-        ax2.set_yticks([0, max(stim)])
+        ax2.set_ylim([0, self.agonist_concentrations[concentration_index]])
+        ax2.set_yticks([0, self.agonist_concentrations[concentration_index]])
         ax2.set_ylabel('stimulus [mM]')
         ax2.set_xlabel('time [ms]')
 
         # ax3 equilibrium
-        steady_bystate = self.results_steady[0].get_results()[-1:].drop('time', 1)
+        sns.barplot(data=self.steady_bystate[concentration_index], ax=ax3)
+
         log.info('###Equilibrium by states:')
-        log.info(steady_bystate)
-        sns.barplot(data=steady_bystate, ax=ax3)
+        log.info(self.steady_bystate[concentration_index])
+
         ax3.set_ylabel('equilibrium occupancies')
         ax3.set_xlabel('state')
         ax3.set(yscale='log')
 
         # ax4 equilibrium categorical
-        steady_bycategory = pd.DataFrame({category: steady_bystate[self.states_belongs[category]].sum(axis=1) for category in self.states_belongs})
-        log.info('###Equilibrium by categories:')
-        log.info(steady_bycategory)
-        categories = steady_bycategory.transpose()
+        categories = self.steady_bycategory[concentration_index].transpose()
         categories.columns = ['cumulative equilibrium occupancy']
         categories.plot.pie(y='cumulative equilibrium occupancy', legend=True, labels=None, ax=ax4)
+
+        log.info('###Equilibrium by categories:')
+        log.info(self.steady_bycategory[concentration_index])
+
         ax4.legend(loc='lower center', nrow=1)
         ax4.axis('equal')
 
         sns.despine()
 
-    def steady_dose_response(self):
+    def plot_steady_dose_response(self):
         """
-
+        plots complete dose response curve
         :return:
         """
 
@@ -153,15 +200,7 @@ class AnalyzerODE:
         fig_ode_dr.add_subplot(ax1, ax2)
 
         # ax1 dr by state
-        concs = pd.DataFrame({'concentration': self.agonist_concentrations})
-        dr_bystate = pd.DataFrame()
-
-        for result in self.results_steady:
-            dr_bystate = dr_bystate.append(result.get_results()[-1:].drop('time', 1))
-
-        dr_bystate = dr_bystate.reset_index(drop=True)
-        dr_bystate = pd.concat([concs, dr_bystate], axis=1)
-        dr_bystate = dr_bystate.set_index('concentration', drop=True)
+        dr_bystate = pd.concat(self.steady_bystate)
         dr_bystate_fit = dr_bystate.copy()
         dr_bystate_fit = self.fit_logarithmic(dr_bystate_fit)
         dr_bystate.plot(ax=ax1, marker='o', linestyle='None', legend=False)
@@ -175,7 +214,7 @@ class AnalyzerODE:
         ax1.set_ylabel("equilibrium occupancy")
 
         # ax2 dr bystate
-        dr_bycategory = pd.DataFrame({category: dr_bystate[self.states_belongs[category]].sum(axis=1) for category in self.states_belongs})
+        dr_bycategory = pd.concat(self.steady_bycategory)
         dr_bycategory_fit = dr_bycategory.copy()
         dr_bycategory_fit = self.fit_logarithmic(dr_bycategory_fit)
         dr_bycategory.plot(ax=ax2, style='o', colormap=cls.ListedColormap(self.colors[0:6]))
@@ -191,6 +230,4 @@ class AnalyzerODE:
         ax2.set_xlim(1e-4, 1e3)
 
         sns.despine()
-
-
 

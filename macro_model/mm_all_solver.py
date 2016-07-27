@@ -34,9 +34,9 @@ solve_glp = False
 if solve_ode:
     ode_analysis = AnalyzerODE(build_models, t0, te)
     if dynamic:
-        ode_analysis.dynamic_response()
+        ode_analysis.plot_dynamic_response(1)
     if steady:
-        ode_analysis.steady_dose_response()
+        ode_analysis.plot_steady_dose_response()
 
 if solve_glp:
     solver = SolverGlp(model_kinetic, ini_conc, part, t0, te, suspend, opsh)
