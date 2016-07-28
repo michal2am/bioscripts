@@ -1,21 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as grd
-import matplotlib.colors as cls
-from collections import OrderedDict
-from scipy.interpolate import interp1d
 import seaborn as sns
 import pandas as pd
 import scipy.stats as sts
 import time as tm
 import logging as log
-from mm_solver_ode import SolverOde
 from mm_solver_glp import SolverGlp
 from mm_kinetic_models import ModelBuilder
 from mm_analyzer_ode import AnalyzerODE
 
 log.basicConfig(filename='mm_kin.log', filemode='w', format='%(message)s', level=log.DEBUG)
 log.info("### Kinetic solver starts!")
+# log.captureWarnings(True)
 all_time = tm.time()
 
 # model configuration

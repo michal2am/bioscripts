@@ -31,10 +31,12 @@ class AnalyzerODE:
         self.states_ini_concentrations = models.states_ini_concentrations
 
         # integration results
+        log.info('### Integration begins')
         self.results_dynamic = self.integrate_model(False)
         self.results_steady = self.integrate_model(True)
 
         # parsed results
+        log.info('### Integration results parsing begins')
         self.tp_bystate, self.tp_bycategory = self.trajectories()
         self.ta_stimuli = self.trajectories_stimuli()
         self.steady_bystate, self.steady_bycategory = self.steady_occupancies()
@@ -57,9 +59,9 @@ class AnalyzerODE:
             xknown = data.index
 
             # replace index with index logarithm
-            data = data.reset_index()
-            data[xlabel] = data[xlabel].apply(np.log10)
-            data = data.set_index(xlabel, drop=True)
+            data.reset_index(inplace=True)
+            data.loc[:, xlabel] = data.loc[:, xlabel].apply(np.log10)
+            data.set_index(xlabel, inplace=True, drop=True)
 
             # prepare extended index to interpolate
             log_xknown = np.log10(xknown)
@@ -72,9 +74,9 @@ class AnalyzerODE:
             data = data.interpolate(method='akima')
 
             # invert index back
-            data = data.reset_index()
-            data[xlabel] = data[xlabel].rpow(np.ones(len(data[xlabel]))*10)
-            data = data.set_index(xlabel, drop=True)
+            data.reset_index(inplace=True)
+            data.loc[:, xlabel] = data.loc[:, xlabel].rpow(np.ones(len(data[xlabel]))*10)
+            data.set_index(xlabel, inplace=True, drop=True)
 
             return data
 
@@ -92,7 +94,7 @@ class AnalyzerODE:
         parse results from ode solver
         :return: list (concentrations) of dataframes (time + states/categories)
         """
-
+        log.info('Parsing trajectories')
         tp_bystate, tp_bycategory = [], []
         for idx, result in enumerate(self.results_dynamic):
             tp_bystate.append(result.get_results())
@@ -104,7 +106,7 @@ class AnalyzerODE:
         generate stimulus trajectory
         :return: list (concentrations) of dataframes (time + stimuli)
         """
-
+        log.info('Parsing stimuli')
         ta_stimuli = []
         for stimulus in self.stimuli:
             time = np.linspace(self.t0 - 2, self.te, int(1e5))
@@ -118,14 +120,14 @@ class AnalyzerODE:
         parse steady state occupancies
         :return: list (concentrations) of dataframes (concentration + state/category)
         """
-
+        log.info('Parsing steady state occupancies')
         steady_bystate, steady_bycategory = [], []
-        for idx, result in enumerate(self.results_steady):
+        for concentration, result in zip(self.agonist_concentrations, self.results_steady):
             steady = result.get_results().iloc[-1:]
-            steady['concentration'] = self.agonist_concentrations[idx]
-            steady = steady.set_index('concentration', drop=True)
+            steady.index = [concentration]              # explicit to avoid nan substitution
+            steady.index.name = 'concentration'
             steady_bystate.append(steady)
-            steady_bycategory.append(pd.DataFrame({category: steady_bystate[idx][self.states_belongs[category]].sum(axis=1) for category in self.states_belongs}))
+            steady_bycategory.append(pd.DataFrame({category: steady.loc[:, self.states_belongs[category]].sum(axis=1) for category in self.states_belongs}))
 
         return steady_bystate, steady_bycategory
 
@@ -181,7 +183,7 @@ class AnalyzerODE:
         log.info('###Equilibrium by categories:')
         log.info(self.steady_bycategory[concentration_index])
 
-        ax4.legend(loc='lower center', nrow=1)
+        ax4.legend(loc='lower center', nrow=1)  # throws no label warning, but it is ok
         ax4.axis('equal')
 
         sns.despine()
