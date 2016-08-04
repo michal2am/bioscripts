@@ -1,16 +1,13 @@
 import logging as log
 import numpy as np
-import time
-import math
-from scipy.optimize import minimize
+
 from dcpyps import dcio
 from dcpyps import dataset
 from dcpyps import mechanism
-from dcpyps.sccalc import popen
-from dcprogs.likelihood import Log10Likelihood
+from dcpyps import fitMLL
 
 
-class fitterDC:
+class KineticDc:
 
     def __init__(self, mec_file_name, mec_model_num, fixed, scn_files, scn_tres, scn_tcrit, scn_conc):
 
@@ -58,57 +55,8 @@ class fitterDC:
 
         log.info("Reading files: {} with t_res: {} s, t_crit {} s and concentrations: {} M".format(self.scn_files, self.scn_tres, self.scn_tcrit, self.scn_conc))
 
-    def optimize_rates(self):
-
-        kwargs = {'nmax': 2, 'xtol': 1e-12, 'rtol': 1e-12, 'itermax': 100, 'lower_bound': -1e6, 'upper_bound': 0}
-
-        likelihood = []
-
-        for rec, bur in zip(self.recs, self.bursts):
-            likelihood.append(Log10Likelihood(bur, self.mec.kA, rec.tres, rec.tcrit, **kwargs))
-
-        def dcprogslik(x, args=None):
-            self.mec.theta_unsqueeze(np.exp(x))
-            lik = 0
-            for idx, con in enumerate(self.scn_conc):
-                self.mec.set_eff('c', con)
-                lik += -likelihood[idx](self.mec.Q) * math.log(10)
-            return lik
-
-        self.iternum = 0
-
-        def printiter(theta):
-            self.iternum += 1
-            lik = dcprogslik(theta)
-            log.info("iteration # {0:d}; log-lik = {1:.6f}".format(self.iternum, -lik))
-            log.info(np.exp(theta))
-
-        lik = dcprogslik(self.theta)
-        log.info("\nStarting likelihood (DCprogs)= {0:.6f}".format(-lik))
-        start = time.clock()
-        success = False
-
-        while not success:
-            result = minimize(dcprogslik, self.theta, method='Nelder-Mead', callback=printiter, options={'xtol':1e-4, 'ftol':1e-4, 'maxiter': 5000, 'maxfev': 10000, 'disp': True})
-            if result.success:
-                success = True
-            else:
-                self.theta = result.x
-
-        end = time.clock()
-        log.info('time in simplex='.format(end - start))
-        log.info('\n\nresult=')
-        log.info(result)
-
-        log.info('\n Final log-likelihood = {0:.6f}'.format(-result.fun))
-        log.info('\n Number of iterations = {0:d}'.format(result.nit))
-        log.info('\n Number of evaluations = {0:d}'.format(result.nfev))
-        self.mec.theta_unsqueeze(np.exp(result.x))
-        log.info("\n Final rate constants: {}".format(self.mec))
-        log.info('Dose response: {}'.format(popen.printout(self.mec, 0.000065)))
-
 log.basicConfig(filename='mm_dc.log', filemode='w', format='%(message)s', level=log.DEBUG)
-fitter = fitterDC('magda.mec', 0,
+model_dc = KineticDc('magda.mec', 0,
                   [],
                   [['121015C8.SCN', '12101591.SCN', '12101592.SCN', '13101511.SCN', '13101521.SCN', '13101531.SCN'],
                    ['103161K1.SCN', '103161K2.SCN', '103161S1.SCN', '103161S2.SCN', '103162K1.SCN'], #, '103162S1.SCN', '103162S2.SCN'],
@@ -118,11 +66,5 @@ fitter = fitterDC('magda.mec', 0,
                   [0.0105, 0.007, 0.005, 0.006],
                   [10e-3, 10e-6, 1e-6, 0.1e-6])
 
-'''
-fitter = fitterDC('magda.mec', 0,
-                  ['alfa1', 'alfa2', 'alfa3', 'alfa4', 'alfa5', 'beta1', 'beta2', 'beta3', 'beta4', 'beta5', 'k on', 'k off', 'd1', 'r1', 'd2', 'r2', 'd4', 'r4'],
-                  [['121015C8.SCN']],
-                  [0.000065], [0.0105], [10e-3])
-'''
-
-fitter.optimize_rates()
+fit_dc = fitMLL.FittingSession(model_dc.mec, model_dc.recs)
+fit_dc.run()
