@@ -183,7 +183,7 @@ class AnalyzerODE:
         log.info('###Equilibrium by categories:')
         log.info(self.steady_bycategory[concentration_index])
 
-        ax4.legend(loc='lower center', nrow=1)  # throws no label warning, but it is ok
+        ax4.legend(loc='lower center', nrow=1)  # throws no label warning, but it is ok-
         ax4.axis('equal')
 
         sns.despine()
@@ -224,8 +224,7 @@ class AnalyzerODE:
 
         log.info('###Equilibrium by categories:')
         log.info(dr_bycategory)
-
-        ax2.legend(labels=self.states_categories, numpoints=1, loc='center right', ncol=2, borderaxespad=0.)
+        ax2.legend(labels=dr_bycategory.columns.values, numpoints=1, loc='center right', ncol=2, borderaxespad=0.)
         ax2.set(xscale='log')
         ax2.set_xlabel("stimulus [mM]")
         ax2.set_ylabel("equilibrium occupancy")

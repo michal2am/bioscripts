@@ -30,7 +30,7 @@ solve_glp = False
 if solve_ode:
     ode_analysis = AnalyzerODE(build_models, t0, te)
     if dynamic:
-        ode_analysis.plot_dynamic_response(1)
+        ode_analysis.plot_dynamic_response(2)
     if steady:
         ode_analysis.plot_steady_dose_response()
 

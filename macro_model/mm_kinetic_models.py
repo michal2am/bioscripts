@@ -28,7 +28,7 @@ class ModelBuilder:
 
         self.states = self.models[0].states
         self.states_names = self.models[0].states_names
-        self.states_categories = self.models[0].states_categories
+        self.states_categories = self.models[0].states_belongs.keys()
         self.states_belongs = self.models[0].states_belongs
         self.states_number = self.models[0].states_number
         self.states_ini_concentrations = self.models[0].states_ini_concentrations

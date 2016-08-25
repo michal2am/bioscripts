@@ -1,5 +1,6 @@
 import numpy as np
 import logging as log
+import collections
 
 
 class Kinetic:
@@ -15,7 +16,7 @@ class Kinetic:
         self.states_ini_concentrations = [state.border for state in self.states]
         self.states_names = [state.name for state in self.states]
         self.states_categories = set([state.category for state in self.states])
-        self.states_belongs = {category: [state.name for state in self.states if state.category == category] for category in self.states_categories}
+        self.states_belongs = collections.OrderedDict({category: [state.name for state in self.states if state.category == category] for category in self.states_categories})
         self.states_number = len(self.states_names)
         # self.states_op = [state.no for state in self.states if state.category == 'open']
         # self.states_sh = [state.no for state in self.states if not state.category == 'open']
