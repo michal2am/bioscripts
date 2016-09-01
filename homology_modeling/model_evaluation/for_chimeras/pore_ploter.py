@@ -17,10 +17,10 @@ def md_plot(data, xlab, ylab, labe, fontsize=12):
     for (series, model) in zip(data, labe):
         series = list(zip(*series))
         if model == 'chimeric': 
-           ax.plot(series[1][pore_range_temp[0]:pore_range_temp[1]], series[0][pore_range_temp[0]:pore_range_temp[1]], label='template', color='#f69855')
+           ax.plot_euclidean(series[1][pore_range_temp[0]:pore_range_temp[1]], series[0][pore_range_temp[0]:pore_range_temp[1]], label='template', color='#f69855')
         else: 
            lab = 'closed hybrid model {0:02d}'.format(model)
-           ax.plot(series[1][pore_range[0]:pore_range[1]], series[0][pore_range[0]:pore_range[1]], label=lab, lw=1)
+           ax.plot_euclidean(series[1][pore_range[0]:pore_range[1]], series[0][pore_range[0]:pore_range[1]], label=lab, lw=1)
  
     #ax.locator_params(nbins=20)
     ax.set_xlabel(xlab, fontsize=fontsize)

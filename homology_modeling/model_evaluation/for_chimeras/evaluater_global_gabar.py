@@ -15,8 +15,8 @@ def md_plot(outFile, x, y, xlab, ylab, labe, fontsize=12):
 
     fig, ax = plt.subplots()
 
-    ax.plot(x, y[0], c='#f69855', marker='o', ls='', label=labe[0])
-    ax.plot(x, y[1], c='#3a81ba', marker='o', ls='', label=labe[1])
+    ax.plot_euclidean(x, y[0], c='#f69855', marker='o', ls='', label=labe[0])
+    ax.plot_euclidean(x, y[1], c='#3a81ba', marker='o', ls='', label=labe[1])
  
    #ax.locator_params(nbins=20)
     ax.set_xlabel(xlab, fontsize=fontsize)

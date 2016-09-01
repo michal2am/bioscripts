@@ -11,19 +11,19 @@ def md_plot(template, models_mod, xlab, ylab, models, plot_range, fontsize=10):
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
 
     if plot_range == 'all':
-        ax.plot(template, lw=0.6, color='#f69855', label='template')
+        ax.plot_euclidean(template, lw=0.6, color='#f69855', label='template')
         for model, number in zip(models_mod, models): 
-            ax.plot(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
+            ax.plot_euclidean(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
     
     if plot_range == '1':
-       ax.plot(range(12,350), template[674:1012], ls='-', color='#f69855', label='template')
+       ax.plot_euclidean(range(12, 350), template[674:1012], ls='-', color='#f69855', label='template')
        for model, number in zip(models_mod, models):
-            ax.plot(range(12,350), model[0:338], lw=1, label='open hybrid model {0:02d}'.format(number))
+            ax.plot_euclidean(range(12, 350), model[0:338], lw=1, label='open hybrid model {0:02d}'.format(number))
 
     if plot_range == '2':
-        ax.plot(range(12,350), template[0:338], ls='-', color='#f69855', label='template')
+        ax.plot_euclidean(range(12, 350), template[0:338], ls='-', color='#f69855', label='template')
         for model, number in zip(models_mod, models):
-            ax.plot(range(12,350), model[674:1012], lw=1, label='open hybrid model {0:02d}'.format(number))
+            ax.plot_euclidean(range(12, 350), model[674:1012], lw=1, label='open hybrid model {0:02d}'.format(number))
 
     ax.locator_params(nbins=10)
     ax.set_xlabel(xlab, fontsize=fontsize)

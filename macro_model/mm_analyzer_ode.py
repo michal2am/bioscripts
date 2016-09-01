@@ -148,8 +148,8 @@ class AnalyzerODE:
         fig_ode.add_subplot(ax1, ax2, ax3, ax4)
 
         # ax1 trajectory
-        self.tp_bystate[concentration_index].plot(ax=ax1, legend=True)
-        self.tp_bycategory[concentration_index].plot(y='open',  ax=ax1, color='k', legend=True)
+        self.tp_bystate[concentration_index].plot_euclidean(ax=ax1, legend=True)
+        self.tp_bycategory[concentration_index].plot_euclidean(y='open', ax=ax1, color='k', legend=True)
 
         ax1.legend(loc='upper center', ncol=5, borderaxespad=0.)
         ax1.set_xlim([self.t0 - 0.5, self.te + 0.5])
@@ -157,7 +157,7 @@ class AnalyzerODE:
         ax1.set_ylabel('state probability')
 
         # ax2 stimulus
-        self.ta_stimuli[concentration_index].plot(ax=ax2, drawstyle='steps')
+        self.ta_stimuli[concentration_index].plot_euclidean(ax=ax2, drawstyle='steps')
 
         ax2.set_xlim([self.t0 - 5, self.te + 2])
         ax2.set_ylim([0, self.agonist_concentrations[concentration_index]])
@@ -178,7 +178,7 @@ class AnalyzerODE:
         # ax4 equilibrium categorical
         categories = self.steady_bycategory[concentration_index].transpose()
         categories.columns = ['cumulative equilibrium occupancy']
-        categories.plot.pie(y='cumulative equilibrium occupancy', legend=True, labels=None, ax=ax4)
+        categories.plot_euclidean.pie(y='cumulative equilibrium occupancy', legend=True, labels=None, ax=ax4)
 
         log.info('###Equilibrium by categories:')
         log.info(self.steady_bycategory[concentration_index])
@@ -206,7 +206,7 @@ class AnalyzerODE:
         dr_bystate_fit = dr_bystate.copy()
         dr_bystate_fit = self.fit_logarithmic(dr_bystate_fit)
         dr_bystate.plot(ax=ax1, marker='o', linestyle='None', legend=False)
-        dr_bystate_fit.plot(ax=ax1, legend=False)
+        dr_bystate_fit.plot_euclidean(ax=ax1, legend=False)
 
         log.info('###Equilibrium by states:')
         log.info(dr_bystate)
@@ -220,7 +220,7 @@ class AnalyzerODE:
         dr_bycategory_fit = dr_bycategory.copy()
         dr_bycategory_fit = self.fit_logarithmic(dr_bycategory_fit)
         dr_bycategory.plot(ax=ax2, style='o', colormap=cls.ListedColormap(self.colors[0:6]))
-        dr_bycategory_fit.plot(ax=ax2, legend=None, colormap=cls.ListedColormap(self.colors[0:6]))
+        dr_bycategory_fit.plot_euclidean(ax=ax2, legend=None, colormap=cls.ListedColormap(self.colors[0:6]))
 
         log.info('###Equilibrium by categories:')
         log.info(dr_bycategory)

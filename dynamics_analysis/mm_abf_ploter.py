@@ -53,7 +53,7 @@ class ABF_results:
 
         for i, d in enumerate(data):
             ax = plt.subplot(gs[i, 0])
-            d.plot(ax=ax)
+            d.plot_euclidean(ax=ax)
             fig.add_subplot(ax)
 
         sns.despine()

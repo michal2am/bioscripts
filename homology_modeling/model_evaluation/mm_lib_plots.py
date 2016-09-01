@@ -19,7 +19,7 @@ def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, 
     :return:
     """
     fig, ax = plt.subplots()
-    ax.plot(x, y, label=labe, lw=3, color=color)
+    ax.plot_euclidean(x, y, label=labe, lw=3, color=color)
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
     ax.grid('on')
@@ -58,7 +58,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsiz
     ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
-        ax.plot(x[serie], y[serie], label=labe[serie], lw=2, linestyle=linestyle, marker=marker)
+        ax.plot_euclidean(x[serie], y[serie], label=labe[serie], lw=2, linestyle=linestyle, marker=marker)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)

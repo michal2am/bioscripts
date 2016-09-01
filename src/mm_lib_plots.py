@@ -22,7 +22,7 @@ def plot_simple(x, y, xlab, ylab, labe, out_file, color='#405952', fontsize=12, 
     :return:
     """
     fig, ax = plt.subplots()
-    ax.plot(x, y, label=labe, lw=3, color=color)
+    ax.plot_euclidean(x, y, label=labe, lw=3, color=color)
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
     ax.grid('on')
@@ -61,7 +61,7 @@ def plot_simple_multiple(x, y, xlab, ylab, labe, out_file, ylimit=False, fontsiz
     ax.set_color_cycle(['#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29'])
 
     for serie in range(len(labe)):
-        ax.plot(x[serie], y[serie], label=labe[serie], lw=2, linestyle=linestyle, marker=marker)
+        ax.plot_euclidean(x[serie], y[serie], label=labe[serie], lw=2, linestyle=linestyle, marker=marker)
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)
@@ -110,11 +110,11 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
 
     for serie in range(len(labe)):
         color = color_map(norm(serie)) if ranges else colors[serie]
-        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
-                marker=marker, color=color)
+        ax.plot_euclidean(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
+                          marker=marker, color=color)
         for adds in range(data[serie].shape[1] - 2):
-            ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
-                    marker=marker, color=colors[serie])
+            ax.plot_euclidean(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
+                              marker=marker, color=colors[serie])
 
     ax.set_xlabel(xlab, fontsize=fontsize)
     ax.set_ylabel(ylab, fontsize=fontsize)

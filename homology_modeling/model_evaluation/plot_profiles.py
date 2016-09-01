@@ -10,9 +10,9 @@ def md_plot(template, models_mod, xlab, ylab, models, fontsize=10):
     ax.set_color_cycle(['#4D4D4D','#5DA5DA', '#60BD68', '#F17CB0', '#B2912F', '#B276B2', '#DECF3F', '#F15854'])
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
 
-    ax.plot(template, lw=0.6, color='#f69855', label='template')
+    ax.plot_euclidean(template, lw=0.6, color='#f69855', label='template')
     for model, number in zip(models_mod, models): 
-        ax.plot(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
+        ax.plot_euclidean(model, lw=0.5, label='open hybrid model {0:02d}'.format(number))
     
     ax.locator_params(nbins=10)
     ax.set_xlabel(xlab, fontsize=fontsize)

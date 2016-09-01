@@ -12,8 +12,8 @@ def md_plot (x, y, xlab, ylab, labe, savefile, fontsize=12):
 
     ax.set_color_cycle([orange, blue, grey])
 
-    ax.plot(x, y[0], label=labe[0])
-    ax.plot(x, y[1], label=labe[1])
+    ax.plot_euclidean(x, y[0], label=labe[0])
+    ax.plot_euclidean(x, y[1], label=labe[1])
     ax.locator_params(nbins=3)
     ax.set_xlim([0, 120])
     ax.set_xlabel(xlab, fontsize=fontsize)
