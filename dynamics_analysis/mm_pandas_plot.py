@@ -11,25 +11,63 @@ class Ploter:
     def __init__(self):
         pass
 
-
-
     @staticmethod
-    def plot_single(data, type, title):
+    def plot_single(data, title):
+        """
+        plot single plot of one dataseries
+        :param data: pandas dataframe
+        :param title: string
+        :return:
+        """
 
+        # seaborn globals
         sns.set_context('paper')
         sns.set_style('ticks')
         font = {'family': 'serif', 'size': 12}
         mpl.rc('font', **font)
 
-        fig, ax = plt.subplots(figsize=(3.5, 3))
+        # figure and axes initialization
+        fig, ax = plt.subplots(figsize=(4, 3))
+        fig.canvas.set_window_title(title)
 
-        ax.plot(data)
+        # data and labels selection
+        ax.plot(data, color='black', linewidth=0.5)
         ax.set_xlabel(data.index.name)
         ax.set_ylabel(data.columns.values[0])
 
+        # annotations
+
+        ax.annotate('protein constraints removed',
+             (data.loc[2.17].name, data.loc[2.17, 'area [A^2]']),
+             xycoords='data',
+             xytext=(0.1, 0.7),
+             textcoords='data',
+             arrowprops=dict(arrowstyle='simple', color='black'))
+
+        ax.annotate('ion constraints removed',
+             (data.loc[5.76].name, data.loc[5.76, 'area [A^2]']),
+             xycoords='data',
+             xytext=(0.1, 0.85),
+             textcoords='axes fraction',
+             arrowprops=dict(arrowstyle='simple', color='black'))
+
+        # ticks formatting
+        ax.yaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))
+        ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))
+        ax.xaxis.set_ticks(np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num=5))
+        ax.yaxis.set_ticks(np.linspace(ax.get_ylim()[0], ax.get_ylim()[1], num=5))
+
+        # font formatting
+        font = {'family': 'serif'}
+        mpl.rc('font', **font)
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(12)
+
+        # post plot mods and saving
         plt.tight_layout()
         sns.despine()
-        fig.savefig('test.svg', format='svg')
+        fig.savefig(title+'.svg', format='svg')
         plt.show()
 
     @staticmethod
