@@ -10,7 +10,7 @@ import argparse as arp
 
 class TimePositions:
 
-    def __init__(self, filname, step, columns, task, options):
+    def __init__(self, filname, step, columns, task, options, annotations=None):
         """
         for vmd .dat files of step + coords format parsing and plotting
         :param filname: string
@@ -63,7 +63,7 @@ class TimePositions:
         """
         plots shoelace area time plot
         """
-        self.ploter.plot_single(self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]')
+        self.ploter.plot_single(self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]', annotations=['a', 'b'])
 
     def plot_euclidean(self):
         """
@@ -77,7 +77,8 @@ parser.add_argument("-f", "--file", help="file name")
 parser.add_argument("-s", "--step", type=float, help="file time step")
 parser.add_argument("-l", "--labels", nargs="+", help="file data labels")
 parser.add_argument("-t", "--task", help="action to perform")
+parser.add_argument("-a", "--annotations", nargs="+", help="plot annotations: title + point")
 parser.add_argument("-o", "--options", nargs="+", help="additional options")
 args = parser.parse_args()
 
-results = TimePositions(args.file, args.step, args.labels, args.task, args.options)
+results = TimePositions(args.file, args.step, args.labels, args.task, args.options, args.annotations)

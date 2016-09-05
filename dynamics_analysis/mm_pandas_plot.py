@@ -11,8 +11,13 @@ class Ploter:
     def __init__(self):
         pass
 
+    @classmethod
+    def extra_annotation(cls, ax, text, xypoint, xytext):
+        # ax.annotate(text, xypoint, xycoords='data', xytext=xytext, textcoords='data', arrowprops=dict(arrowstyle='simple', color='black'))
+        ax.annotate(text, xypoint, arrowprops=dict(arrowstyle='simple', color='black'))
+
     @staticmethod
-    def plot_single(data, title):
+    def plot_single(data, title, **kwargs):
         """
         plot single plot of one dataseries
         :param data: pandas dataframe
@@ -36,20 +41,11 @@ class Ploter:
         ax.set_ylabel(data.columns.values[0])
 
         # annotations
-
-        ax.annotate('protein constraints removed',
-             (data.loc[2.17].name, data.loc[2.17, 'area [A^2]']),
-             xycoords='data',
-             xytext=(0.1, 0.7),
-             textcoords='data',
-             arrowprops=dict(arrowstyle='simple', color='black'))
-
-        ax.annotate('ion constraints removed',
-             (data.loc[5.76].name, data.loc[5.76, 'area [A^2]']),
-             xycoords='data',
-             xytext=(0.1, 0.85),
-             textcoords='axes fraction',
-             arrowprops=dict(arrowstyle='simple', color='black'))
+        points = (2.17, 5.76)
+        annotations = (annotation for annotation in kwargs['annotations'] if 'annotations' in kwargs.keys())
+        for annotation in annotations:
+            Ploter.extra_annotation(ax, 'protein constraints removed', (points[0], data.loc[points[0], data.columns.values[0]]), (0.1, 0.7))
+            Ploter.extra_annotation(ax, 'ion constraints removed', (points[1], data.loc[points[1], data.columns.values[0]]), (0.1, 0.85))
 
         # ticks formatting
         ax.yaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))
