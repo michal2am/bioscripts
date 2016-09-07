@@ -11,7 +11,9 @@ import logging as lg
 import numpy as np
 import mm_lib_plots as mmplt
 import mm_lib_analysis as mmanl
-
+import pandas as pd
+import mm_pandas_parse as mmpr
+import mm_pandas_plot as mmpl
 
 # hole2 fixed file paths
 hole2 = '/opt/hole2/exe/hole'
@@ -21,14 +23,19 @@ positioner = '/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/co
 class PoreModel:
 
     def __init__(self, pdb_dir, name):
+
+        # modules stuff
+        self.parser = mmpr.Parser()
+        self.ploter = mmpl.Ploter()
+
         self.pdb_dir = pdb_dir
         self.name = name
 
-        self.set_position()
-        self.get_profile()
+        # self.set_position()
+        # self.get_profile()
+        self.labels = self.set_names()
         self.parsed_profiles, self.min_Rads = self.parse_profiles()
 
-        self.labels = self.set_names()
 
     @staticmethod
     def find_files_rec(directory, extension):
@@ -102,7 +109,7 @@ class PoreModel:
         parsed_profiles = []
         min_rads = []
 
-        for profile in self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'):
+        for profile, name  in zip(self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'), self.labels):
             with open(os.path.join('profiles', profile), 'r') as prof:
                 parsed_profile = []
                 for line in prof.readlines():
@@ -112,16 +119,17 @@ class PoreModel:
                     if len(line) == 5 and line[0] == 'Minimum':
                         min_rads.append(float(line[3]))
                 parsed_profile = mmanl.filter_out(parsed_profile, 1, 'out', [-65, -7.5])
-                parsed_profiles.append(np.array(parsed_profile))
+                parsed_profiles.append(pd.DataFrame(parsed_profile))
         return [parsed_profiles, min_rads]
 
     def plot_profiles(self):
         """
         :return:
         """
-        mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Radius [A]", "Z-axis [A]", self.labels,
-                                         self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True,
-                                         xlimit=[-0.5, 6.5])
+        #mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Radius [A]", "Z-axis [A]", self.labels,
+        #                                 self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True,
+        #                                 xlimit=[-0.5, 6.5])
+        self.ploter.plot_multiple(self.parsed_profiles, 'pore profiles')
 
 parser = ap.ArgumentParser()
 parser.add_argument("-d", "--pdb_dirs", nargs='+', help="directories with pdb files to analyze")

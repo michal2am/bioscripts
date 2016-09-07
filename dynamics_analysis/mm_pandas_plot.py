@@ -12,9 +12,17 @@ class Ploter:
         pass
 
     @classmethod
-    def extra_annotation(cls, ax, text, xypoint, xytext):
+    def extra_annotation(cls, ax, text, xypoint): #, xytext):
+        """
+        adds annotation to given axes
+        :param ax: axes
+        :param text: string, annotation to add
+        :param xypoint: tuple, point to put arrowhead
+        :param xytext: tuple, arrow text coordinates
+        """
+        # TODO: xytext!
         # ax.annotate(text, xypoint, xycoords='data', xytext=xytext, textcoords='data', arrowprops=dict(arrowstyle='simple', color='black'))
-        ax.annotate(text, xypoint, arrowprops=dict(arrowstyle='simple', color='black'))
+        ax.annotate(text, xypoint, xycoords='data', textcoords='data', arrowprops=dict(arrowstyle='simple', color='black'))
 
     @staticmethod
     def plot_single(data, title, **kwargs):
@@ -41,11 +49,60 @@ class Ploter:
         ax.set_ylabel(data.columns.values[0])
 
         # annotations
-        points = (2.17, 5.76)
-        annotations = (annotation for annotation in kwargs['annotations'] if 'annotations' in kwargs.keys())
-        for annotation in annotations:
-            Ploter.extra_annotation(ax, 'protein constraints removed', (points[0], data.loc[points[0], data.columns.values[0]]), (0.1, 0.7))
-            Ploter.extra_annotation(ax, 'ion constraints removed', (points[1], data.loc[points[1], data.columns.values[0]]), (0.1, 0.85))
+        if kwargs['annot_texts'] and kwargs['annot_points'] is not None:
+            for annotation in zip(kwargs['annot_points'], kwargs['annot_texts']):
+                Ploter.extra_annotation(ax, annotation[1], (annotation[0], data.loc[float(annotation[0]), data.columns.values[0]]))
+
+        # ticks formatting
+        ax.yaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))
+        ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))
+        ax.xaxis.set_ticks(np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num=5))
+        ax.yaxis.set_ticks(np.linspace(ax.get_ylim()[0], ax.get_ylim()[1], num=5))
+
+        # font formatting
+        font = {'family': 'serif'}
+        mpl.rc('font', **font)
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(12)
+
+        # post plot mods and saving
+        plt.tight_layout()
+        sns.despine()
+        fig.savefig(title+'.svg', format='svg')
+        plt.show()
+
+    @staticmethod
+    def plot_multiple(data, title, **kwargs):
+        """
+        plot single plot of one dataseries
+        :param data: pandas dataframe
+        :param title: string
+        :return:
+        """
+
+        # seaborn globals
+        sns.set_context('paper')
+        sns.set_style('ticks')
+        font = {'family': 'serif', 'size': 12}
+        mpl.rc('font', **font)
+
+        # figure and axes initialization
+        fig, ax = plt.subplots(figsize=(4, 6))
+        fig.canvas.set_window_title(title)
+
+        # data and labels selection
+        for series in data:
+            ax.plot(series, linewidth=0.5)
+        # ax.set_xlabel(data.index.name)
+        # ax.set_ylabel(data.columns.values[0])
+
+        # annotations TODO: fix for multiple
+        '''
+        if kwargs['annot_texts'] and kwargs['annot_points'] is not None:
+            for annotation in zip(kwargs['annot_points'], kwargs['annot_texts']):
+                Ploter.extra_annotation(ax, annotation[1], (annotation[0], data.loc[float(annotation[0]), data.columns.values[0]]))
+        '''
 
         # ticks formatting
         ax.yaxis.set_major_formatter(mpl.ticker.FormatStrFormatter('%.2f'))

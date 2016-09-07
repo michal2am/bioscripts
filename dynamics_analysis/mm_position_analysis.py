@@ -6,11 +6,12 @@ import mm_pandas_parse as mmpr
 import mm_pandas_plot as mmpl
 import numpy as np
 import argparse as arp
+import pandas as pd
 
 
 class TimePositions:
 
-    def __init__(self, filname, step, columns, task, options, annotations=None):
+    def __init__(self, filname, step, columns, task, options, **kwargs):
         """
         for vmd .dat files of step + coords format parsing and plotting
         :param filname: string
@@ -18,18 +19,31 @@ class TimePositions:
         :param columns: list, columns names
         :param task: string, selected action
         :param options: list, optional
+        :param annotations: TODO
         """
+
+        # modules stuff
         self.parser = mmpr.Parser()
         self.ploter = mmpl.Ploter()
 
+        # kwargs handling
+        self.annot_points, self.annot_texts = kwargs['annotations'][0], kwargs['annotations'][1]
+        self.bounds = [float(b) for b in kwargs['bounds']] if kwargs['bounds'] is not None else None
+
+        # basic parsing
         self.filename, self.step, self.options = filname, step, options
         self.positions = self.parser.read_result(self.filename, 0, columns)
+        if self.bounds is not None:
+            self.positions = self.positions.loc[self.bounds[0]:self.bounds[1]]
+            label = self.positions.index.name
+            self.positions.reset_index(drop=True, inplace=True)
+            self.positions.index.name = label
         self.tons()
 
         if task == 'euclidean':
             self.euclidean()
-            print(self.positions.loc[2.17].name)
             self.plot_euclidean()
+            self.plot_n()
         if task == 'shoelace':
             self.shoelace()
             self.plot_shoelace()
@@ -63,13 +77,19 @@ class TimePositions:
         """
         plots shoelace area time plot
         """
-        self.ploter.plot_single(self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]', annotations=['a', 'b'])
+        self.ploter.plot_single(self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]',
+                                annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 
     def plot_euclidean(self):
         """
         plots euclidean distance time plot
         """
-        self.ploter.plot_single(self.positions.loc[:, 'distance [A]'].to_frame(), 'chloride positions')
+        self.ploter.plot_single(self.positions.loc[:, 'distance [A]'].to_frame(), 'chloride positions',
+                                annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
+
+    def plot_n(self):
+        self.ploter.plot_single(self.positions.loc[:, 'n'].to_frame(), 'chloride ions within 4A',
+                                annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 
 
 parser = arp.ArgumentParser()
@@ -77,8 +97,11 @@ parser.add_argument("-f", "--file", help="file name")
 parser.add_argument("-s", "--step", type=float, help="file time step")
 parser.add_argument("-l", "--labels", nargs="+", help="file data labels")
 parser.add_argument("-t", "--task", help="action to perform")
-parser.add_argument("-a", "--annotations", nargs="+", help="plot annotations: title + point")
+parser.add_argument("-ap", "--annot_point", nargs="+", help="plot annotations: points")
+parser.add_argument("-at", "--annot_text", nargs="+", help="plot annotations: titles")
+parser.add_argument("-b", "--bounds", nargs="+", help="start and stop timeframe to plot")
 parser.add_argument("-o", "--options", nargs="+", help="additional options")
 args = parser.parse_args()
 
-results = TimePositions(args.file, args.step, args.labels, args.task, args.options, args.annotations)
+results = TimePositions(args.file, args.step, args.labels, args.task, args.options,
+                        annotations=(args.annot_point, args.annot_text), bounds=args.bounds)

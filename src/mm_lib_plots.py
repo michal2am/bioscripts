@@ -110,10 +110,10 @@ def plot_simple_multiple_numpy(data, xlab, ylab, labe, out_file, ranges=False, x
 
     for serie in range(len(labe)):
         color = color_map(norm(serie)) if ranges else colors[serie]
-        ax.plot_euclidean(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
+        ax.plot(data[serie][:, 0], data[serie][:, 1], label=labe[serie], lw=0.5, linestyle=linestyle,
                           marker=marker, color=color)
         for adds in range(data[serie].shape[1] - 2):
-            ax.plot_euclidean(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
+            ax.plot(data[serie][:, 0], data[serie][:, adds + 2], label='_nolegend_', lw=0.5, linestyle=linestyle,
                               marker=marker, color=colors[serie])
 
     ax.set_xlabel(xlab, fontsize=fontsize)
