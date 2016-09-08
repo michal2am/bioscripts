@@ -70,8 +70,9 @@ class PoreModel:
         """
         :return: list of pdb file names without extension
         """
-        positioned = [os.path.splitext(os.path.split(pdb)[1])[0] for pdb in self.find_files_cur(self.pdb_dir + '/positioned', '.pdb')]
-        return [name.split('_')[0] for name in positioned]
+        positioned = [os.path.splitext(os.path.split(pdb)[1])[0] for pdb in self.find_files_cur(self.pdb_dir + '/profiles', '.dat')]
+        return [name.split('_')[0] + ' ' + name.split('_')[1] for name in positioned]
+        # return positioned
 
     def set_position(self):
         """
@@ -109,7 +110,7 @@ class PoreModel:
         parsed_profiles = []
         min_rads = []
 
-        for profile, name  in zip(self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'), self.labels):
+        for profile, name in zip(self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'), self.labels):
             with open(os.path.join('profiles', profile), 'r') as prof:
                 parsed_profile = []
                 for line in prof.readlines():
@@ -118,8 +119,11 @@ class PoreModel:
                         parsed_profile.append([float(col) for col in line[1::-1]])
                     if len(line) == 5 and line[0] == 'Minimum':
                         min_rads.append(float(line[3]))
-                parsed_profile = mmanl.filter_out(parsed_profile, 1, 'out', [-65, -7.5])
-                parsed_profiles.append(pd.DataFrame(parsed_profile))
+                parsed_profile = np.array(mmanl.filter_out(parsed_profile, 1, 'out', [-55, -10]))
+                parsed_profile = pd.DataFrame(index=parsed_profile[:, 0], data=parsed_profile[:, 1], columns=[name])
+                parsed_profile.index.name = 'radius [A]'
+                parsed_profiles.append(parsed_profile)
+        print(parsed_profiles)
         return [parsed_profiles, min_rads]
 
     def plot_profiles(self):

@@ -44,7 +44,7 @@ class Ploter:
         fig.canvas.set_window_title(title)
 
         # data and labels selection
-        ax.plot(data, color='black', linewidth=0.5)
+        ax.plot(data, linewidth=0.5)
         ax.set_xlabel(data.index.name)
         ax.set_ylabel(data.columns.values[0])
 
@@ -83,19 +83,23 @@ class Ploter:
 
         # seaborn globals
         sns.set_context('paper')
-        sns.set_style('ticks')
+        sns.set_style('ticks', {'legend.frameon': True})
         font = {'family': 'serif', 'size': 12}
         mpl.rc('font', **font)
 
         # figure and axes initialization
-        fig, ax = plt.subplots(figsize=(4, 6))
+        fig, ax = plt.subplots(figsize=(5, 6))
         fig.canvas.set_window_title(title)
 
         # data and labels selection
         for series in data:
-            ax.plot(series, linewidth=0.5)
-        # ax.set_xlabel(data.index.name)
-        # ax.set_ylabel(data.columns.values[0])
+            ax.plot(series, label=series.columns[0], linewidth=1)
+        ax.set_xlabel(data[0].index.name)
+        ax.set_ylabel('z coordinate [A]')
+
+
+        # legend handling
+        plt.legend(fontsize=12, loc=4)
 
         # annotations TODO: fix for multiple
         '''
