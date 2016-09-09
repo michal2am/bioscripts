@@ -123,7 +123,6 @@ class PoreModel:
                 parsed_profile = pd.DataFrame(index=parsed_profile[:, 0], data=parsed_profile[:, 1], columns=[name])
                 parsed_profile.index.name = 'radius [A]'
                 parsed_profiles.append(parsed_profile)
-        print(parsed_profiles)
         return [parsed_profiles, min_rads]
 
     def plot_profiles(self):
@@ -133,7 +132,8 @@ class PoreModel:
         #mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Radius [A]", "Z-axis [A]", self.labels,
         #                                 self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True,
         #                                 xlimit=[-0.5, 6.5])
-        self.ploter.plot_multiple(self.parsed_profiles, 'pore profiles')
+        self.ploter.plot_single('multi-indepx', self.parsed_profiles, 'pore profiles', (5, 6),
+                                y_label='z coordinate [A]')
 
 parser = ap.ArgumentParser()
 parser.add_argument("-d", "--pdb_dirs", nargs='+', help="directories with pdb files to analyze")

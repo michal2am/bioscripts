@@ -77,18 +77,21 @@ class TimePositions:
         """
         plots shoelace area time plot
         """
-        self.ploter.plot_single(self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]',
+        self.ploter.plot_single('single', self.positions.loc[:, 'area [A^2]'].to_frame(), 'upring area [A^2]', (4, 3),
                                 annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 
     def plot_euclidean(self):
         """
         plots euclidean distance time plot
         """
-        self.ploter.plot_single(self.positions.loc[:, 'distance [A]'].to_frame(), 'chloride positions',
+        self.ploter.plot_single('single', self.positions.loc[:, 'distance [A]'].to_frame(), 'chloride positions', (4, 3),
                                 annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 
+    def plot_both(self):
+        self.ploter.plot_multiple('a', [self.positions.loc[:, 'area [A^2]'].to_frame(), self.positions.loc[:, 'distance [A]'].to_frame()], (4, 6))
+
     def plot_n(self):
-        self.ploter.plot_single(self.positions.loc[:, 'n'].to_frame(), 'chloride ions within 4A',
+        self.ploter.plot_single('single', self.positions.loc[:, 'n'].to_frame(), 'chloride ions within 4A', (4, 3),
                                 annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 
 
