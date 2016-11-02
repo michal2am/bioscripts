@@ -1,4 +1,4 @@
-# python 2
+# python 3
 # script for transcripting pdb to fasta
 # michaladammichalowski@gmail.com
 # ? - creation
@@ -25,8 +25,8 @@ def getSeq(structName, chain, ch, seqFile):
 
     for peptide in polypeptide:
         PdbSeq += str(peptide.get_sequence())
-    print '>{0} chain-{1}'.format(structName, ch)
-    print PdbSeq
+    print('>{0} chain-{1}'.format(structName, ch))
+    print(PdbSeq)
 
     seqFile.write('>{0} chain-{1}\n'.format(structName, ch))
     seqFile.write(PdbSeq + '\n')

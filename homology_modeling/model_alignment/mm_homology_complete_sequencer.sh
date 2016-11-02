@@ -7,6 +7,7 @@
 
 pdbDir="$1"
 pdbAll="${pdbDir}/*.pdb"
+converter="${HOME}/pycharm_projects/bioscripts/homology_modeling/model_alignment/mm_homology_pdb2fasta.py"
 
 echo "info: begin sequencing files in: ${pdbDir}"
 
@@ -20,7 +21,7 @@ for pdb in $pdbAll; do
 
         echo "info: processing file "$pdbName" "
 
-        python mm_homology_pdb2fasta.py --pdbFile "$pdbFile" --pdbCode "$pdbName" --seqName "$pdbName"
+        python "$converter" --pdbFile "$pdbFile" --pdbCode "$pdbName" --seqName "$pdbName"
 
 done
 

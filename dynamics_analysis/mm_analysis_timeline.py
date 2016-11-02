@@ -153,8 +153,11 @@ class Timelines:
         #for timeline in timelines:
             #timeline.print_prop(["RMSF"])
 
-        dataseries = [timeline.get_prop("RMSD") for timeline in timelines]
-        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", "RMSD", self.names, "timeline_RMSD",
+        dataseries = [timeline.get_prop("RMSF") for timeline in timelines]
+        print(dataseries[0])
+        with open('chainE_perResRMSF_means.csv', 'wb') as f:
+            np.savetxt(f, dataseries[0], fmt='%.5f')
+        mmplt.plot_simple_multiple_numpy(dataseries, "Residue position", "RMSF", self.names, "timeline_RMSF",
                                          sizex=2.5, sizey=1.5)
 
 
