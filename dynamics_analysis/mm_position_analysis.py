@@ -32,7 +32,7 @@ class TimePositions:
 
         # basic parsing
         self.filename, self.step, self.options = filname, step, options
-        self.positions = self.parser.read_result(self.filename, 0, columns)
+        self.positions = self.parser.read_result_vert(self.filename, 0, columns)
         if self.bounds is not None:
             self.positions = self.positions.loc[self.bounds[0]:self.bounds[1]]
             label = self.positions.index.name
@@ -43,7 +43,7 @@ class TimePositions:
         if task == 'euclidean':
             self.euclidean()
             self.plot_euclidean()
-            self.plot_n()
+            # self.plot_n()
         if task == 'shoelace':
             self.shoelace()
             self.plot_shoelace()
@@ -84,6 +84,9 @@ class TimePositions:
         """
         plots euclidean distance time plot
         """
+        print(self.positions)
+        f = open('test', 'w')
+        self.positions.loc[:, 'distance [A]'].to_frame().to_csv(path_or_buf=f)
         self.ploter.plot_single('single', self.positions.loc[:, 'distance [A]'].to_frame(), 'chloride positions', (4, 3),
                                 annot_points=self.annot_points, annot_texts=self.annot_texts, bounds=self.bounds)
 

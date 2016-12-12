@@ -46,6 +46,9 @@ class Ploter:
         ax.xaxis.set_ticks(np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num=freq))
         ax.yaxis.set_ticks(np.linspace(ax.get_ylim()[0], ax.get_ylim()[1], num=freq))
 
+        ax.xaxis.set_ticks(np.linspace(0, 20, num=freq))
+        ax.set_xlim([-5, 30])
+
     @classmethod
     def set_fonts(cls, ax, size):
         font = {'family': 'serif'}
@@ -55,8 +58,10 @@ class Ploter:
             item.set_fontsize(size)
 
     @classmethod
-    def set_legend(cls, ax, position, fontsize):
-        ax.legend(fontsize=fontsize, loc=position)
+    def set_legend(cls, ax, position, fontsize, cols=1):
+        leg = ax.legend(fontsize=fontsize, loc=position, ncol=cols)
+        for legobj in leg.legendHandles:
+            legobj.set_linewidth(2.0)
 
     @classmethod
     def set_annotation(cls, ax, text, xypoint): #, xytext):
@@ -86,17 +91,24 @@ class Ploter:
 
         # for dataframe with one column
         if style == 'single':
-            ax.plot(data, linewidth=1)
+            ax.plot(data, 'o', linewidth=1.5)
             ax.set_xlabel(data.index.name)
             ax.set_ylabel(data.columns.values[0])
 
+        # for dataframe with many columns
+        if style == 'multi':
+            data.plot(ax=ax, linewidth=0.25)                                    # correct label and legend handling
+            ax.set_xlabel(data.index.name)
+            ax.set_ylabel(kwargs['y_label'])
+            Ploter.set_legend(ax, 4, font, cols=kwargs['ncols'])
+
         # for list of dataframes with one column (different index values)
-        if style == 'multi-indepx':
+        if style == 'multi-index':
             for series in data:
-                ax.plot(series, label=series.columns[0], linewidth=1)
+                ax.plot(series, label=series.columns[0], linewidth=0.25)
                 ax.set_xlabel(data[0].index.name)
                 ax.set_ylabel(kwargs['y_label'])
-            Ploter.set_legend(ax, 4, font)
+            Ploter.set_legend(ax, 4, font, cols=kwargs['ncols'])
 
         # annotations TODO: for multi styles
         if 'annot_texts' and'annot_points' in kwargs:
