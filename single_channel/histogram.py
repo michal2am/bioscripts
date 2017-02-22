@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import matplotlib.scale as mscale
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
@@ -10,14 +8,24 @@ import matplotlib.ticker as ticker
 import argparse as ap
 
 
-class SCh_histogram:
+class Histogram:
 
     def __init__(self, fname):
+        """
+        plot handling of HCJFIT event time distribution
+        :param fname: HCJFIT ASCII file name
+        """
 
         self.fname = fname
         self.data, self.calc, self.mntime, self.mxtime, self.meven = self.read()
+        self.data = self.data.append(self.last_bin())
 
     def read(self):
+        """
+        read HCJFIT ASCII file
+        :return: histogram datafram, fits dataframes, time and event number range
+        """
+
         with open(self.fname) as f:
 
             raw = f.readlines()
@@ -28,28 +36,49 @@ class SCh_histogram:
                 if 'calc' in line: calcid.append(id)
                 if len(line.split()) == 1: seriid.append(id)
 
+            # histogram
             data = [map(float, line.split()) for line in raw[seriid[0]+1:seriid[0]+int(raw[seriid[0]])+1]]
 
+            # fits
             calc = []
             for i in range(len(seriid) - 1):
-                calc.append([map(float, line.split()) for line in raw[seriid[i+1]+1:seriid[i+1]+int(raw[seriid[i+1]])+1]])
+                calc.append([map(float, line.split()) for
+                             line in raw[seriid[i+1]+1:seriid[i+1]+int(raw[seriid[i+1]])+1]])
 
             data = pd.DataFrame(data).set_index(keys=0)
             calc = [pd.DataFrame(series).set_index(keys=0) for series in calc]
 
+            # ranges
             meven = max([series.max().iloc[0] for series in calc])
             mxtime = max([series.index[-1] for series in calc])
-            mntime = sorted([series.index[0] for series in calc])[1]                  # magic sorted, because missed event may be longer
+            mntime = sorted([series.index[0] for series in calc])[1]                                                    # magic sorted, because missed event may be longer
 
             return data, calc, mntime, mxtime, meven
 
     def last_bin(self):
-        bins = sch_hist.data.index.values
-        diffs = np.diff(bins)
-        for dif in diffs:
-            print(dif)
-        mpl.pyplot.plot(diffs)
-        plt.show()
+        """
+        extrapolates last bin width
+        :return: last bin width [ms]
+        """
+
+        bins = self.data.index.values
+        diffs = np.log(np.diff(bins))                                                                                   # linearized bin widths
+        xs = range(0, len(diffs))                                                                                       # just x axis
+
+        fit = np.polyfit(xs, diffs, 1)
+        fiteq = np.poly1d(fit)
+        last_bin = np.exp(fiteq(xs[-1]+1)) + self.data.index.values[-1]
+
+        extrapolated = pd.DataFrame(data=[0], index=[last_bin], columns=[1])
+
+        print('Sanity check: last known bin: {}'.format(self.data.index.values[-1]))
+        print('Sanity check: extrapolated bin: {}'.format(last_bin))
+
+        # bins plot
+        # mpl.pyplot.plot(np.append(self.data.index.values, last_bin))
+        # plt.show()
+
+        return extrapolated
 
     def plot(self):
 
@@ -73,14 +102,14 @@ class SCh_histogram:
             series.plot(ax=ax, color='black', lw=1)
 
         # tick ranges
-        ymax = int(self.meven ** 0.5)                               # magic need 'last before' power function argument
+        ymax = int(self.meven ** 0.5)                                                                                   # magic need 'last before' power function argument
         if ymax % 2 == 1: ymax += 1
 
-        ys = [(x * 2) ** 2 for x in range(0, int(ymax / 2 + 2))]    # magick scale if +2 so w need /2 and +2 for additional entry
-        yms = [x ** 2 for x in np.arange(0, ymax + 2, 0.5)]         # magick scale is not divided so only +2 for additional entry
+        ys = [(x * 2) ** 2 for x in range(0, int(ymax / 2 + 2))]                                                        # magick scale if +2 so w need /2 and +2 for additional entry
+        yms = [x ** 2 for x in np.arange(0, ymax + 2, 0.5)]                                                             # magick scale is not divided so only +2 for additional entry
 
-        last = ys[-1] if len(ys) % 2 == 1 else 0                    # too many ys? reduce, but preserve last
-        lastm = yms[-1] if len(yms) % 2 ==1 else 0
+        last = ys[-1] if len(ys) % 2 == 1 else 0                                                                        # too many ys? reduce, but preserve last
+        lastm = yms[-1] if len(yms) % 2 == 1 else 0
 
         if len(ys) > 10:
             ys = ys[0:-1:4]
@@ -97,8 +126,8 @@ class SCh_histogram:
         ax.set_yticks(yms, minor=True)
         ax.tick_params(labelsize=14)
 
-        xmax = int(np.log10(self.mxtime))    # magic again, 'last before' base 10 log
-        xmin = int(np.log10(self.mntime))    # magic again, first base 10 log
+        xmax = int(np.log10(self.mxtime))                                                                               # magic again, 'last before' base 10 log
+        xmin = int(np.log10(self.mntime))                                                                               # magic again, first base 10 log
 
         # axes ranges
         ax.set_ylim([0, (ymax + 2) ** 2])
@@ -109,11 +138,10 @@ class SCh_histogram:
         ax.set_ylabel('frequency [ ] (square root scale)', fontsize=14)
         ax.legend(['observed', 'fit', 'missed event correction', 'components fits'], loc='best', fontsize=14)
 
-
         sns.despine()
         plt.tight_layout()
 
-        # plt.show()
+        plt.show()
         fig.savefig(self.fname.split('.')[0] + ".png")
 
 
@@ -167,23 +195,5 @@ parser.add_argument("-f", "--files", nargs='+', help="hcjfit ASCII files")
 args = parser.parse_args()
 
 for file in args.files:
-    sch_hist = SCh_histogram(file)
-    sch_hist.last_bin()
+    sch_hist = Histogram(file)
     sch_hist.plot()
-
-
-'''
-bin sizes:
-
->>> 24.76216-20.43879
-4.323370000000001
->>> 20.43879-16.87026
-3.5685300000000026
->>> 16.87026-13.92478
-2.945479999999998
->>> 13.92478-11.49358
-2.4312000000000005
->>> 11.49358-9.48684
-2.006739999999999
->>>
-'''
