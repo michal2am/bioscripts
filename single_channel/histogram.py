@@ -10,15 +10,16 @@ import argparse as ap
 
 class Histogram:
 
-    def __init__(self, fname):
+    def __init__(self, fname, size, xrange, yrange, legend):
         """
         plot handling of HCJFIT event time distribution
         :param fname: HCJFIT ASCII file name
         """
 
         self.fname = fname
+        self.size, self.xrange, self.yrange, self.legend = size, xrange, yrange, legend
         self.data, self.calc, self.mntime, self.mxtime, self.meven = self.read()
-        self.data = self.data.append(self.last_bin())
+        self.data = pd.concat([pd.DataFrame([0], index=[0.07], columns=[1]), self.data, self.last_bin()])
 
     def read(self):
         """
@@ -37,7 +38,7 @@ class Histogram:
                 if len(line.split()) == 1: seriid.append(id)
 
             # histogram
-            data = [map(float, line.split()) for line in raw[seriid[0]+1:seriid[0]+int(raw[seriid[0]])+1]]
+            data = [[float(value) for value in line.split()] for line in raw[seriid[0]+1:seriid[0]+int(raw[seriid[0]])+1]]
 
             # fits
             calc = []
@@ -46,6 +47,7 @@ class Histogram:
                              line in raw[seriid[i+1]+1:seriid[i+1]+int(raw[seriid[i+1]])+1]])
 
             data = pd.DataFrame(data).set_index(keys=0)
+            print(data.iloc[0])
             calc = [pd.DataFrame(series).set_index(keys=0) for series in calc]
 
             # ranges
@@ -88,7 +90,7 @@ class Histogram:
         sns.set_style("ticks")
 
         # figure generation
-        fig, ax = plt.subplots(figsize=(6.5, 4))
+        fig, ax = plt.subplots(figsize=self.size)
         ax.set_xscale('log', basex=10)
         ax.set_yscale('squareroot')
 
@@ -101,14 +103,34 @@ class Histogram:
         for series in sch_hist.calc[1:-1]:
             series.plot(ax=ax, color='black', lw=1)
 
-        # tick ranges
+        # x-axis
+        xmax = int(np.log10(self.mxtime))                                                                               # magic again, 'last before' base 10 log
+        xmin = int(np.log10(self.mntime))                                                                               # magic again, first base 10 log
+
+        if self.xrange:
+            ax.set_xlim(self.xrange)
+        else:
+            ax.set_xlim([10 ** xmin, 10 ** (xmax + 1)])
+
+        # y-axis
         ymax = int(self.meven ** 0.5)                                                                                   # magic need 'last before' power function argument
         if ymax % 2 == 1: ymax += 1
+
+        if self.yrange:
+            ax.set_ylim(self.yrange)
+        else:
+            ax.set_ylim([0, (ymax + 2) ** 2])
 
         ys = [(x * 2) ** 2 for x in range(0, int(ymax / 2 + 2))]                                                        # magick scale if +2 so w need /2 and +2 for additional entry
         yms = [x ** 2 for x in np.arange(0, ymax + 2, 0.5)]                                                             # magick scale is not divided so only +2 for additional entry
 
-        last = ys[-1] if len(ys) % 2 == 1 else 0                                                                        # too many ys? reduce, but preserve last
+
+
+        if self.yrange:
+            ys = [y for y in ys if y < self.yrange[1]]
+            yms = [ym for ym in yms if ym < self.yrange[1]]
+
+        last = ys[-1] if len(ys) % 2 == 1 else 0  # too many ys? reduce, but preserve last
         lastm = yms[-1] if len(yms) % 2 == 1 else 0
 
         if len(ys) > 10:
@@ -126,17 +148,13 @@ class Histogram:
         ax.set_yticks(yms, minor=True)
         ax.tick_params(labelsize=14)
 
-        xmax = int(np.log10(self.mxtime))                                                                               # magic again, 'last before' base 10 log
-        xmin = int(np.log10(self.mntime))                                                                               # magic again, first base 10 log
-
-        # axes ranges
-        ax.set_ylim([0, (ymax + 2) ** 2])
-        ax.set_xlim([10 ** xmin, 10 ** (xmax + 1)])
-
         # overwrite labels and legend
         ax.set_xlabel('apparent open time [ms] (log scale)', fontsize=14)
-        ax.set_ylabel('frequency [ ] (square root scale)', fontsize=14)
-        ax.legend(['observed', 'fit', 'missed event correction', 'components fits'], loc='best', fontsize=14)
+        ax.set_ylabel('frequency density (square root scale)', fontsize=14)
+
+        if self.legend:
+            ax.legend(['observed', 'fit', 'missed event correction', 'components fits'], loc='best', fontsize=14)
+        else: ax.legend_.remove()
 
         sns.despine()
         plt.tight_layout()
@@ -192,8 +210,15 @@ class SquareRootScale(mscale.ScaleBase):
 
 parser = ap.ArgumentParser()
 parser.add_argument("-f", "--files", nargs='+', help="hcjfit ASCII files")
+parser.add_argument("-s", "--size", nargs='+', type=float, help="figure x and y size [inch]")
+parser.add_argument("-x", "--xrange", nargs='+', type=float, help="plot x range")
+parser.add_argument("-y", "--yrange", nargs='+', type=float, help="plot y range")
+parser.add_argument("-l", "--legend", dest='leg', action='store_true', help="add legend")
+parser.add_argument("-nl", "--no_legend", dest='leg', action='store_false', help="don't add legend")
+
+parser.set_defaults(leg=True)
 args = parser.parse_args()
 
 for file in args.files:
-    sch_hist = Histogram(file)
+    sch_hist = Histogram(file, args.size, args.xrange, args.yrange, args.leg)
     sch_hist.plot()
