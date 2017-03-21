@@ -3,14 +3,14 @@
 # michaladammichalowski@gmail.com
 # ? - creation
 # 18.02.16 - refactor
+# 21.03.17 - refactor
 # EXAMPLE CALL: python3 mm_homology_eval_global.py -l mm_homology_create_gabar.log -o 3jae_global -n 256 -t 0.08
 
 import subprocess as sp
-import heapq
-import copy
 import argparse
-import mm_lib_plots as mmplt
-
+import numpy as np
+import pandas as pd
+import mm_pandas_plot as mm_plt
 
 class ModelList:
 
@@ -20,120 +20,49 @@ class ModelList:
         :param model_num: number of models
         :param treshold: percent of top models to select
         :param out_file: file for plotting
-        :return: none
         """
 
-        self.log_file = log_file
-        self.model_num = model_num
-        self.tresh = treshold
-        self.out_file = out_file
-
-        self.best_molpdf = self.parse()[0]
-        self.best_dope = self.parse()[1]
-        self.best_common = self.parse()[2]
-        self.normals = self.parse()[3]
-
-    @staticmethod
-    def get_extr(values, index):
-        """
-        :param values: line-like values iterable
-        :param index: property to compare
-        :return: lowest and highest line-like value
-        """
-
-        return heapq.nsmallest(1, values, key=lambda x: x[index])[0], \
-               heapq.nlargest(1, values, key=lambda x: x[index])[0]
-
-    @staticmethod
-    def get_sort(values, index):
-        """
-        :param values: line-like values iterable
-        :param index: property to compare
-        :return: sorted line-like values iterable with position at [0]
-        """
-
-        return [[i+1] + model[:] for i, model in enumerate(sorted(values, key=lambda x: x[index]))]
-
-    @staticmethod
-    def get_top(values, perc):
-        """
-        :param values:
-        :param perc:
-        :return:
-        """
-
-        return values[0:int(len(values) * perc)]
-
-
-    @staticmethod
-    def normalized(values, index, bounds):
-        """
-        for properties 'the lower the better', 0-1 range 1 for best
-        :param values: line-like values iterable
-        :param index: properties to normalize [[i], ...]
-        :param bounds: line-like values for boundaries [[best, worst], ...]
-        :return: line-like values with normalized selected properties
-        """
-
-        for line in values:
-            for ind in index:
-                line[ind] = 1 - (line[ind] - bounds[ind-1][0][ind])/(bounds[ind-1][1][ind] - bounds[ind-1][0][ind])
-        return values
+        self.log_file, self.model_num, self.tresh, self.out_file = log_file, model_num, int(treshold*model_num), out_file
+        self.best_molpdf, self.best_dope, self.best_common, self.normals = self.parse()
 
     def parse(self):
         """
-        :return: best by molpdf, best by dope, best common, all normalized
+        :return: best by molpdf, best by dope, best common, best common normalized
         """
 
         modelList = [model.split() for model in sp.check_output(['grep', 'Summary of successfully produced models:', \
                                                                  self.log_file, '-A', str(self.model_num+2)]) \
                                                                  .decode('utf-8').split('\n')[3:-1]]
-        modelList = [[int(model[0][16:19]), float(model[1]), float(model[2])] for model in modelList]
+        modelList = [[int(model[0][15:19]), float(model[1]), float(model[2])] for model in modelList]
 
-        listByMOLPDF = self.get_sort(modelList, 1)
-        listByDOPE = self.get_sort(modelList, 2)
+        by_model = pd.DataFrame(modelList, columns=['model', 'molpdf', 'dope']).set_index(keys='model', drop=True)
 
-        listBest = []
-        for modelMol in self.get_top(listByMOLPDF, self.tresh):
-            for modelDOPE in self.get_top(listByDOPE, self.tresh):
-                if modelMol[1] == modelDOPE[1]:
-                    pos = '{}/{}'.format(modelMol[0], modelDOPE[0])
-                    listBest.append([pos] + modelMol[1:])
+        by_molpdf = by_model.sort_values(by=['molpdf']).iloc[0:self.tresh]
+        by_dope = by_model.sort_values(by=['dope']).iloc[0:self.tresh]
 
-        bestMolPDF, worstMolPDF = self.get_extr(modelList, 1)
-        bestDOPE, worstDOPE = self.get_extr(modelList, 2)
+        common = by_molpdf.index.intersection(by_dope.index)
+        c_by_molpdf = by_model.loc[common].sort_values(by=['molpdf'])
+        n_by_model = by_model.apply(lambda x: (x - np.mean(x))/(np.min(x) - np.max(x)))
 
-        tonorm = copy.deepcopy(modelList)
-        listNorm = self.normalized(tonorm, [1, 2], [[bestMolPDF, worstMolPDF], [bestDOPE, worstDOPE]])
+        print('Top by molpdf:')
+        print(by_molpdf)
+        print('Top by dope')
+        print(by_dope)
+        print('Top common:')
+        print(c_by_molpdf)
 
-        return [listByMOLPDF, listByDOPE, listBest, listNorm]
-
-    def print_table(self):
-        """
-        :return: prints table of best molpdf, dope and common
-        """
-
-        cols = '        model    molpdf      DOPE'
-        sep = '-' * len(cols)
-        for table, models in zip(['{} best by MOLPDF'.format(self.out_file), '{} best by DOPE'. \
-                                 format(self.out_file), '{} best common'.format(self.out_file)], \
-                                 [self.get_top(self.best_molpdf, self.tresh), \
-                                 self.get_top(self.best_dope, self.tresh), self.best_common]):
-            print('{}\n{}\n{}\n{}\n{}'.format(sep, table, sep, cols, sep))
-            for line in models:
-                print('{0:>s}\t{1:5d}\t{2:7.0f}\t{3:9.0f}'.format(str(line[0]), *line[1:]))
-            print(sep)
+        return by_molpdf, by_dope, c_by_molpdf, n_by_model
 
     def plot_profile(self):
         """
         :return: plots all models normalized scores
         """
-
-        toplot = list(zip(*self.normals))
-        mmplt.plot_simple_multiple([toplot[0], toplot[0]], toplot[1:3], \
-                                   "model []", "quality relative to best [norm]", ['molpdf', 'dope'], \
-                                   self.out_file, marker='.', linestyle='None', ylimit=[0, 1.1])
-
+        ploter = mm_plt.Ploter()
+        ploter.plot_single('single-index', self.normals, 'fig_globaleval', [6, 6], y_label='normalized score',
+                           axes_style={'ytvals': [-1, -0.2, -0.5, 0, 0.2, 0.5, 1], 'xtvals': [1000]},
+                           lines_style={'linestyle': 'None', 'marker': 'o', 'color': ['black', 'grey']},
+                           legend_style={'loc': 'best', 'ncol': 2}
+                           )
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--logFile", dest="logFile", action="store")
@@ -143,5 +72,4 @@ parser.add_argument("-t", "--treshold", dest="treshold", action="store", type=fl
 args = parser.parse_args()
 
 models = ModelList(args.logFile, args.modelNum, args.treshold, args.outFile)
-models.print_table()
 models.plot_profile()
