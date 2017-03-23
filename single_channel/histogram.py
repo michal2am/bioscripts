@@ -10,21 +10,21 @@ import argparse as ap
 
 class Histogram:
 
-    def __init__(self, fname, size, xrange, yrange, legend):
+    def __init__(self, fname, size, fontsize, ticks, xrange, yrange, legend, dat):
         """
         plot handling of HCJFIT event time distribution
         :param fname: HCJFIT ASCII file name
         """
 
         self.fname = fname
-        self.size, self.xrange, self.yrange, self.legend = size, xrange, yrange, legend
-        self.data, self.calc, self.mntime, self.mxtime, self.meven = self.read()
-        self.data = pd.concat([pd.DataFrame([0], index=[0.07], columns=[1]), self.data, self.last_bin()])
+        self.size, self.fontsize, self.ticks, self.xrange, self.yrange, self.legend, self.dat = size, fontsize, ticks, xrange, yrange, legend, dat
+        self.data, self.calc, self.mntime, self.mxtime, self.meven, self.dead = self.read()
+        if self.dat: self.data = pd.concat([pd.DataFrame([0], index=[self.dead], columns=[1]), self.data, self.last_bin()])
 
     def read(self):
         """
         read HCJFIT ASCII file
-        :return: histogram datafram, fits dataframes, time and event number range
+        :return: histogram datafram, fits dataframes, time and event number range, dead time
         """
 
         with open(self.fname) as f:
@@ -38,24 +38,32 @@ class Histogram:
                 if len(line.split()) == 1: seriid.append(id)
 
             # histogram
-            data = [[float(value) for value in line.split()] for line in raw[seriid[0]+1:seriid[0]+int(raw[seriid[0]])+1]]
+            if self.dat:
+                data = [[float(value) for value in line.split()] for line in raw[seriid[0]+1:seriid[0]+int(raw[seriid[0]])+1]]
+                dead = data[0][0]
+                data = pd.DataFrame(data).set_index(keys=0)
+            else:
+                data = False
+                dead = False
 
             # fits
             calc = []
-            for i in range(len(seriid) - 1):
-                calc.append([map(float, line.split()) for
-                             line in raw[seriid[i+1]+1:seriid[i+1]+int(raw[seriid[i+1]])+1]])
 
-            data = pd.DataFrame(data).set_index(keys=0)
-            print(data.iloc[0])
+            calclen = len(seriid) - 1 if self.dat else len(seriid)
+            shift = 1 if self.dat else 0
+
+            for i in range(calclen):
+                calc.append([[float(value) for value in line.split()] for
+                             line in raw[seriid[i+shift]+1:seriid[i+shift]+int(raw[seriid[i+shift]])+1]])
+
             calc = [pd.DataFrame(series).set_index(keys=0) for series in calc]
 
             # ranges
             meven = max([series.max().iloc[0] for series in calc])
             mxtime = max([series.index[-1] for series in calc])
-            mntime = sorted([series.index[0] for series in calc])[1]                                                    # magic sorted, because missed event may be longer
+            mntime = sorted([series.index[0] for series in calc])[1]                                                    # magic sorted, because missed event may be longer (60% of the time, it works every time)
 
-            return data, calc, mntime, mxtime, meven
+            return data, calc, mntime, mxtime, meven, dead
 
     def last_bin(self):
         """
@@ -76,10 +84,6 @@ class Histogram:
         print('Sanity check: last known bin: {}'.format(self.data.index.values[-1]))
         print('Sanity check: extrapolated bin: {}'.format(last_bin))
 
-        # bins plot
-        # mpl.pyplot.plot(np.append(self.data.index.values, last_bin))
-        # plt.show()
-
         return extrapolated
 
     def plot(self):
@@ -97,7 +101,7 @@ class Histogram:
         ### figure variables ###
 
         # data
-        self.data.plot(ax=ax, drawstyle='steps-post', color='black', lw=3)
+        if self.dat: self.data.plot(ax=ax, drawstyle='steps-post', color='black', lw=3)
         self.calc[0].plot(ax=ax, color='black', lw=3)
         self.calc[-1].plot(ax=ax, color='grey', lw=3, style='--')
         for series in sch_hist.calc[1:-1]:
@@ -124,13 +128,11 @@ class Histogram:
         ys = [(x * 2) ** 2 for x in range(0, int(ymax / 2 + 2))]                                                        # magick scale if +2 so w need /2 and +2 for additional entry
         yms = [x ** 2 for x in np.arange(0, ymax + 2, 0.5)]                                                             # magick scale is not divided so only +2 for additional entry
 
-
-
         if self.yrange:
             ys = [y for y in ys if y < self.yrange[1]]
             yms = [ym for ym in yms if ym < self.yrange[1]]
 
-        last = ys[-1] if len(ys) % 2 == 1 else 0  # too many ys? reduce, but preserve last
+        last = ys[-1] if len(ys) % 2 == 1 else 0                                                                        # too many ys? reduce, but preserve last
         lastm = yms[-1] if len(yms) % 2 == 1 else 0
 
         if len(ys) > 10:
@@ -146,14 +148,16 @@ class Histogram:
 
         ax.set_yticks(ys)
         ax.set_yticks(yms, minor=True)
-        ax.tick_params(labelsize=14)
+        if self.ticks:
+            plt.locator_params(axis='x', numticks=self.ticks)
+        ax.tick_params(labelsize=self.fontsize[0])
 
         # overwrite labels and legend
-        ax.set_xlabel('apparent open time [ms] (log scale)', fontsize=14)
-        ax.set_ylabel('frequency density (square root scale)', fontsize=14)
+        ax.set_xlabel('apparent open time [ms] (log scale)', fontsize=self.fontsize[1])
+        ax.set_ylabel('frequency density (square root scale)', fontsize=self.fontsize[1])
 
         if self.legend:
-            ax.legend(['observed', 'fit', 'missed event correction', 'components fits'], loc='best', fontsize=14)
+            ax.legend(['observed', 'fit', 'missed event correction', 'components fits'], loc='best', fontsize=self.fontsize[1])
         else: ax.legend_.remove()
 
         sns.despine()
@@ -211,14 +215,20 @@ class SquareRootScale(mscale.ScaleBase):
 parser = ap.ArgumentParser()
 parser.add_argument("-f", "--files", nargs='+', help="hcjfit ASCII files")
 parser.add_argument("-s", "--size", nargs='+', type=float, help="figure x and y size [inch]")
+parser.add_argument("-fs", "--font_size", nargs='+', type=float, help="tick fontisze")
 parser.add_argument("-x", "--xrange", nargs='+', type=float, help="plot x range")
 parser.add_argument("-y", "--yrange", nargs='+', type=float, help="plot y range")
+parser.add_argument("-t", "--ticks", type=float, help="x axis ticks")
 parser.add_argument("-l", "--legend", dest='leg', action='store_true', help="add legend")
 parser.add_argument("-nl", "--no_legend", dest='leg', action='store_false', help="don't add legend")
+parser.add_argument("-d", "--data", dest='dat', action='store_true', help="add histogram")
+parser.add_argument("-nd", "--no_data", dest='dat', action='store_false', help="don't add histogram")
 
 parser.set_defaults(leg=True)
+parser.set_defaults(dat=True)
+
 args = parser.parse_args()
 
 for file in args.files:
-    sch_hist = Histogram(file, args.size, args.xrange, args.yrange, args.leg)
+    sch_hist = Histogram(file, args.size, args.font_size, args.ticks, args.xrange, args.yrange, args.leg, args.dat)
     sch_hist.plot()
