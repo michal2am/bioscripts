@@ -20,18 +20,15 @@ parser.add_argument("-r", "--residues", nargs="+", help="starting residues of re
 parser.add_argument("-n", "--number", type=int, help="number of models to prepare")
 args = parser.parse_args()
 
-
 j = job()
-j.append(local_slave())
-j.append(local_slave())
-j.append(local_slave())
-j.append(local_slave())
+for core in range(0, 8):
+    j.append(local_slave())
 
 log.verbose()   
 env = environ() 
 env.io.atom_files_directory = ['.']
 
-gaba_homology = GABAModel(env=env,
+gaba_homology = GABAModelSelection(env=env,
                           alnfile=args.alnfile,
                           knowns=args.knowns,
                           sequence=args.sequence,
