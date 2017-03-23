@@ -14,7 +14,7 @@ env = environ()
 env.libs.topology.read(file='$(LIB)/top_heav.lib') # read topology
 env.libs.parameters.read(file='$(LIB)/par.lib') # read parameters
 
-models=[args.nameTemplate+selected+'_fit.pdb' for selected in args.selectedNames]
+models=[args.nameTemplate+selected+'.pdb' for selected in args.selectedNames]
 models.append(args.template)
 profiles=['model_'+selected+'.profile' for selected in args.selectedNames]
 profiles.append('template.profile')
