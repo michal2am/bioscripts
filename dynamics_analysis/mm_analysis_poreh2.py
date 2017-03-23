@@ -16,9 +16,9 @@ import mm_pandas_parse as mmpr
 import mm_pandas_plot as mmpl
 
 # hole2 fixed file paths
-hole2 = '/opt/hole2/exe/hole'
-hole2_rads = '/opt/hole2/rad/simple.rad'
-positioner = '/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/complete_positioner.sh'
+hole2 = '/home/mm/Insync/RESEARCH/WORK/linux/hole2/exe/hole'
+hole2_rads = '/home/mm/Insync/RESEARCH/WORK/linux/hole2/rad/simple.rad'
+positioner = '/home/mm/pycharm_projects/bioscripts/homology_modeling/model_positioning/complete_positioner.sh'
 
 class PoreModel:
 
@@ -31,8 +31,8 @@ class PoreModel:
         self.pdb_dir = pdb_dir
         self.name = name
 
-        # self.set_position()
-        # self.get_profile()
+        #self.set_position()
+        #self.get_profile()
         self.labels = self.set_names()
         self.parsed_profiles, self.min_Rads = self.parse_profiles()
 
@@ -111,6 +111,7 @@ class PoreModel:
         min_rads = []
 
         for profile, name in zip(self.find_files_cur(self.pdb_dir + '/profiles', '_pos.dat'), self.labels):
+            print(name)
             with open(os.path.join('profiles', profile), 'r') as prof:
                 parsed_profile = []
                 for line in prof.readlines():
@@ -123,6 +124,7 @@ class PoreModel:
                 parsed_profile = pd.DataFrame(index=parsed_profile[:, 0], data=parsed_profile[:, 1], columns=[name])
                 parsed_profile.index.name = 'radius [A]'
                 parsed_profiles.append(parsed_profile)
+        print(parsed_profiles)
         return [parsed_profiles, min_rads]
 
     def plot_profiles(self):
@@ -132,8 +134,8 @@ class PoreModel:
         #mmplt.plot_simple_multiple_numpy(self.parsed_profiles, "Radius [A]", "Z-axis [A]", self.labels,
         #                                 self.name + '_pore_profiles', sizex=3.75, sizey=3.0, ranges=True,
         #                                 xlimit=[-0.5, 6.5])
-        self.ploter.plot_single('multi-indepx', self.parsed_profiles, 'pore profiles', (5, 6),
-                                y_label='z coordinate [A]')
+        self.ploter.plot_single('multi-index', self.parsed_profiles, 'pore profiles', (5, 6),
+                                y_label='z coordinate [A]', ncols=1)
 
 parser = ap.ArgumentParser()
 parser.add_argument("-d", "--pdb_dirs", nargs='+', help="directories with pdb files to analyze")
