@@ -12,7 +12,8 @@ import numpy as np
 import pandas as pd
 import mm_pandas_plot as mm_plt
 
-class ModelList:
+
+class EvaluateGlobal:
 
     def __init__(self, log_file, model_num, treshold, out_file):
         """
@@ -71,5 +72,5 @@ parser.add_argument("-n", "--modelNum", dest="modelNum", action="store", type=in
 parser.add_argument("-t", "--treshold", dest="treshold", action="store", type=float)
 args = parser.parse_args()
 
-models = ModelList(args.logFile, args.modelNum, args.treshold, args.outFile)
+models = EvaluateGlobal(args.logFile, args.modelNum, args.treshold, args.outFile)
 models.plot_profile()
