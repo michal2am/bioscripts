@@ -59,10 +59,10 @@ class EvaluateGlobal:
         :return: plots all models normalized scores
         """
         ploter = mm_plt.Ploter()
-        ploter.plot_single('single-index', self.normals, 'fig_globaleval', [6, 6], y_label='normalized score',
-                           axes_style={'ytvals': [-1, -0.2, -0.5, 0, 0.2, 0.5, 1], 'xtvals': [1000]},
+        ploter.plot_single('single', self.normals, 'fig_globaleval', [6, 6], y_label='normalized score',
+                           axes_style={'ytvals': [-1, -0.2, -0.5, 0, 0.2, 0.5, 1], 'xtvals': [1, self.model_num], 'xlim': [-1, self.model_num + 1]},
                            lines_style={'linestyle': 'None', 'marker': 'o', 'color': ['black', 'grey']},
-                           legend_style={'loc': 'best', 'ncol': 2}
+                           legend_style={'loc': 'upper center', 'ncol': 2, 'frameon': True, 'edgecolor': 'black'}
                            )
 
 parser = argparse.ArgumentParser()

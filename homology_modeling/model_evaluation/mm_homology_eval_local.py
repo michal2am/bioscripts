@@ -1,36 +1,40 @@
 import argparse
-import pandas as pd
-import mm_pandas_plot as mmpdplt
-import mm_homology_pirreader as mmpirred
 import mm_pandas_plot as mmpdplt
 from modeller import *
 from modeller.scripts import complete_pdb
+from mm_homology_sequencereader import Sequence
+import pandas as pd
 
 
-class EvaluateLocal:
+class EvaluateLocal(Sequence):
 
-    def __init__(self, name_template, selected_names, template, pir_file, com_seq, sub_seq, sta_res):
+    def __init__(self, name_template, selected_names, template, pir_file, com_seq, sub_seq, sta_res, run):
         """
         modeller dope evaluation wrapper
         :param name_template: model name prefix
         :param selected_names: model name suffix
-        :param template: template name
+        :param template: template file name
+        :param pir_file: pir file name
+        :param com_seq: name of complete sequence
+        :param sub_seq: name of subunitp
+        :param sta_res: starting residue numbers
         """
 
-        self.names = selected_names + ['template']
+        Sequence.__init__(self, pir_file, com_seq, sub_seq, sta_res)
 
+        self.set_value_csv('gabaar', 'csv_loopnaming_gabaar.csv', ['strand', 'helix', 'loop'])
+
+        self.temp_name = self.com_seq[1]
+        self.mod_name = self.com_seq[0]
+
+        self.names = selected_names + ['template']
         self.models = [name_template + selected + '.pdb' for selected in selected_names]
         self.models.append(template)
         self.profiles = ['model_' + selected + '.profile' for selected in selected_names]
         self.profiles.append('template.profile')
 
-        self.pir = mmpirred.Pir(pir_file, com_seq, sub_seq, sta_res)
-        self.tempname = com_seq[1]
-        self.modname = com_seq[0]
-
-        # self.run()
-        self.vals = self.read_profile()
-        self.align()
+        if run: self.run()
+        self.read_profile()
         self.plot()
 
     def run(self):
@@ -38,10 +42,10 @@ class EvaluateLocal:
         runs modeller dope evaluation and saves results in file 
         """
 
-        log.verbose()  # request verbose output
+        log.verbose()
         env = environ()
-        env.libs.topology.read(file='$(LIB)/top_heav.lib')  # read topology
-        env.libs.parameters.read(file='$(LIB)/par.lib')  # read parameters
+        env.libs.topology.read(file='$(LIB)/top_heav.lib')
+        env.libs.parameters.read(file='$(LIB)/par.lib')
 
         for model, profile in zip(self.models, self.profiles):
 
@@ -50,9 +54,8 @@ class EvaluateLocal:
             s.assess_dope(output='ENERGY_PROFILE NO_REPORT', file=profile, normalize_profile=True, smoothing_window=15)
 
     def read_profile(self):
-        """
-        
-        :return: 
+        """ 
+        reads modeller dope evaluation files and adds them to Sequence
         """
 
         vals = {}
@@ -65,50 +68,59 @@ class EvaluateLocal:
                     if not line.startswith('#') and len(line) > 10:
                         spl = line.split()
                         vals[name].append(float(spl[-1]))
-        return vals
 
-    def align(self):
-        """
-        
-        :return: 
-        """
+        temp_val = {'template': vals.pop('template')}
+        Sequence.set_value(self, self.temp_name, temp_val)
+        Sequence.set_value(self, self.mod_name, vals)
 
-        gaps = self.pir.sequences[self.tempname].residue == '-'
-        self.pir.sequences[self.tempname].loc[gaps, 'template'] = '-'
-        self.pir.sequences[self.tempname].loc[~gaps, 'template'] = self.vals['template']
 
-        gaps = self.pir.sequences[self.modname].residue == '-'
-        for comv, val in self.vals.items():
-            if comv == 'template': break
-            self.pir.sequences[self.modname].loc[gaps, comv] = '-'
-            self.pir.sequences[self.modname].loc[~gaps, comv] = val
 
     def plot(self):
+        """
+        plots results for respective subunits of template and models
+        """
+
         ploter = mmpdplt.Ploter()
-        print( self.pir.sequences['gabaar']['703'])
-        ploter.plot_single('single-index', self.pir.sequences['gabaar']['703'], 'fig_localeval', [6, 6], y_label='normalized score',)
-                        #   axes_style={'ytvals': [-1, -0.2, -0.5, 0, 0.2, 0.5, 1], 'xtvals': [1000]},
-                        #   lines_style={'linestyle': 'None', 'marker': 'o', 'color': ['black', 'grey']},
-                        #   legend_style={'loc': 'best', 'ncol': 2}
-                        #   )
+
+        self.get_sequence(self.mod_name).to_csv('csv_localeval_' + self.mod_name + '.csv')
+        self.get_sequence(self.temp_name).to_csv('csv_localeval_' + self.temp_name + '.csv')
+
+        for seq_name in zip(self.sub_seq[0:self.sub_num], self.sub_seq[self.sub_num:]):                                 # model & template subunit pairs
+            to_plot = [self.get_sequence(self.temp_name, sub_name=seq_name[1], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop')),
+                       self.get_sequence(self.mod_name, sub_name=seq_name[0], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop'))]
+            ploter.plot_single('multi', to_plot, 'fig_localeval_{}'.format(seq_name[0]), [10, 6],
+                               y_label='normalized score', x_label='residue',
+                               axes_style={'xtlabs':  to_plot[1]['position'][1::50],
+                                           'xtvals': to_plot[1].index.values[1::50]},
+                               lines_style={'linestyle': '-', 'marker': 'o'},
+                               legend_style={'loc': 'best', 'ncol': 3, 'frameon': True, 'edgecolor': 'black'},
+                               annotation={'features': ['strand', 'helix', 'loop']}
+                               )
 
 
-parser = argparse.ArgumentParser()
+if __name__ == '__main__':
 
-# calculate
+    parser = argparse.ArgumentParser()
 
-parser.add_argument("-n", "--nameTemplate")
-parser.add_argument("-s", "--selectedNames", nargs='+')
-parser.add_argument("-t", "--template")
+    # EvaluateLocal
 
-# pirreader
+    parser.add_argument("-n", "--nameTemplate")
+    parser.add_argument("-s", "--selectedNames", nargs='+')
+    parser.add_argument("-t", "--template")
 
-parser.add_argument('-p',  '--pir_file')
-parser.add_argument('-cs', '--com_seq',   nargs='+')
-parser.add_argument('-ss', '--sub_seq',   nargs='+')
-parser.add_argument('-r',  '--sta_res',   nargs='+', type=int)
-parser.add_argument('-sr', '--shift_res', nargs='+', type=int)
+    # Sequence
 
-args = parser.parse_args()
+    parser.add_argument('-p',  '--pir_file')
+    parser.add_argument('-cs', '--com_seq',   nargs='+')
+    parser.add_argument('-ss', '--sub_seq',   nargs='+')
+    parser.add_argument('-r',  '--sta_res',   nargs='+', type=int)
+    parser.add_argument('-sr', '--shift_res', nargs='+', type=int)
+    parser.add_argument("-rn", "--run", dest='run', action='store_true')
+    parser.add_argument("-nrn", "--no_run", dest='run', action='store_false')
 
-evaluater = EvaluateLocal(args.nameTemplate, args.selectedNames, args.template, args.pir_file, args.com_seq, args.sub_seq, args.sta_res)
+    parser.set_defaults(run=False)
+
+    args = parser.parse_args()
+
+    evaluater = EvaluateLocal(args.nameTemplate, args.selectedNames, args.template, args.pir_file, args.com_seq,
+                              args.sub_seq, args.sta_res, args.run)

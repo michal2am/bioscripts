@@ -21,7 +21,7 @@ class GABAModel(automodel):
     def special_patches(self, aln):
         segment_names = ['A', 'B', 'C', 'D', 'E']
         start_res = [8, 10, 8, 10, 23]
-        self.rename_segments(segment_ids=segment_names, renumber_residues=start_res)
+        self.rename_segments(segment_ids=self.segments_names, renumber_residues=self.start_res)
         self.patch(residue_type='DISU', residues=(self.residues['136:A'], self.residues['150:A']))
         self.patch(residue_type='DISU', residues=(self.residues['136:C'], self.residues['150:C']))
         self.patch(residue_type='DISU', residues=(self.residues['138:B'], self.residues['152:B']))

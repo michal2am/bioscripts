@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-a", "--alnfile", help="alignment file in .pir format")
 parser.add_argument("-k", "--knowns", help="known structure name in alignment")
 parser.add_argument("-s", "--sequence", help="target sequence name in alignment")
-parser.add_argument("-r", "--residues", nargs="+", help="starting residues of respective chains")
+parser.add_argument("-r", "--residues", type=int, nargs="+", help="starting residues of respective chains")
 parser.add_argument("-n", "--number", type=int, help="number of models to prepare")
 args = parser.parse_args()
 
@@ -28,7 +28,7 @@ log.verbose()
 env = environ() 
 env.io.atom_files_directory = ['.']
 
-gaba_homology = GABAModelSelection(env=env,
+gaba_homology = GABAModel(env=env,
                           alnfile=args.alnfile,
                           knowns=args.knowns,
                           sequence=args.sequence,

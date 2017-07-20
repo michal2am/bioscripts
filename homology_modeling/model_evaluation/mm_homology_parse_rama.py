@@ -137,10 +137,10 @@ class RamachandranEvals:
             data = self.bads[self.bads.subunit == subunit].loc[:, ['allowed', 'outlier']]
             print(data.sort_values(by=['outlier', 'allowed'], ascending=False))
 
-            ploter.plot_single('single-index', data, 'fig_globalrama_' + subunit, [10, 6], y_label='count [%]',
+            ploter.plot_single('single', data, 'fig_globalrama_' + subunit, [10, 6], y_label='count [%]',
                                kind='bar', rect=(0, 0, 1, 0.85),
                                lines_style={'color': ['grey', 'black'], 'stacked': True},
-                               legend_style={'loc': 'best', 'ncol': 2, 'bbox_to_anchor': (0.25, 1.1)}
+                               legend_style={'loc': 'best', 'ncol': 2, 'bbox_to_anchor': (0.65, 1.2), 'frameon': True, 'edgecolor': 'black'}
                                )
 
     def get_model_sum(self):
