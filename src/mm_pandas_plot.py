@@ -13,7 +13,7 @@ class Ploter:
 
         sns.set_context('paper')
         sns.set_style('ticks', {'legend.frameon': False})
-        sns.set_palette("Paired", 11)
+        sns.set_palette("Paired", 10)
 
     @classmethod
     def set_rc(cls, fontsize):
@@ -46,10 +46,11 @@ class Ploter:
         return fig, axes
 
     @classmethod
-    def save_figure(cls, figure, title, rect):
+    def save_figure(cls, figure, title, rect, format):
         plt.tight_layout(rect=rect)
         sns.despine()
-        figure.savefig(title+'.svg', format='svg')
+        for fm in format:
+            figure.savefig(title+'.'+fm, format=fm)
         plt.show()
 
     # axes handling
@@ -89,6 +90,13 @@ class Ploter:
 
     @classmethod
     def set_annotation_ranges(cls, ax, data, **kwargs):
+        """
+        add horizontal annotation ranges
+        :param ax: axes
+        :param data: pandas dataframe
+        :param kwargs: shall include 'features' with list of dotaframe columns to be switched to annotations
+        :return: 
+        """
 
         if set(kwargs['features']).intersection(set(list(data.columns))):
 
@@ -109,15 +117,15 @@ class Ploter:
     @classmethod
     def set_annotation_legend(cls, ax, annots, kwargs):
         """
-        
-        :param ax: 
-        :param annots: 
-        :param kwargs: 
+        removes annotation plots from legend
+        :param ax: axes
+        :param annots: list of annotation lists (from set_annotation_ranges)
+        :param kwargs: main kwargs from ploter
         :return: 
         """
-        annots = set(list(itertools.chain(*annots)))
+        annots = list(itertools.chain(*annots))
         handles, labels = ax.get_legend_handles_labels()
-        labels = set(labels) - annots
+        labels = [lab for lab in labels if lab not in annots]
         kwargs['legend_style']['labels'] = labels
 
     @staticmethod
@@ -164,4 +172,5 @@ class Ploter:
             Ploter.set_legend(ax, **kwargs.get('legend_style', {}))
 
         Ploter.set_axes(ax, **kwargs.get('axes_style', {}))
-        Ploter.save_figure(fig, title, kwargs.get('rect', (0, 0, 1, 1)))
+        Ploter.save_figure(fig, title, kwargs.get('rect', (0, 0, 1, 1)), ['svg', 'png'])
+

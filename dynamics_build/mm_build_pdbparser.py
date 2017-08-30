@@ -1,4 +1,4 @@
-# python 3
+    # python 3
 # pdb parser
 # michaladammichalowski@gmail.com
 # 25.11.15 - creation
@@ -45,7 +45,7 @@ class PDBLine:
         """
 
         # line = '{0:s}{1:5d}{2:s}{3:s}{4:s}{5:4d}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
-        line = '{0:s}{1:s}{2:s}{3:s}{4:s}{5:s}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
+        line = '{0:s}{1:>5d}{2:s}{3:s}{4:s}{5:s}{6:s}{7:8.3f}{8:8.3f}{9:8.3f}{10:6.2f}{11:6.2f}{12:s}'.\
             format\
             (self.prefix,
              self.serial,
@@ -115,7 +115,14 @@ class PDBFile:
             else:
                 atom_line.change_atom(temp=0.00)
 
-
+    def order_by_chain(self):
+        """
+        
+        :return: 
+        """
+        self.lines = sorted(self.lines, key=lambda x: x.chainID)
+        for no, line in enumerate(self.lines):
+            line.serial = no + 1
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--old_pdb", help="old pdb file extension")
@@ -123,13 +130,16 @@ parser.add_argument("-n", "--new_pdb", help="new pdb file extension")
 parser.add_argument("-c", "--constrain", help="atom name to constrain")
 parser.add_argument("-r", "--remove", help="atom name to remove")
 parser.add_argument("-s", "--segname", help="parse segname for chain name, specify prefix to remove")
+parser.add_argument("-so", "--seg_order", nargs='+', help="segname order")
 args = parser.parse_args()
 
 
 old_files = mmfil.find_files('.', args.old_pdb)
 new_files = mmfil.create_outnames(old_files, args.new_pdb)
 
+print(old_files, new_files)
 pdbs = [PDBFile(new, old) for new, old in zip(old_files, new_files)]
+
 
 for pdb in pdbs:
 
@@ -141,5 +151,8 @@ for pdb in pdbs:
 
     if args.remove:
         pdb.remove_name(args.remove)
+
+    if args.seg_order:
+        pdb.order_by_chain()
 
     pdb.save()

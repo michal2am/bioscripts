@@ -1,7 +1,7 @@
 #!/bin/bash
 
-orienter='/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/orienter.tcl'
-centerer='/home/mm/Pycharm/bioscripts/homology_modeling/model_positioning/centerer.tcl'
+orienter='/home/mm/PycharmProjects17/bioscripts/homology_modeling/model_positioning/orienter.tcl'
+centerer='/home/mm/PycharmProjects17/bioscripts/homology_modeling/model_positioning/centerer.tcl'
 
 pdbDir="$1"
 pdbAll="${pdbDir}/*.pdb"
@@ -36,4 +36,4 @@ done
 echo "info: positioning done, moving files to: "${pdbDir}"/positioned"
 
 mkdir -p "$pdbDir"/positioned
-mv *pos.pdb "$pdbDir"/positioned
+mv "*pos.pdb" "$pdbDir"/positioned

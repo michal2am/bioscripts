@@ -17,6 +17,7 @@ parser.add_argument("-a", "--alnfile", help="alignment file in .pir format")
 parser.add_argument("-k", "--knowns", help="known structure name in alignment")
 parser.add_argument("-s", "--sequence", help="target sequence name in alignment")
 parser.add_argument("-r", "--residues", type=int, nargs="+", help="starting residues of respective chains")
+parser.add_argument("-ch", "--chains", nargs="+", help="chain names")
 parser.add_argument("-n", "--number", type=int, help="number of models to prepare")
 args = parser.parse_args()
 
@@ -33,7 +34,7 @@ gaba_homology = GABAModel(env=env,
                           knowns=args.knowns,
                           sequence=args.sequence,
                           assess_methods=(assess.DOPE, assess.GA341),
-                          segments=['A', 'B', 'C', 'D', 'E'],
+                          segments=args.chains,
                           start_res=args.residues)
 
 gaba_homology.starting_model = 1

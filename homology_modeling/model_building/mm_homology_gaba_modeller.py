@@ -19,8 +19,6 @@ class GABAModel(automodel):
         self.start_res = start_res
 
     def special_patches(self, aln):
-        segment_names = ['A', 'B', 'C', 'D', 'E']
-        start_res = [8, 10, 8, 10, 23]
         self.rename_segments(segment_ids=self.segments_names, renumber_residues=self.start_res)
         self.patch(residue_type='DISU', residues=(self.residues['136:A'], self.residues['150:A']))
         self.patch(residue_type='DISU', residues=(self.residues['136:C'], self.residues['150:C']))
@@ -43,30 +41,28 @@ class GABAModelSelection(automodel):
         self.start_res = start_res
 
     def special_patches(self, aln):
-        segment_names = ['A', 'B', 'C', 'D', 'E']
-        start_res = [8, 10, 8, 10, 23]
-        self.rename_segments(segment_ids=segment_names, renumber_residues=start_res)
+        self.rename_segments(segment_ids=self.segments_names, renumber_residues=self.start_res)
 
-    def select_atoms(self):
-        sel = selection(self.residue_range('195:A', '208:A'))
-        sel.add(self.residue_range('195:C', '208:C'))
-        sel.add(self.residue_range('199:B', '212:B'))
-        sel.add(self.residue_range('199:D', '212:D'))
-        sel.add(self.residue_range('210:E', '223:E'))
-        return sel
+    #def select_atoms(self):
+    #    sel = selection(self.residue_range('193:A', '209:A'))
+    #    sel.add(self.residue_range('193:C', '209:C'))
+    #    sel.add(self.residue_range('197:B', '213:B'))
+    #    sel.add(self.residue_range('197:D', '213:D'))
+    #    sel.add(self.residue_range('208:E', '224:E'))
+    #    return sel
 
     def special_restraints(self, aln):
         rsr = self.restraints
 
-        rsr.add(secondary_structure.strand(self.residue_range('195:A', '199:A')))
-        rsr.add(secondary_structure.strand(self.residue_range('204:A', '208:A')))
-        rsr.add(secondary_structure.strand(self.residue_range('195:C', '199:C')))
-        rsr.add(secondary_structure.strand(self.residue_range('204:C', '208:C')))
+        rsr.add(secondary_structure.strand(self.residue_range('193:A', '200:A')))
+        rsr.add(secondary_structure.strand(self.residue_range('203:A', '209:A')))
+        rsr.add(secondary_structure.strand(self.residue_range('193:C', '200:C')))
+        rsr.add(secondary_structure.strand(self.residue_range('203:C', '209:C')))
 
-        rsr.add(secondary_structure.strand(self.residue_range('199:B', '203:B')))
-        rsr.add(secondary_structure.strand(self.residue_range('208:B', '212:B')))
-        rsr.add(secondary_structure.strand(self.residue_range('199:D', '203:D')))
-        rsr.add(secondary_structure.strand(self.residue_range('208:D', '212:D')))
+        rsr.add(secondary_structure.strand(self.residue_range('197:B', '204:B')))
+        rsr.add(secondary_structure.strand(self.residue_range('207:B', '213:B')))
+        rsr.add(secondary_structure.strand(self.residue_range('197:D', '204:D')))
+        rsr.add(secondary_structure.strand(self.residue_range('207:D', '213:D')))
 
-        rsr.add(secondary_structure.strand(self.residue_range('210:E', '214:E')))
-        rsr.add(secondary_structure.strand(self.residue_range('219:E', '223:E')))
+        rsr.add(secondary_structure.strand(self.residue_range('208:E', '215:E')))
+        rsr.add(secondary_structure.strand(self.residue_range('218:E', '224:E')))

@@ -22,7 +22,7 @@ class EvaluateLocal(Sequence):
 
         Sequence.__init__(self, pir_file, com_seq, sub_seq, sta_res)
 
-        self.set_value_csv('gabaar', 'csv_loopnaming_gabaar.csv', ['strand', 'helix', 'loop'])
+        self.set_value_csv('gabaar', 'csv_loopnaming_gabaarlinkershort.csv', ['strand', 'helix', 'loop'])
 
         self.temp_name = self.com_seq[1]
         self.mod_name = self.com_seq[0]
@@ -86,14 +86,19 @@ class EvaluateLocal(Sequence):
         self.get_sequence(self.temp_name).to_csv('csv_localeval_' + self.temp_name + '.csv')
 
         for seq_name in zip(self.sub_seq[0:self.sub_num], self.sub_seq[self.sub_num:]):                                 # model & template subunit pairs
+
             to_plot = [self.get_sequence(self.temp_name, sub_name=seq_name[1], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop')),
                        self.get_sequence(self.mod_name, sub_name=seq_name[0], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop'))]
-            ploter.plot_single('multi', to_plot, 'fig_localeval_{}'.format(seq_name[0]), [10, 6],
+            print(to_plot)
+
+            title = {'a': r'$\alpha$', 'b': r'$\beta$', 'g': r'$\gamma$'}[seq_name[0][0]] + seq_name[0][1:]
+
+            ploter.plot_single('multi', [frame.drop('position', axis=1) for frame in to_plot], 'fig_localeval_{}'.format(seq_name[0]), [10, 6],
                                y_label='normalized score', x_label='residue',
                                axes_style={'xtlabs':  to_plot[1]['position'][1::50],
                                            'xtvals': to_plot[1].index.values[1::50]},
-                               lines_style={'linestyle': '-', 'marker': 'o'},
-                               legend_style={'loc': 'best', 'ncol': 3, 'frameon': True, 'edgecolor': 'black'},
+                               lines_style={'linestyle': '-', 'marker': 'o', 'title': title},
+                               legend_style={'bbox_to_anchor':(0.5, .5), 'ncol': 3, 'frameon': True, 'edgecolor': 'black'},
                                annotation={'features': ['strand', 'helix', 'loop']}
                                )
 

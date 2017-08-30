@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     pir = Sequence(args.pir_file, args.com_seq, args.sub_seq, args.sta_res)
-
+    pir.get_sequence('gabaar').to_csv('test.csv')
 
 
 
