@@ -39,7 +39,7 @@ class SolverOde:
 
         rk45 = itg.ode(dpdt).set_integrator('lsoda', nsteps=1e4, atol=0.0001)
         rk45.set_initial_value(self.p0, self.t0).set_f_params(self.a)
-        samples = int(1e4)
+        samples = int(1e3)
         dt = self.te / samples
 
         p = np.zeros((samples + 1, len(self.p0)))

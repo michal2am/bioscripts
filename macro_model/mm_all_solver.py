@@ -15,7 +15,7 @@ log.info("### Kinetic solver starts!")
 all_time = tm.time()
 
 # model configuration
-build_models = ModelBuilder('kisiel', [0.001, 0.01, 0.1, 1, 10, 100], 'single')
+build_models = ModelBuilder('fjwm', [0.001, 0.01, 0.1, 1, 10], 'single')
 t0 = 0
 te = 100
 part = 10
@@ -30,7 +30,7 @@ solve_glp = False
 if solve_ode:
     ode_analysis = AnalyzerODE(build_models, t0, te)
     if dynamic:
-        ode_analysis.plot_dynamic_response(2)
+        ode_analysis.plot_dynamic_response(3)
     if steady:
         ode_analysis.plot_steady_dose_response()
 

@@ -88,6 +88,21 @@ class ModelBuilder:
                 r_a     = Kinetic.State.Rate('a',       3.00)
                 r_0     = Kinetic.State.Rate('block',   0.00)
 
+            if self.model == 'fjwm':
+                r_kon = Kinetic.State.Rate('kon', 9.9, new_stimulus)
+                r_2kon = Kinetic.State.Rate('2kon', 19.8, new_stimulus)
+                r_koff = Kinetic.State.Rate('koff', 1.16)
+                r_2koff = Kinetic.State.Rate('2koff', 2.32)
+                r_d = Kinetic.State.Rate('d', 23.8)
+                r_r = Kinetic.State.Rate('r', 0.12)
+                r_b = Kinetic.State.Rate('b', 16.5)
+                r_a = Kinetic.State.Rate('a', 1.69)
+                r_l = Kinetic.State.Rate('l', 4.46)
+                r_g = Kinetic.State.Rate('g', 4.03)
+                r_mf = Kinetic.State.Rate('mf', 0.00)
+                r_mb = Kinetic.State.Rate('mb', 0.00)
+                r_0 = Kinetic.State.Rate('block', 0.00)
+
             log.info("### Adding states:")
 
             if self.model == 'kisiel':
@@ -114,6 +129,16 @@ class ModelBuilder:
                 st_a2d  = Kinetic.State(3, 'A2D', [r_0,     r_0,      r_r,    r_0,  r_0],   0, False)
                 st_a2o  = Kinetic.State(4, 'A2O', [r_0,     r_0,      r_a,    r_0,  r_0],   0, True)
 
+            if self.model == 'fjwm':
+
+                #                                  R        AR        A2R     A2F   A2D   A2O
+                st_r    = Kinetic.State(0, 'R',   [r_0,     r_2kon,   r_0,    r_0,  r_0,  r_0],   1, 'unbound')
+                st_ar   = Kinetic.State(1, 'AR',  [r_koff,  r_0,      r_kon,  r_0,  r_0,  r_0],   0, 'single-bound')
+                st_a2r  = Kinetic.State(2, 'A2R', [r_0,     r_2koff,  r_0,    r_l,  r_mf,  r_0],   0, 'double-bound')
+                st_a2f  = Kinetic.State(3, 'A2F', [r_0,     r_2koff,  r_g,    r_0,  r_d,  r_b],   0, 'flipped')
+                st_a2d  = Kinetic.State(4, 'A2D', [r_0,     r_0,      r_mb,    r_r,  r_0,  r_0],   0, 'desensitized')
+                st_a2o  = Kinetic.State(5, 'A2O', [r_0,     r_0,      r_0,    r_a,  r_0,  r_0],   0, 'open')
+
             if self.model == 'kisiel':
 
                 self.states = [st_a1o, st_a2o, st_a3o, st_a4o, st_a5o, st_r, st_a1r, st_a2r, st_a2f, st_a1d, st_a2d, st_a4d]
@@ -121,6 +146,10 @@ class ModelBuilder:
 
             if self.model == 'jwm':
                 self.states = [st_r, st_ar, st_a2r, st_a2d, st_a2o]
+                model_kinetic = Kinetic(self.states)
+
+            if self.model == 'fjwm':
+                self.states = [st_r, st_ar, st_a2r, st_a2f, st_a2d, st_a2o]
                 model_kinetic = Kinetic(self.states)
 
             self.models.append(model_kinetic)

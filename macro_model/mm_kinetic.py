@@ -34,7 +34,7 @@ class Kinetic:
             :param name: state name
             :param rates: vector of transition rates to other states
             :param border: initial probability of the state
-            :param open: boolean if state is open
+            :param category: state category
             """
             self.no, self.name, self.rates, self.border, self.category, = no, name, rates, border, category
             log.info("Name: {} Rates: {} Initial: {} Open: {}".format(
