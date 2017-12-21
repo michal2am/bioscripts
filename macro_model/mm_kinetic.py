@@ -108,7 +108,7 @@ class Stimulus:
         :return: time dependant function
         """
         def square_t(t):
-            if a[0] <= t < b[0] or a[1] <= t < b[1]:
+            if a[0] <= t < a[1] or b[0] <= t < b[1]:
                 return v
             else:
                 return 0

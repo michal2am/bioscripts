@@ -6,7 +6,7 @@ import logging as log
 
 class SolverOde:
 
-    def __init__(self, a, p0, names, t0, te, steady):
+    def __init__(self, a, p0, names, t0, te):
         """
         differential equation solver
         :param a: normalized transition rate matrix with stimulus
@@ -14,9 +14,8 @@ class SolverOde:
         :param names: names of states
         :param t0: starting time
         :param te: ending time
-        :param steady:
         """
-        self.a, self.p0, self.names, self.t0, self.te, self.steady = a, p0, names, t0, te, steady
+        self.a, self.p0, self.names, self.t0, self.te = a, p0, names, t0, te
         self.tp = self.solve_kfw()
 
     def solve_kfw(self):
@@ -33,14 +32,11 @@ class SolverOde:
             :param a: transition rate matrix row normalized
             :return: differential equation for integrator
             """
-            #if self.steady:
-            #    log.info("STEADY")
-            #    t = 0
             return np.dot(p, a(t))
 
-        rk45 = itg.ode(dpdt).set_integrator('lsoda', nsteps=1e4, atol=0.0001)
+        rk45 = itg.ode(dpdt).set_integrator('dopri5', nsteps=1e3, atol=0.001)
         rk45.set_initial_value(self.p0, self.t0).set_f_params(self.a)
-        samples = int(1e3)
+        samples = int(1e4)
         dt = self.te / samples
 
         p = np.zeros((samples + 1, len(self.p0)))

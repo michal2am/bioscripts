@@ -7,7 +7,7 @@ import time as tm
 import logging as log
 from mm_solver_glp import SolverGlp
 from mm_kinetic_models import ModelBuilder
-from mm_analyzer_ode import AnalyzerODE
+from analyzer_single_ode import AnalyzerODE
 
 log.basicConfig(filename='mm_kin.log', filemode='w', format='%(message)s', level=log.DEBUG)
 log.info("### Kinetic solver starts!")
@@ -15,9 +15,9 @@ log.info("### Kinetic solver starts!")
 all_time = tm.time()
 
 # model configuration
-build_models = ModelBuilder('fjwm', [0.001, 0.01, 0.1, 1, 10], 'single')
+build_models = ModelBuilder('spont18', [0.003], 'single')
 t0 = 0
-te = 100
+te = 3000
 part = 10
 
 # solving!
@@ -30,9 +30,9 @@ solve_glp = False
 if solve_ode:
     ode_analysis = AnalyzerODE(build_models, t0, te)
     if dynamic:
-        ode_analysis.plot_dynamic_response(3)
-    if steady:
-        ode_analysis.plot_steady_dose_response()
+        ode_analysis.plot_dynamic_response()
+    #if steady:
+    #    ode_analysis.plot_steady_dose_response()
 
 if solve_glp:
     solver = SolverGlp(model_kinetic, ini_conc, part, t0, te, suspend, opsh)

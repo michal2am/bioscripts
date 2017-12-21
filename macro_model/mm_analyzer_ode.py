@@ -140,18 +140,17 @@ class AnalyzerODE:
 
         fig_ode = plt.figure()
         fig_ode.canvas.set_window_title('ODE results')
-        gs = grd.GridSpec(6, 2, width_ratios=[3, 2], hspace=2, wspace=0.20)
+        gs = grd.GridSpec(6, 2, width_ratios=[3, 2], hspace=2, wspace=0.50)
         ax2 = plt.subplot(gs[5, 0])
         ax1 = plt.subplot(gs[0:5, 0], sharex=ax2)
-        ax4 = plt.subplot(gs[3:, 1])
         ax3 = plt.subplot(gs[0:3, 1])
-        fig_ode.add_subplot(ax1, ax2, ax3, ax4)
+        fig_ode.add_subplot(ax1, ax2, ax3)
 
         # ax1 trajectory
-        self.tp_bystate[concentration_index].apply(lambda x: x*-1).plot(ax=ax1, legend=True)
-        self.tp_bycategory[concentration_index].apply(lambda x: x*-1).plot(y='open', ax=ax1, color='k', legend=True)
+        self.tp_bystate[concentration_index].apply(lambda x: x*-1).plot(ax=ax1, legend=False)
+        self.tp_bycategory[concentration_index].apply(lambda x: x*-1).plot(y='open', ax=ax1, color='k', legend=False)
 
-        ax1.legend(loc='upper center', ncol=5, borderaxespad=0.)
+        # ax1.legend(loc='upper center', ncol=5, borderaxespad=0.)
         ax1.set_xlim([self.t0 - 0.5, self.te + 0.5])
         ax1.set_ylim([-1.00, 0])
         ax1.set_ylabel('state probability')
@@ -175,16 +174,6 @@ class AnalyzerODE:
         ax3.set_xlabel('state')
         ax3.set(yscale='log')
 
-        # ax4 equilibrium categorical
-        categories = self.steady_bycategory[concentration_index].transpose()
-        categories.columns = ['cumulative equilibrium occupancy']
-        categories.plot.pie(y='cumulative equilibrium occupancy', legend=True, labels=None, ax=ax4)
-
-        log.info('###Equilibrium by categories:')
-        log.info(self.steady_bycategory[concentration_index])
-
-        ax4.legend(loc='lower center', nrow=1)  # throws no label warning, but it is ok-
-        ax4.axis('equal')
 
         sns.despine()
 
