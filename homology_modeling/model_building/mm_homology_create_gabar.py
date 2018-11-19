@@ -25,7 +25,7 @@ j = job()
 for core in range(0, 8):
     j.append(local_slave())
 
-log.verbose()   
+# log.verbose()
 env = environ() 
 env.io.atom_files_directory = ['.']
 
