@@ -10,6 +10,13 @@ class GABArefine(loopmodel):
 
     def select_loop_atoms(self):
 
+        if self.location == "LC":
+
+            sel = selection(self.residue_range('195:A', '210:A'))
+            sel.add(self.residue_range('195:C', '210:C'))
+
+        '''
+
         if self.location == "b4b5inner":
 
             sel = selection(self.residue_range('100:A', '106:A'))
@@ -112,6 +119,8 @@ class GABArefine(loopmodel):
 
             #sel.add(self.residue_range('201:B', '203:B'))
             #sel.add(self.residue_range('201:D', '203:D'))
+            
+        '''
 
         return sel
 

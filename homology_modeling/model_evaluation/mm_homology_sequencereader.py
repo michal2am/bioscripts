@@ -16,7 +16,8 @@ class Sequence:
 
         self.pir_file = pir_file
         self.com_seq, self.sub_seq, self.sta_res = com_seq, sub_seq, sta_res
-        self.sub_num = int(len(self.sub_seq)/len(self.com_seq))
+        self.sub_num = int(len(self.sub_seq)/len(self.com_seq))  #WTF? skąd to dzielenie?
+        #self.sub_num = int(len(self.sub_seq))
 
         """
         main attribute:
@@ -67,6 +68,7 @@ class Sequence:
 
             sub_cat = {com: self.sub_seq[i * self.sub_num:i * self.sub_num + self.sub_num] for i, com in
                        enumerate(self.com_seq)}
+            print(sub_cat)
             sequences = {com: pd.concat([sequences[sub] for sub in sub_cat[com]], ignore_index=True)
                          for com in sub_cat}
 
@@ -119,7 +121,11 @@ class Sequence:
         :param seq_name: name of complete sequence (dict key)
         :param values: values to add (dict)
         """
+        print(seq_name)
+        print(values)
         gaps = self.sequences[seq_name].residue == '-'
+        #print(gaps)
+        print(self.sequences[seq_name])
 
         for col_name, col_val in values.items():
             self.sequences[seq_name].loc[gaps, col_name] = '-'

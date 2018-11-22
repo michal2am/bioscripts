@@ -22,7 +22,7 @@ class EvaluateLocal(Sequence):
 
         Sequence.__init__(self, pir_file, com_seq, sub_seq, sta_res)
 
-        self.set_value_csv('gabaar', 'csv_loopnaming_gabaarlinkershort.csv', ['strand', 'helix', 'loop'])
+        self.set_value_csv('a1b2g2_mm', 'csv_loopnaming_gabaarlinkershort.csv', ['strand', 'helix', 'loop'])
 
         self.temp_name = self.com_seq[1]
         self.mod_name = self.com_seq[0]

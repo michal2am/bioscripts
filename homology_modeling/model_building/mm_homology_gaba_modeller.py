@@ -22,14 +22,14 @@ class GABAModel(automodel):
         self.rename_segments(segment_ids=self.segments_names, renumber_residues=self.start_res)
         self.patch(residue_type='DISU', residues=(self.residues['136:A'], self.residues['150:A']))
         self.patch(residue_type='DISU', residues=(self.residues['136:C'], self.residues['150:C']))
-        self.patch(residue_type='DISU', residues=(self.residues['138:B'], self.residues['152:B']))
-        self.patch(residue_type='DISU', residues=(self.residues['138:D'], self.residues['152:D']))
-        self.patch(residue_type='DISU', residues=(self.residues['233:B'], self.residues['292:B']))
-        self.patch(residue_type='DISU', residues=(self.residues['233:D'], self.residues['298:D']))
+        self.patch(residue_type='DISU', residues=(self.residues['139:B'], self.residues['153:B']))
+        self.patch(residue_type='DISU', residues=(self.residues['139:D'], self.residues['153:D']))
+        # self.patch(residue_type='DISU', residues=(self.residues['233:B'], self.residues['292:B']))
+        # self.patch(residue_type='DISU', residues=(self.residues['233:D'], self.residues['298:D']))
         self.patch(residue_type='DISU', residues=(self.residues['151:E'], self.residues['165:E']))
-        self.patch(residue_type='DISU', residues=(self.residues['244:E'], self.residues['303:E']))
+        # self.patch(residue_type='DISU', residues=(self.residues['244:E'], self.residues['303:E']))
 
-
+'''
 class GABAModelSelection(automodel):
     """
     template based refinement of LC region
@@ -66,3 +66,4 @@ class GABAModelSelection(automodel):
 
         rsr.add(secondary_structure.strand(self.residue_range('208:E', '215:E')))
         rsr.add(secondary_structure.strand(self.residue_range('218:E', '224:E')))
+'''
