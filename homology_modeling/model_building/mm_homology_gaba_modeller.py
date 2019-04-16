@@ -20,14 +20,31 @@ class GABAModel(automodel):
 
     def special_patches(self, aln):
         self.rename_segments(segment_ids=self.segments_names, renumber_residues=self.start_res)
-        self.patch(residue_type='DISU', residues=(self.residues['136:A'], self.residues['150:A']))
-        self.patch(residue_type='DISU', residues=(self.residues['136:C'], self.residues['150:C']))
-        self.patch(residue_type='DISU', residues=(self.residues['139:B'], self.residues['153:B']))
+        self.patch(residue_type='DISU', residues=(self.residues['136:B'], self.residues['150:B']))
+        self.patch(residue_type='DISU', residues=(self.residues['136:E'], self.residues['150:E']))
+        self.patch(residue_type='DISU', residues=(self.residues['139:A'], self.residues['153:A']))
         self.patch(residue_type='DISU', residues=(self.residues['139:D'], self.residues['153:D']))
         # self.patch(residue_type='DISU', residues=(self.residues['233:B'], self.residues['292:B']))
         # self.patch(residue_type='DISU', residues=(self.residues['233:D'], self.residues['298:D']))
-        self.patch(residue_type='DISU', residues=(self.residues['151:E'], self.residues['165:E']))
+        self.patch(residue_type='DISU', residues=(self.residues['151:C'], self.residues['165:C']))
         # self.patch(residue_type='DISU', residues=(self.residues['244:E'], self.residues['303:E']))
+
+
+    def special_restraints(self, aln):
+        rsr = self.restraints
+        rsr.add(secondary_structure.alpha(self.residue_range('306:A', '311:A'))) #ashift 305:310 bshift 306:311 ab 311
+        rsr.add(secondary_structure.alpha(self.residue_range('315:A', '347:A')))
+        rsr.add(secondary_structure.alpha(self.residue_range('306:D', '311:D')))
+        rsr.add(secondary_structure.alpha(self.residue_range('315:D', '347:D')))
+
+        rsr.add(secondary_structure.alpha(self.residue_range('300:B', '305:B'))) #ashift 300:305 bshift 301:306 ab 305
+        rsr.add(secondary_structure.alpha(self.residue_range('310:B', '340:B')))
+        rsr.add(secondary_structure.alpha(self.residue_range('300:E', '305:E')))
+        rsr.add(secondary_structure.alpha(self.residue_range('310:E', '340:E')))
+
+        rsr.add(secondary_structure.alpha(self.residue_range('315:C', '320:C'))) #ashift 315:320 bshift 316:321 ab 320
+        rsr.add(secondary_structure.alpha(self.residue_range('325:C', '357:C')))
+
 
 '''
 class GABAModelSelection(automodel):

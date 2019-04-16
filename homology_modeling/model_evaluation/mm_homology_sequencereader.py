@@ -68,7 +68,7 @@ class Sequence:
 
             sub_cat = {com: self.sub_seq[i * self.sub_num:i * self.sub_num + self.sub_num] for i, com in
                        enumerate(self.com_seq)}
-            print(sub_cat)
+            #print(sub_cat)
             sequences = {com: pd.concat([sequences[sub] for sub in sub_cat[com]], ignore_index=True)
                          for com in sub_cat}
 
@@ -121,15 +121,16 @@ class Sequence:
         :param seq_name: name of complete sequence (dict key)
         :param values: values to add (dict)
         """
-        print(seq_name)
-        print(values)
-        gaps = self.sequences[seq_name].residue == '-'
-        #print(gaps)
-        print(self.sequences[seq_name])
 
-        for col_name, col_val in values.items():
-            self.sequences[seq_name].loc[gaps, col_name] = '-'
-            self.sequences[seq_name].loc[~gaps, col_name] = col_val
+        gaps = self.sequences[seq_name].residue == '-'
+
+        for col_name, col_val in values.items():                                                                        # dirty fix: if gaps in added data, they will be added to sequence
+            if '-' in col_val:
+                self.sequences[seq_name].loc[:, col_name] = col_val
+            else:                                                                                                       # old way: for non-gap list of values gaps in sequence are omitted
+                self.sequences[seq_name].loc[gaps, col_name] = '-'
+                self.sequences[seq_name].loc[~gaps, col_name] = col_val
+
 
     def set_value_csv(self, seq_name, csv, headers):
         """

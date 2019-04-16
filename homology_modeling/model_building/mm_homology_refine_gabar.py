@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 j = job()
 
-for core in range(0, 8):
+for core in range(0, 1):
     j.append(local_slave())
 
 log.verbose()

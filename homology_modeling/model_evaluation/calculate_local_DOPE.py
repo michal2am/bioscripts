@@ -1,9 +1,7 @@
 import argparse
-import mm_pandas_plot as mmpdplt
 from modeller import *
 from modeller.scripts import complete_pdb
 from mm_homology_sequencereader import Sequence
-import pandas as pd
 
 
 class EvaluateLocal(Sequence):
@@ -22,8 +20,6 @@ class EvaluateLocal(Sequence):
 
         Sequence.__init__(self, pir_file, com_seq, sub_seq, sta_res)
 
-        #self.set_value_csv('a1b2g2_mm', 'csv_loopnaming_gabaarlinkershort.csv', ['strand', 'helix', 'loop'])
-
         self.temp_name = self.com_seq[1]
         self.mod_name = self.com_seq[0]
         self.names = selected_names + ['template']
@@ -34,7 +30,6 @@ class EvaluateLocal(Sequence):
 
         if run: self.run()
         self.read_profile()
-        self.plot()
 
     def run(self):
         """
@@ -68,36 +63,13 @@ class EvaluateLocal(Sequence):
                         spl = line.split()
                         vals[name].append(float(spl[-1]))
 
-        temp_val = {'template': vals.pop('template')}
+        temp_val = {'template_ene': vals.pop('template')}
         Sequence.set_value(self, self.temp_name, temp_val)
         Sequence.set_value(self, self.mod_name, vals)
-
-    def plot(self):
-        """
-        plots results for respective subunits of template and models
-        """
-
-        ploter = mmpdplt.Ploter()
+        print(self.mod_name)
 
         self.get_sequence(self.mod_name).to_csv('csv_localeval_' + self.mod_name + '.csv')
         self.get_sequence(self.temp_name).to_csv('csv_localeval_' + self.temp_name + '.csv')
-
-        for seq_name in zip(self.sub_seq[0:self.sub_num], self.sub_seq[self.sub_num:]):                                 # model & template subunit pairs
-
-            to_plot = [self.get_sequence(self.temp_name, sub_name=seq_name[1], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop')),
-                       self.get_sequence(self.mod_name, sub_name=seq_name[0], num=True, skip=('residue', 'position', 'subunit', 'strand', 'helix', 'loop'))]
-            #print(to_plot)
-
-            title = {'a': r'$\alpha$', 'b': r'$\beta$', 'g': r'$\gamma$'}[seq_name[0][0]] + seq_name[0][1:]
-
-            ploter.plot_single('multi', [frame.drop('position', axis=1) for frame in to_plot], 'fig_localeval_{}'.format(seq_name[0]), [10, 6],
-                               y_label='normalized score', x_label='residue',
-                               axes_style={'xtlabs':  to_plot[1]['position'][1::50],
-                                           'xtvals': to_plot[1].index.values[1::50]},
-                               lines_style={'linestyle': '-', 'marker': 'o', 'title': title},
-                               legend_style={'bbox_to_anchor':(0.5, .5), 'ncol': 3, 'frameon': True, 'edgecolor': 'black'},
-                               annotation={'features': ['strand', 'helix', 'loop']}
-                               )
 
 
 if __name__ == '__main__':

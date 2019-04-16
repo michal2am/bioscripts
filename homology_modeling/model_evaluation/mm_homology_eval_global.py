@@ -34,10 +34,11 @@ class EvaluateGlobal:
         modelList = [model.split() for model in sp.check_output(['grep', 'Summary of successfully produced models:', \
                                                                  self.log_file, '-A', str(self.model_num+2)]) \
                                                                  .decode('utf-8').split('\n')[3:-1]]
-        modelList = [[int(model[0][15:19]), float(model[1]), float(model[2])] for model in modelList]
+        modelList = [[int(model[0][17:20]), float(model[1]), float(model[2])] for model in modelList]
 
         by_model = pd.DataFrame(modelList, columns=['model', 'molpdf', 'dope']).set_index(keys='model', drop=True)
 
+        print(self.tresh)
         by_molpdf = by_model.sort_values(by=['molpdf']).iloc[0:self.tresh]
         by_dope = by_model.sort_values(by=['dope']).iloc[0:self.tresh]
 

@@ -5,7 +5,8 @@
 # 21.03.17 - refactor
 #
 # EXAMPLE CALL: python3 mm_homology_parse_rama.py  --rmf 31 167 231 242 39  --chains A B C D E --chains_seq B2 A1 B2 A1 Y2 --chains_frq 1 1 1 1 2
-
+import sys
+#sys.settrace()
 import argparse
 import re
 import numpy as np
@@ -157,7 +158,7 @@ class RamachandranEvals:
         sums.sort_values(by=['outlier', 'allowed'], inplace=True, ascending=True)
         print(sums)
 
-
+print('dupa')
 parser = argparse.ArgumentParser()
 parser.add_argument("--rmf", nargs='+', help="rampage file name")
 parser.add_argument("--chains", nargs='+', help="chains in pdb")
