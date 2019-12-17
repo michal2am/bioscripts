@@ -26,7 +26,7 @@ for core in range(0, 8):
     j.append(local_slave())
 
 # log.verbose()
-env = environ() 
+env = environ(rand_seed=-7777,)                                            # def:-8124, <-2, -50000>
 env.io.atom_files_directory = ['.']
 
 gaba_homology = GABAModel(env=env,

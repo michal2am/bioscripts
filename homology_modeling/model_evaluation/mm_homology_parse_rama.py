@@ -120,9 +120,11 @@ class RamachandranEvals:
         self.bads['resnum'] = self.bads.index.map(lambda x: int(''.join([num for num in x[-5:-2] if num.isdigit()])))
         self.bads.sort_values(by=['subunit', 'resnum'], inplace=True, ascending=True)
 
+        print(self.bads)
+
         # get percentage
         self.bads.loc[:, ['outlier', 'allowed']] = self.bads.loc[:, ['outlier', 'allowed']].apply(
-            lambda x: (x / np.max(x)) * 100)
+            lambda x: (x / 20) * 100)
 
         # greek index
         def greek(resi):
@@ -158,7 +160,6 @@ class RamachandranEvals:
         sums.sort_values(by=['outlier', 'allowed'], inplace=True, ascending=True)
         print(sums)
 
-print('dupa')
 parser = argparse.ArgumentParser()
 parser.add_argument("--rmf", nargs='+', help="rampage file name")
 parser.add_argument("--chains", nargs='+', help="chains in pdb")

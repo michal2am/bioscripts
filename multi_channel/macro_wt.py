@@ -20,6 +20,9 @@ class MetaWT:
         print(parsed.describe())
         parsed.describe().to_csv('summary.csv')
 
+        print(parsed.loc["Marek", :])
+        print(parsed.loc["Marek", :].describe())
+        parsed.loc["Marek", :].describe().to_csv('marek_summary.csv')
 
     def exp_lc_test(self):
 
@@ -47,7 +50,7 @@ class MetaWT:
     def plot_violin(self, param, yname):
 
         fig = plt.figure(figsize=(12, 5))
-        grid = plt.GridSpec(1, 5, wspace=0.4, hspace=0.)
+        grid = plt.GridSpec(1, 5, wspace=0.5, hspace=0.)
         ax1 = fig.add_subplot(grid[0, 0:4])
         ax2 = fig.add_subplot(grid[0, 4], sharey=ax1)
 
