@@ -105,68 +105,52 @@ class CFO:
         return l3, l4, t3, t4, a3, a4
 
 
-def rate_range(rate):
-    #step = int(rate * 0.1)
-    #return list(range(rate - 9 * step, rate + 10 * step, step))
-    #return list(np.linspace(100, 2500, 20))
-    return [int(rate) for rate in list(np.logspace(2.5, 4, num=15))]
+class RateGenerator:
 
-def rate_combinations(rates):
-    return list(itr.product(*rates))
+    def __init__(self):
+
+        self.deltas = self.rate_range()
+        self.gammas = self.rate_range()
+        self.betas = self.rate_range()
+        self.alphas = self.rate_range()
+
+        self.rate_sets = self.rate_combinations([self.deltas, self.gammas, self.betas, self.alphas])
+        self.models = self.generate()
+
+    def rate_range_seed(self, start_rate):
+        # step = int(start_rate * 0.did0)
+        # return list(range(start_rate - 9 * step, start_rate + 10 * step, step))
+        # return list(np.li100, 2500, 20))
+        pass
+
+    def rate_range(self):
+        return [int(rate) for rate in list(np.logspace(2.5, 4, num=15))]
+
+    def rate_combinations(self, rates):
+        return list(itr.product(*rates))
+
+    def generate(self):
+
+        models = []
+
+        for rate_set in self.rate_sets:
+
+            cfo_mechanism = CFO(rate_set)
+            models.append(cfo_mechanism.frame)
+
+        all_models = pd.concat(models, axis=0)
+        all_models.reset_index(inplace=True, drop=True)
+        all_models.to_csv('all_test_log_mini.csv')
+
+        return all_models.melt(id_vars=['delta', 'gamma', 'beta', 'alpha']).copy()
 
 
-dc = CFO([26, 1e4, 1.9e4, 1e3])
+dc = CFO([25, 1e4, 1.9e4, 1e3])
 print(dc.frame)
-print('DC sanity: 58.7 ms, 34.5 us, 5.879, 18994')
+print('DC sanity: 57.7 ms, 34.5 us, 5.879, 18994')
 
-
-def generate():
-
-    delta, gamma, beta, alpha = 1500, 2000, 8200, 700
-    deltas, gammas, betas, alphas = rate_range(delta), rate_range(gamma), rate_range(beta), rate_range(alpha)
-    rate_sets = rate_combinations([deltas, gammas, betas, alphas])                                                          # 14641 combinations
-
-    tests = []
-
-    for rate_set in rate_sets:
-
-        cfo_mechanism = CFO(rate_set)
-        tests.append(cfo_mechanism.frame)
-
-    all_tests = pd.concat(tests, axis=0)
-    all_tests.reset_index(inplace=True, drop=True)
-    print(all_tests)
-
-    results_long = all_tests.melt(id_vars=['delta', 'gamma', 'beta', 'alpha']).copy()
-
-    all_tests.to_csv('all_test_log_mini.csv')
-
-
-delta, gamma, beta, alpha = 1500, 2000, 8200, 700
-
-#generate()
+generate = RateGenerator()
 all_tests = pd.read_csv('all_test_log_mini.csv', index_col=0)
-
-
-'''
-fix_not_delta = all_tests[((all_tests['gamma'] == gamma) & (all_tests['beta'] == beta) & (all_tests['alpha'] == alpha))]
-fix_not_gamma = all_tests[((all_tests['delta'] == delta) & (all_tests['beta'] == beta) & (all_tests['alpha'] == alpha))]
-fix_not_beta = all_tests[((all_tests['delta'] == delta) & (all_tests['gamma'] == gamma) & (all_tests['alpha'] == alpha))]
-fix_not_alpha = all_tests[((all_tests['delta'] == delta) & (all_tests['beta'] == beta) & (all_tests['beta'] == beta))]
-
-
-fix_beta_alpha = all_tests[((all_tests['beta'] == beta) & (all_tests['alpha'] == alpha))]
-fix_delta_gamma = all_tests[((all_tests['gamma'] == gamma) & (all_tests['delta'] == delta))]
-
-fix_gamma_alpha = all_tests[((all_tests['gamma'] == gamma) & (all_tests['alpha'] == alpha))]
-fix_gamma_beta = all_tests[((all_tests['gamma'] == gamma) & (all_tests['beta'] == beta))]
-
-#fix_delta_alpha = all_tests[((all_tests['delta'] == delta) & (all_tests['alpha'] == alpha))]
-fix_delta_beta = all_tests[((all_tests['delta'] == delta) & (all_tests['alpha'] == alpha))]
-
-sns.set_context("talk")
-
-'''
 
 
 def correlation_plot():
@@ -184,11 +168,14 @@ def correlation_plot():
     annots_spearman.replace(to_replace=[0.0, -0.0], value='', inplace=True)
 
     fig, axs = plt.subplots(ncols=3, nrows=1, figsize=[15, 5])
+    axs[0].set_title('pearson')
+    axs[1].set_title('kendall')
+    axs[2].set_title('spearman')
     sns.heatmap(correlations_pearson.iloc[4:, 0:4], yticklabels=1, cmap="RdBu_r", center=0, annot=annots_pearson, fmt='', ax=axs[0])
     sns.heatmap(correlations_kendall.iloc[4:, 0:4], yticklabels=1, cmap="RdBu_r", center=0, annot=annots_kendall, fmt='', ax=axs[1])
     sns.heatmap(correlations_spearman.iloc[4:, 0:4], yticklabels=1, cmap="RdBu_r", center=0, annot=annots_spearman, fmt='', ax=axs[2])
 
-# correlation_plot()
+correlation_plot()
 
 
 def two_rate_heatmap(rates, fix_rates, property):
@@ -203,15 +190,13 @@ def two_rate_heatmap(rates, fix_rates, property):
     sns.heatmap(for_heat, annot=False, xticklabels=2, yticklabels=2, cbar=True, square=True, ax=ax)
 
 
-# two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'r')
-#two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'r_app')
-#two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'mshb')
-#two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'mshb_app')
-
-
-
+two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'r')
+two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'r_app')
+two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'mshb')
+two_rate_heatmap(['gamma', 'beta'], ['alpha', 'delta'], 'mshb_app')
 
 # TODO: add rates parameter and omit parameter, basically rewrite for 3-rate dependancy option
+
 
 def four_rate_plot(property):
 
@@ -244,7 +229,7 @@ def one_rate_plots(property):
 
 
 
-#four_rate_plot('a4')
+four_rate_plot('a4')
 #four_rate_plot('a3')
 #four_rate_plot('t4')
 #four_rate_plot('t3')
@@ -252,7 +237,7 @@ def one_rate_plots(property):
 
 #one_rate_plots('r')
 
-sns.scatterplot(x='delta', y='gamma', data=all_tests, style='beta', hue='a4')
+#sns.scatterplot(x='delta', y='gamma', data=all_tests, style='beta', hue='a4')
 
 '''
 def plot_paired(models, factor):
@@ -264,8 +249,8 @@ def plot_paired(models, factor):
 plot_paired(selected_gamma_delta, 'delta')
 '''
 
-#sns.set_style("white")
-#sns.set_context("talk")
+sns.set_style("white")
+sns.set_context("talk")
 
 sns.despine()
 plt.tight_layout()
