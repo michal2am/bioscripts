@@ -8,6 +8,10 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import itertools as itr
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+import argparse
+
 
 from scalcs import scalcslib as scl
 from scalcs import scplotlib as scpl
@@ -63,11 +67,13 @@ class ModelAnalysis:
         self.mechanism = rates
 
         # TODO: clean up parameter calculation and data frame build, should work for any model
+        # TODO: dirty ideal open only for RFO
         parameters = {rate.name: rate.rateconstants[0] for rate in self.mechanism.Rates}
         parameters.update({'resolution': self.resolution})
         shuts_dist = scl.printout_distributions(self.mechanism, self.resolution).split()
         parameters.update({'t1': shuts_dist[16], 'a1': shuts_dist[17], 't2': shuts_dist[21], 'a2': shuts_dist[22],
-                    't1_a': shuts_dist[50], 'a1_a': shuts_dist[75], 't2_a': shuts_dist[46], 'a2_a': shuts_dist[73]})
+                        't1_a': shuts_dist[50], 'a1_a': shuts_dist[75], 't2_a': shuts_dist[46], 'a2_a': shuts_dist[73],
+                        'op_t': 1/self.mechanism.Rates[0].rateconstants[0]*1000})
 
         self.frame = pd.DataFrame([parameters])
 
@@ -128,13 +134,17 @@ class ModelAnalysis:
 
 class ModelMultiGenerator:
 
-    def __init__(self):
+    def __init__(self, resolution, out_table_file):
         """
         creates mutliple possible models
         TODO: works only for CFO model
         TODO: works only for logarithmic parameter sets
         """
 
+        self.resolution = resolution
+        self.output = out_table_file
+
+        # TODO: all below is a mess
         self.deltas = self.rate_range_auto()
         self.gammas = self.rate_range_auto()
         self.betas = self.rate_range_auto()
@@ -142,6 +152,22 @@ class ModelMultiGenerator:
 
         self.rate_sets = self.rate_combinations([self.deltas, self.gammas, self.betas, self.alphas])
         self.models = self.generate()
+
+    @property
+    def resolution(self):
+        return self._resolution
+
+    @resolution.setter
+    def resolution(self, resolution):
+        self._resolution = resolution
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, output_table_file):
+        self._output = output_table_file
 
     def rate_range(self, start_rate):
         """
@@ -158,9 +184,11 @@ class ModelMultiGenerator:
         generates a logarithmic set of rate values for single rate
         :return: list of rates values
         """
-        return [int(rate) for rate in list(np.logspace(2.5, 4, num=15))]
+        # return [int(rate) for rate in list(np.logspace(2.7, 4.31, num=25))]
+        return [int(rate) for rate in list(np.logspace(2.4, 4.5, num=30))]
 
-    def rate_combinations(self, rates):
+    @staticmethod
+    def rate_combinations(rates):
         """
         generates all possible permutations of rates for complete model
         :param rates: list of list rates
@@ -178,12 +206,13 @@ class ModelMultiGenerator:
 
         for rate_set in self.rate_sets:
 
-            cfo_mechanism = ModelAnalysis('RFO', rate_set, 50e-6)
+            resolution = self.resolution
+            cfo_mechanism = ModelAnalysis('RFO', rate_set, resolution)
             generated_models.append(cfo_mechanism.frame)
 
         all_models = pd.concat(generated_models, axis=0)
         all_models.reset_index(inplace=True, drop=True)
-        all_models.to_csv('all_test_log_SCALCS_REDONE.csv')
+        all_models.to_csv(self.output)
 
         return all_models.melt(id_vars=['delta', 'gamma', 'beta', 'alpha']).copy()
 
@@ -286,15 +315,173 @@ class ModelPlots:
             fig.savefig(parameter + '_' + rate)
 
 
-# new = ModelAnalysis('RFO', [4300, 5000, 12500, 800], 50e-6)
-# new.plot_shut_dis()
-# new.print_mechanism()
+class ModelParse:
+
+    def __init__(self, fit, models_csvs, experiments_csv):
+
+        if fit:
+
+            self.models = models_csvs
+            self.experiment = experiments_csv
+
+        else:
+
+            pass
+
+    @property
+    def models(self):
+        return self._models
+
+    @models.setter
+    def models(self, model_files):
+        models = []
+        for model_file in model_files:
+            model = pd.read_csv(model_file, index_col=0)
+            models.append(model)
+        models_df = pd.concat(models)
+        self._models = models_df.drop(columns=['t1', 'a1', 't2', 'a2'])
+
+    @property
+    def experiment(self):
+        return self._experiment
+
+    @experiment.setter
+    def experiment(self, experimental_table):
+        experiment = pd.read_csv(experimental_table)
+        self._experiment = experiment.drop(columns=['file', 'p1_s', 'p2_s', 't3_s', 'p3_s', 't4_s', 'p4_s', 'mean_s', 't1_o', 'p1_o', 't2_o' ,'p2_o'])
+
+    def parse_and_fit(self):
+        # TODO: refactor indexing, it's a mess
+        """
+
+        :return:
+        """
+
+        fitted = pd.DataFrame(columns=['type', 'project', 'equilibrium', 'forward'])
+
+        for index, row in self.experiment.iterrows():
+
+            experimental = row.to_frame().T.rename(columns={'t1_s': 't2_a', 't2_s': 't1_a', 'p1_n': 'a2_a', 'p2_n': 'a1_a', 'mean_o': 'op_t'})
+            experimental = experimental.loc[:, ['type', 'project', 'resolution', 't1_a', 'a1_a', 't2_a', 'a2_a', 'op_t']]
+
+            res_filter = self.models[self.models.loc[:, 'resolution'] == experimental.loc[:, 'resolution'].values[0]]
+
+            up = 1.8
+            bt = 0.2
+
+            pre_filter = res_filter[(res_filter.t2_a < up*row.t1_s) & (res_filter.t2_a > bt*row.t1_s) &
+                                 (res_filter.a2_a < up*row.p1_n) & (res_filter.a2_a > bt*row.p1_n) &
+                                 (res_filter.t1_a < up*row.t2_s) & (res_filter.t1_a > bt*row.t2_s) &
+                                 (res_filter.a1_a < up*row.p2_n) & (res_filter.a1_a > bt*row.p2_n) &
+                                 (res_filter.op_t < 1.0*row.mean_o) & (res_filter.op_t > 0.2*row.mean_o)]
+
+            relatives = {prop: pre_filter.loc[:, prop].apply(lambda x: abs((x - experimental.loc[index, prop])/x))
+                         for prop in ['t1_a', 'a1_a', 't2_a', 'a2_a', 'op_t']}
+            relatives = pd.DataFrame.from_dict(relatives)
+            relatives.loc[:, 'diff_av'] = relatives.mean(numeric_only=True, axis=1)
+
+            pre_filter = pd.concat([pre_filter, relatives.loc[:, 'diff_av']], axis=1)
+            post_filter = pre_filter.sort_values(by=['diff_av']).iloc[0:1, :]
+
+            post_filter.loc[:, 'forward'] = np.log(post_filter.loc[:, 'beta'] * post_filter.loc[:, 'delta'])
+            post_filter.loc[:, 'equilibrium'] = np.log((post_filter.loc[:, 'beta'] * post_filter.loc[:, 'delta'])/
+                                                       (post_filter.loc[:, 'alpha'] * post_filter.loc[:, 'gamma']))
+
+            post_filter.reset_index(inplace=True, drop=True)
+            experimental.reset_index(inplace=True, drop=True)
+
+            print(experimental)
+            print(post_filter)
+
+            result = pd.concat([experimental[['type', 'project']], post_filter[['equilibrium', 'forward']]], axis=1)
+            fitted = fitted.append(result, ignore_index=True)
+
+        fitted.to_csv('rates.csv')
+
+    def plot_phi(self):
+        """
+
+        :return: 
+        """
+
+        data = pd.read_csv('rates.csv', index_col=0)
+        sns.set_style("white")
+        sns.set_context("talk")
+
+        phis = pd.DataFrame(columns=['project', 'phi_s', 'phi_c'])
 
 
-generate = ModelMultiGenerator()
-models = pd.read_csv('all_test_log_SCALCS_REDONE.csv', index_col=0)
+        for project in data.project.unique():
 
-ploter = ModelPlots(models, ['delta', 'gamma', 'beta', 'alpha'])
+            single_cell = data[data.loc[:, 'project'] == project]
+            cumulative_cell = single_cell.groupby('type', sort=False).mean().reset_index()
 
-ploter.correlation_plot()
-ploter.one_rate_plots('a2_a')
+            g1 = sns.relplot(x='equilibrium', y='forward', hue='type',  data=single_cell)
+            g1.map(sns.regplot, x='equilibrium', y='forward', scatter=False, data=single_cell)
+            plt.show()
+            g1.savefig(project+'_single_REFER.png')
+
+            g2 = sns.relplot(x='equilibrium', y='forward', hue='type', data=cumulative_cell)
+            g2.map(sns.regplot, x='equilibrium', y='forward', scatter=False, data=cumulative_cell)
+            plt.show()
+            g2.savefig(project + '_cumulative_REFER.png')
+
+
+            x_s = single_cell.loc[:, 'equilibrium']
+            x_s = sm.add_constant(x_s)
+            y_s = single_cell.loc[:, 'forward']
+            model_s = sm.OLS(y_s, x_s).fit()
+
+            x_c = cumulative_cell.loc[:, 'equilibrium']
+            x_c = sm.add_constant(x_c)
+            y_c = cumulative_cell.loc[:, 'forward']
+            model_c = sm.OLS(y_c, x_c).fit()
+
+            phis = phis.append({'project': project, 'phi_s': model_s.params.loc['equilibrium'],
+                               'phi_c': model_c.params.loc['equilibrium']}, ignore_index=True)
+
+        phis.to_csv('phis.csv')
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', help='foo help')
+parser.add_argument('--generate_resolution', type=float, help='foo help')
+parser.add_argument('--generate_output', help='foo help')
+parser.add_argument('--experimental_input', help='foo help')
+
+
+args = parser.parse_args()
+
+#new = ModelAnalysis('RFO', [4300, 5000, 12500, 800], 50e-6)
+#new.plot_shut_dis()
+#new.print_mechanism()
+
+if args.mode == 'generate':
+
+    generate = ModelMultiGenerator(args.generate_resolution, args.generate_output)
+
+if args.mode == 'plot_trend':
+
+    pass
+    # TODO: should accept file, not DataFrame
+    # TODO: should work with multi resolution DataFrame(s) from file list
+
+    # models = pd.read_csv('all_test_log_SCALCS_REDONE_25bis.csv', index_col=0)
+    # ploter = ModelPlots(models, ['delta', 'gamma', 'beta', 'alpha'])
+    # ploter.correlation_plot()
+    # ploter.one_rate_plots('a2_a')
+
+if args.mode == 'fit_plot':
+
+    parser = ModelParse(True, ['all_test_log_SCALCS_30.csv', 'all_test_log_SCALCS_30_r30.csv',
+                         'all_test_log_SCALCS_30_r40.csv', 'all_test_log_SCALCS_30_r60.csv',
+                         'all_test_log_SCALCS_30_r70.csv', 'all_test_log_SCALCS_30_r80.csv'],
+                        args.experimental_input)
+
+    parser.parse_and_fit()
+    parser.plot_phi()
+
+if args.mode == 'fitted_plot':
+
+    parser = ModelParse(False, None, None)
+    parser.plot_phi()
