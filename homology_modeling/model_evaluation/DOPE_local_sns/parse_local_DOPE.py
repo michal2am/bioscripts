@@ -18,7 +18,7 @@ class ScopeEvaluateLocal(Sequence):
 
         models = self.get_sequence(com_seq[0], num=True, skip=('residue', 'subunit', 'helix', 'strand', 'loop'))
 
-        models_cut = models.loc[(models['position'] > 38) & (models['position'] < 55) & models['subunit'].isin(self.chains)]
+        models_cut = models.loc[(models['position'] > 10) & (models['position'] < 20) & models['subunit'].isin(self.chains)]
 
         self.both_chains_sums = []
         self.both_chains_singles = []

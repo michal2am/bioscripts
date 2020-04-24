@@ -55,6 +55,7 @@ class EvaluateGlobal:
 
         return by_molpdf, by_dope, c_by_molpdf, n_by_model
 
+
     def plot_profile(self):
         """
         :return: plots all models normalized scores
@@ -66,6 +67,7 @@ class EvaluateGlobal:
                            legend_style={'loc': 'upper center', 'ncol': 2, 'frameon': True, 'edgecolor': 'black'}
                            )
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--logFile", dest="logFile", action="store")
 parser.add_argument("-o", "--outFile", dest="outFile", action="store")
@@ -74,4 +76,4 @@ parser.add_argument("-t", "--treshold", dest="treshold", action="store", type=fl
 args = parser.parse_args()
 
 models = EvaluateGlobal(args.logFile, args.modelNum, args.treshold, args.outFile)
-models.plot_profile()
+models.plot_profile_plotly()
