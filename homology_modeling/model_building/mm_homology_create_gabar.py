@@ -22,7 +22,7 @@ parser.add_argument("-n", "--number", type=int, help="number of models to prepar
 args = parser.parse_args()
 
 j = job()
-for core in range(0, 8):
+for core in range(0, 3):
     j.append(local_slave())
 
 # log.verbose()

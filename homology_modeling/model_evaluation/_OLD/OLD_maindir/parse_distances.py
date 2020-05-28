@@ -4,7 +4,7 @@ from biopandas.pdb import PandasPdb
 import os
 import pandas as pd
 
-dirs = os.listdir('.')
+dirs = os.listdir('../..')
 
 read_pdbs = []
 
