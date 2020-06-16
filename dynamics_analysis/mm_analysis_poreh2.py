@@ -9,7 +9,6 @@ import os
 import subprocess as sp
 import logging as lg
 import numpy as np
-import mm_lib_plots as mmplt
 import mm_lib_analysis as mmanl
 import pandas as pd
 import mm_pandas_parse as mmpr

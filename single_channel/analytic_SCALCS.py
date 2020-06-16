@@ -408,7 +408,7 @@ class ModelParse:
         sns.set_style("white")
         sns.set_context("talk")
 
-        phis = pd.DataFrame(columns=['project', 'phi_s', 'phi_c'])
+        phis = pd.DataFrame(columns=['project', 'phi_allCells', 'phi_cumuCells'])
 
 
         for project in data.project.unique():
@@ -437,8 +437,8 @@ class ModelParse:
             y_c = cumulative_cell.loc[:, 'forward']
             model_c = sm.OLS(y_c, x_c).fit()
 
-            phis = phis.append({'project': project, 'phi_s': model_s.params.loc['equilibrium'],
-                               'phi_c': model_c.params.loc['equilibrium']}, ignore_index=True)
+            phis = phis.append({'project': project, 'phi_allCells': model_s.params.loc['equilibrium'],
+                               'phi_cumuCells': model_c.params.loc['equilibrium']}, ignore_index=True)
 
         phis.to_csv('phis.csv')
 
@@ -474,8 +474,10 @@ if args.mode == 'plot_trend':
 if args.mode == 'fit_plot':
 
     parser = ModelParse(True, ['all_test_log_SCALCS_30.csv', 'all_test_log_SCALCS_30_r30.csv',
-                         'all_test_log_SCALCS_30_r40.csv', 'all_test_log_SCALCS_30_r60.csv',
-                         'all_test_log_SCALCS_30_r70.csv', 'all_test_log_SCALCS_30_r80.csv'],
+                               'all_test_log_SCALCS_30_r40.csv', 'all_test_log_SCALCS_30_r60.csv',
+                               'all_test_log_SCALCS_30_r70.csv', 'all_test_log_SCALCS_30_r80.csv',
+                               'all_test_log_SCALCS_30_r75.csv', 'all_test_log_SCALCS_30_r65.csv',
+                               'all_test_log_SCALCS_30_r100.csv'],
                         args.experimental_input)
 
     parser.parse_and_fit()
