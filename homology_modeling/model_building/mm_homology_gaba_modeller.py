@@ -29,6 +29,11 @@ class GABAModel(automodel):
         self.patch(residue_type='DISU', residues=(self.residues['151:C'], self.residues['165:C']))
         # self.patch(residue_type='DISU', residues=(self.residues['244:E'], self.residues['303:E']))
 
+        # self.patch(residue_type='DISU', residues=(self.residues['31:E'], self.residues['15:D']))
+        # self.patch(residue_type='DISU', residues=(self.residues['31:B'], self.residues['15:A']))
+
+
+
 
     def special_restraints(self, aln):
         rsr = self.restraints

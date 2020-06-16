@@ -11,6 +11,7 @@ from modeller.parallel import *
 from mm_homology_gaba_modeller import *
 import argparse
 
+#from homology_modeling.model_building.mm_homology_gaba_modeller import GABAModel
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-a", "--alnfile", help="alignment file in .pir format")
@@ -22,7 +23,7 @@ parser.add_argument("-n", "--number", type=int, help="number of models to prepar
 args = parser.parse_args()
 
 j = job()
-for core in range(0, 8):
+for core in range(0, 4):
     j.append(local_slave())
 
 # log.verbose()
