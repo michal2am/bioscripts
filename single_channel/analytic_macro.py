@@ -1,20 +1,13 @@
-# script for some trend-analytic single channel simulations
-# if "generate" is commented out simulations results are read from csv
 
-# TODO: a lot of stuff, thus is just temporary (see detailed TODOS)
+# ?
 
 import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import itertools as itr
-
-from scalcs import scalcslib as scl
-from scalcs import scplotlib as scpl
+import plotly.express as px
 from scalcs import mechanism
+from scalcs import cjumps
 
 
-class ModelRFO:
+class ModelCCOD:
 
     def __init__(self, rates):
         """
@@ -23,7 +16,6 @@ class ModelRFO:
         """
 
         self.mechanism = rates
-        print('Building new model')
 
     @property
     def mechanism(self):
@@ -32,165 +24,106 @@ class ModelRFO:
     @mechanism.setter
     def mechanism(self, rates):
 
-        o = mechanism.State('A', 'F*', 50e-12)
-        f = mechanism.State('B', 'F', 0.0)
-        r = mechanism.State('C', 'R', 0.0)
+        mectitle = 'C-C-O-D'
+        ratetitle = 'quasi random numbers'
 
-        rate_list = [
-            mechanism.Rate(rates[3], o, f, name='alpha', limits=[1e-15, 1e+7]),
-            mechanism.Rate(rates[2], f, o, name='beta', limits=[1e-15, 1e+7]),
-            mechanism.Rate(rates[1], f, r, name='gamma', limits=[1e-15, 1e+7]),
-            mechanism.Rate(rates[0], r, f, name='delta', limits=[1e-15, 1e+10])
-        ]
+        A2Dp = mechanism.State('B', 'A2Dp', 0.0)
+        A2D  = mechanism.State('B', 'A2D', 0.0)
+        A2Op = mechanism.State('A', 'A2Op', 50e-12)
+        A2O  = mechanism.State('A', 'A2O', 50e-12)
+        A2F  = mechanism.State('B', 'A2F', 0.0)
+        A2R  = mechanism.State('B', 'A2R', 0.0)
+        AR   = mechanism.State('B', 'AR', 0.0)
+        R    = mechanism.State('C', 'R', 0.0)
 
-        complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFO', rtitle='CFO_rates')
-        complete_mechanism.set_eff('c', 100e-9)
+        RateList = [
 
-        self._mechanism = complete_mechanism
+             mechanism.Rate(rates['res'], A2D, A2F, name='res', limits=[1e-15, 1e+7]),
+             mechanism.Rate(rates['des'], A2F, A2D, name='des', limits=[1e-15, 1e+7]),
+             mechanism.Rate(rates['res_p'], A2Dp, A2F, name='res_p', limits=[1e-15, 1e+7]),
+             mechanism.Rate(rates['des_p'], A2F, A2Dp, name='des_p', limits=[1e-15, 1e+7]),
 
+             mechanism.Rate(rates['alpha'], A2O, A2F, name='alpha', limits=[1e-15,1e+7]),
+             mechanism.Rate(rates['beta'], A2F, A2O, name='beta', limits=[1e-15,1e+7]),
+             mechanism.Rate(rates['alpha_p'], A2Op, A2F, name='alpha_p', limits=[1e-15, 1e+7]),
+             mechanism.Rate(rates['beta_p'], A2F, A2Op, name='beta_p', limits=[1e-15, 1e+7]),
 
-class ModelAnalysis:
+             mechanism.Rate(rates['gamma'], A2F, A2R, name='gamma', limits=[1e-15,1e+7]),
+             mechanism.Rate(rates['delta'], A2R, A2F, name='delta', limits=[1e-15,1e+7]),
 
-    def __init__(self, topology, rates, resolution):
-        """
-        creates single model using SCALCS also handles analysis and printing/ploting for one model
-        :param topology:
-        :param rates: list of rates
-        :param resolution: recording resolution for missed events correction
-        """
+             mechanism.Rate(rates['koff']*2, A2R, AR, name='2koff', limits=[1e-15, 1e+7]),
+             mechanism.Rate(rates['kon']*2, R, AR, name='2kon', eff='c', limits=[1e-15, 1e+10]),
+             mechanism.Rate(rates['koff'], AR, R, name='koff', limits=[1e-15,1e+7]),
+             mechanism.Rate(rates['kon'], AR, A2R, name='kon', eff='c', limits=[1e-15,1e+10]),
+             ]
 
-        self.resolution = resolution
-        self.topology = topology
-        self.mechanism = rates
-
-        # TODO: clean up parameter calculation and data frame build, should work for any model
-        # TODO: dirty ideal open only for RFO
-        parameters = {rate.name: rate.rateconstants[0] for rate in self.mechanism.Rates}
-        parameters.update({'resolution': self.resolution})
-        shuts_dist = scl.printout_distributions(self.mechanism, self.resolution).split()
-        parameters.update({'t1': shuts_dist[16], 'a1': shuts_dist[17], 't2': shuts_dist[21], 'a2': shuts_dist[22],
-                        't1_a': shuts_dist[50], 'a1_a': shuts_dist[75], 't2_a': shuts_dist[46], 'a2_a': shuts_dist[73],
-                        'op_t': 1/self.mechanism.Rates[0].rateconstants[0]*1000})
-
-        self.frame = pd.DataFrame([parameters])
-
-    @property
-    def topology(self):
-        return self._topology
-
-    @topology.setter
-    def topology(self, topology):
-        self._topology = topology
-
-    @property
-    def resolution(self):
-        return self._res
-
-    @resolution.setter
-    def resolution(self, resolution):
-        self._res = resolution
-
-    @property
-    def mechanism(self):
-        return self._mechanism
-
-    @mechanism.setter
-    def mechanism(self, rates):
-        if self.topology == 'RFO':
-            self._mechanism = ModelRFO(rates).mechanism
-
-    def print_mechanism(self):
-        """
-        prints standard SCALCS mechanism printout
-        """
-        print(self.mechanism)
-
-    def print_occupancy(self):
-        """
-        prints states occupancy
-        """
-        print(scl.printout_occupancies(self.mechanism, self.resolution))
-
-    def print_shut_dis(self):
-        """
-        prints shut time distribution
-        TODO: only shuts, openings are commented out in SCALCS due to single open state issue
-        """
-        print(scl.printout_distributions(self.mechanism, self.resolution))
-
-    def plot_shut_dis(self):
-        """
-        plots shut time distribution
-        """
-        t, ipdf, epdf, apdf = scpl.shut_time_pdf(self.mechanism, self.resolution)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fshut(t)')
-        plt.xlabel('Shut time, ms')
-        plt.title('The shut time pdf')
+        self._mechanism = mechanism.Mechanism(RateList, mtitle=mectitle, rtitle=ratetitle)
 
 
-class ModelMultiGenerator:
+def to_pc(header, outfile, multi_data):
+    '''
+    saves Pandas data frame as single atf file
+    :param header: path to header template
+    :param outfile: path to atf outfile
+    :param multi_data: Pandas data frame with all the abfs data
+    :return:
+    '''
 
-    def __init__(self):
-        """
-        creates mutliple possible models
-        TODO: works only for CFO model
-        TODO: works only for logarithmic parameter sets
-        """
+    # prepare header
+    with open(header, 'r') as h:
+        cols = multi_data.shape[1]
 
-        self.deltas = self.rate_range_auto()
-        self.gammas = self.rate_range_auto()
-        self.betas = self.rate_range_auto()
-        self.alphas = self.rate_range_auto()
+        header = h.readlines()
+        header[1] = "7\t{}\n".format(1 + cols)
+        header[8] = header[8].rstrip() + "\t" + "\"sim #1\"\t" * cols + "\n"
+        header[9] = header[9].rstrip() + "\t" + "\"Trace #1 (prob)\"\t" * cols + "\n"
+        header = ''.join(header)
 
-        self.rate_sets = self.rate_combinations([self.deltas, self.gammas, self.betas, self.alphas])
-        self.models = self.generate()
+    # write header
+    with open(outfile, 'w') as d:
+        d.write(header)
 
-    def rate_range(self, start_rate):
-        """
-        TODO: shuld be a part of custom rate range generation option
-        """
-        # step = int(start_rate * 0.did0)
-        # return list(range(start_rate - 9 * step, start_rate + 10 * step, step))
-        # return list(np.li100, 2500, 20))
-        pass
-
-    @staticmethod
-    def rate_range_auto():
-        """
-        generates a logarithmic set of rate values for single rate
-        :return: list of rates values
-        """
-        return [int(rate) for rate in list(np.logspace(2.7, 4.31, num=25))]
-
-    def rate_combinations(self, rates):
-        """
-        generates all possible permutations of rates for complete model
-        :param rates: list of list rates
-        :return: list of lists of rate values sets
-        """
-        return list(itr.product(*rates))
-
-    def generate(self):
-        """
-        generates multiple models based on rates sets
-        :return: dataframe of models
-        """
-
-        generated_models = []
-
-        for rate_set in self.rate_sets:
-
-            cfo_mechanism = ModelAnalysis('RFO', rate_set, 50e-6)
-            generated_models.append(cfo_mechanism.frame)
-
-        all_models = pd.concat(generated_models, axis=0)
-        all_models.reset_index(inplace=True, drop=True)
-        all_models.to_csv('all_test_log_SCALCS_REDONE_25bis.csv')
-
-        return all_models.melt(id_vars=['delta', 'gamma', 'beta', 'alpha']).copy()
+    # write all data
+    with open(outfile, 'a') as d:
+        multi_data.to_csv(d, header=False, float_format='%.4f', sep='\t')
 
 
-generate = ModelMultiGenerator()
-#models = pd.read_csv('all_test_log_SCALCS_REDONE_25bis.csv', index_col=0)
+start_rates = {'kon': 10e6, 'koff': 900,
+               'delta': 4400, 'gamma': 3000,
+               'beta': 6900, 'alpha': 1800, 'beta_p': 4300, 'alpha_p': 450,
+               'des': 4000, 'res': 60, 'des_p': 400, 'res_p': 3}
 
+step_size = 8e-5
+record_length = 1000e-3
+model_trace = pd.DataFrame()
+
+variable_rate = 'delta'
+
+for variable_rate_val in [0.1*start_rates[variable_rate], 0.3*start_rates[variable_rate], 0.5*start_rates[variable_rate], 0.7*start_rates[variable_rate], 0.9*start_rates[variable_rate],
+                          start_rates[variable_rate],
+                          1.1*start_rates[variable_rate], 1.3*start_rates[variable_rate], 1.5*start_rates[variable_rate], 1.7*start_rates[variable_rate], 2.0*start_rates[variable_rate]]:
+
+    start_rates[variable_rate] = variable_rate_val
+    sample_model = ModelCCOD(start_rates)
+
+    t, c, Popen, P = cjumps.solve_jump(sample_model.mechanism, record_length, step_size, cjumps.pulse_square, (1e-2, 0.0, 100e-3, 500e-3))
+
+    model_trace[variable_rate_val] = Popen
+
+model_trace['t'] = t * 1000
+model_trace.set_index(keys='t', drop=True, inplace=True)
+
+model_trace_normalized = model_trace.divide(model_trace.max(), axis=1)
+model_trace_normalized_forATF = model_trace_normalized.copy()
+
+
+model_trace_normalized.reset_index(inplace=True)
+model_trace_normalized_long = (model_trace_normalized.melt(id_vars=['t'], var_name=variable_rate, value_name='Popen'))
+
+
+print(model_trace_normalized_forATF)
+
+fig = px.line(model_trace_normalized_long, x='t', y='Popen', color=variable_rate, color_discrete_sequence=px.colors.qualitative.Dark24, title=str(start_rates))
+fig.write_html('test.html')
+
+to_pc('header.txt', 'test.atf', model_trace_normalized_forATF)
