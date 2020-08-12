@@ -361,18 +361,18 @@ class ModelsBuilder:
                 print('full simulated trace:')
                 print(model_trace)
 
-                trace_rise = model_trace.iloc[1250:model_trace['Popen'].idxmax()]
-                trace_rise['t'] -= 100.00
+                trace_rise = model_trace.iloc[1250:model_trace['Popen'].idxmax()].copy()
+                trace_rise.loc[:, 't'] -= 100.00
                 param_rt = self.fit_rise(trace_rise)
                 model_trace['rt'] = param_rt
 
                 if self.topology == 'RAAFOD':
-                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875]
-                    trace_des['t'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
+                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
                     params_des = self.fit_des_single(trace_des)
                 else:
-                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500]
-                    trace_des['t'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500].copy()
+                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
                     params_des = self.fit_des(trace_des)
 
                 model_trace['d_a1'] = params_des[0]
@@ -381,8 +381,8 @@ class ModelsBuilder:
                 model_trace['d_t2'] = params_des[3]
                 model_trace['d_a3'] = params_des[4]
 
-                trace_dea = model_trace.iloc[7500:]
-                trace_dea['t'] -= 600
+                trace_dea = model_trace.iloc[7500:].copy()
+                trace_dea.loc[:, 't'] -= 600
                 param_dea = self.fit_dea(trace_dea)
                 model_trace['dea_m'] = param_dea
 
