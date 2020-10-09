@@ -175,7 +175,7 @@ class SquareRootScale(mscale.ScaleBase):
     name = 'squareroot'
 
     def __init__(self, axis, **kwargs):
-        mscale.ScaleBase.__init__(self)
+        mscale.ScaleBase.__init__(self, axis)                                                                           # axis was added here in 2020 for compatibility
 
     def set_default_locators_and_formatters(self, axis):
         axis.set_major_locator(ticker.AutoLocator())

@@ -477,7 +477,8 @@ if args.mode == 'fit_plot':
                                'all_test_log_SCALCS_30_r40.csv', 'all_test_log_SCALCS_30_r60.csv',
                                'all_test_log_SCALCS_30_r70.csv', 'all_test_log_SCALCS_30_r80.csv',
                                'all_test_log_SCALCS_30_r75.csv', 'all_test_log_SCALCS_30_r65.csv',
-                               'all_test_log_SCALCS_30_r100.csv'],
+                               'all_test_log_SCALCS_30_r85.csv',
+                               'all_test_log_SCALCS_30_r100.csv', 'all_test_log_SCALCS_30_r90.csv'],
                         args.experimental_input)
 
     parser.parse_and_fit()
