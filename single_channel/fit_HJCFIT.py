@@ -90,9 +90,10 @@ if args.config:
         rec.printout()
 
         if sc_model == 'CO':
-            mec = mechanism_RO([5000, 5000])
+            mec = mechanism_RO([single_cell.at[0, 'beta'], single_cell.at[0, 'alpha']])
         elif sc_model == 'CFO':
-            mec = mechanism_RFO([500, 500, 500, 500])
+            mec = mechanism_RFO([single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
+                                 single_cell.at[0, 'beta'], single_cell.at[0, 'alpha']])
 
         mec.update_mr()
         mec.printout(sys.stdout)
@@ -122,9 +123,10 @@ if args.config:
             alpha = mec.Rates[0].rateconstants[0]
             beta = mec.Rates[1].rateconstants[0]
 
-            refer_result = {'type': sc_type, 'file': file_name,
+            refer_result = {'project': args.project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                            'equilibrium': np.log(beta / alpha), 'forward': np.log(beta),
                             'alpha': alpha, 'beta': beta,
-                            'equilibrium': np.log(beta/alpha), 'forward': np.log(beta)}
+                            }
 
         elif sc_model == 'CFO':
 
@@ -133,22 +135,20 @@ if args.config:
             gamma = mec.Rates[2].rateconstants[0]
             delta = mec.Rates[3].rateconstants[0]
 
-            refer_result = {'type': sc_type, 'file': file_name,
+            refer_result = {'project': args.project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                            'equilibrium': np.log((delta * beta) / (gamma * alpha)),
+                            'forward': np.log(delta * beta / gamma),
                             'alpha': alpha, 'beta': beta,
                             'delta': delta, 'gamma': gamma,
-                            'equilibrium': np.log((delta * beta)/(gamma * alpha)),
-                            'forward': np.log(delta * beta / gamma)}
+                            }
 
 
         results.append(refer_result)
 
     results = pd.DataFrame(results)
-
     print(results)
     results.to_csv(args.project + '_hjcfit_rates_all.csv')
-    for_plot = results.loc[:, ['type', 'equilibrium', 'forward', 'file']]
-    for_plot['project'] = args.project
-    for_plot.to_csv(args.project + '_hjcfit_rates.csv')
+
 
 else:
 

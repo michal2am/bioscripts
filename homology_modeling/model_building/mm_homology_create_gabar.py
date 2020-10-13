@@ -23,11 +23,8 @@ parser.add_argument("-n", "--number", type=int, help="number of models to prepar
 args = parser.parse_args()
 
 j = job()
-<<<<<<< HEAD
-for core in range(0, 4):
-=======
+
 for core in range(0, 3):
->>>>>>> 12235f198defecf835466558ae0e3ab0f61d87c8
     j.append(local_slave())
 
 # log.verbose()

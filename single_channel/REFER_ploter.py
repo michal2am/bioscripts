@@ -8,7 +8,9 @@ import argparse
 
 class REFERPloter:
 
-    def __init__(self, rates_tabel, order):
+    def __init__(self, rates_tabel, order, config):
+
+        self.config = config
 
         self.table_results = pd.read_csv(rates_tabel).drop(columns='Unnamed: 0')
 
@@ -17,14 +19,17 @@ class REFERPloter:
         # 2. index reset I: unstack by level=0, being the index level named by 'values'
         # 3. index reset II: reset remaining, unpivoted levels of index, those specified as 'columns' during pivot
 
-        self.cumulative_results = pd.pivot_table(self.table_results, columns=['type', 'project'], values=['forward', 'equilibrium'], aggfunc=np.mean)
+        self.cumulative_results = self.table_results.drop(columns=['file'])
+        self.cumulative_results = pd.pivot_table(self.cumulative_results, columns=['project', 'type', 'model'], aggfunc=np.mean)
         self.cumulative_results = self.cumulative_results.unstack(level=0)
         self.cumulative_results.reset_index(inplace=True)
 
         self.table_results.sort_values('type', ascending=False, inplace=True)
-        print(self.table_results)
         self.cumulative_results.sort_values('type', ascending=False, inplace=True)
-        print(self.cumulative_results)
+
+        # print(self.table_results)
+        # print(self.cumulative_results)
+
 
     def REFER_plot(self):
 
@@ -80,6 +85,13 @@ class REFERPloter:
         allProjects_cumuCells.write_html('allProjects_cumuCells.html')
         allProjects_cumuCells.write_image('allProjects_cumuCells.png')
 
+    def update_config(self):
+
+        config = pd.read_csv(self.config)
+        new_starters = self.cumulative_results.drop(columns=['project', 'model', 'equilibrium', 'forward'])
+
+        new_config = pd.merge(new_starters, config.loc[:, ['type', 'file', 'file_scn', 'tres', 'tcrit', 'model']], on='type')
+        new_config.to_csv('hjcfit_config_f200_DC_90_STARTERS3.csv')
 
 # 'F200', 'F64', 'F45', 'F14', 'F31', 'H55', 'G254', 'F14F31'
 
@@ -89,5 +101,6 @@ parser.add_argument("-c", "--configFile", type=str)
 parser.add_argument("-p", "--projectsOrder", type=str, nargs='+')
 args = parser.parse_args()
 
-ploter = REFERPloter(args.ratesFile, args.projectsOrder, args.config)
+ploter = REFERPloter(args.ratesFile, args.projectsOrder, args.configFile)
+ploter.update_config()
 ploter.REFER_plot()

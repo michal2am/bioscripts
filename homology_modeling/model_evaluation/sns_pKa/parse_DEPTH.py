@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px
 from functools import reduce
 
 
@@ -94,8 +95,8 @@ class ReadPropkaLog:
         results_long = results_human.melt(id_vars=['fullname', 'resname', 'resnum', 'chain', 'chain_n', 'type', 'method', 'ligand']).copy()
         results_long.rename(columns={'variable': 'template', 'value': 'pKa'}, inplace=True)
 
-        #print(results_human)
-        #print(results_long)
+        print(results_human)
+        print(results_long)
 
         return results_human, results_long
 
@@ -260,6 +261,7 @@ class Analyze:
         g.map(sns.swarmplot)
         '''
 
+        '''
         g1 = sns.catplot(kind='point', data=self.results_long[self.results_long['resnum'] == 155], row='method',
                         col='chain_n', x='ligand', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
         sns.despine(trim=True)
@@ -268,28 +270,30 @@ class Analyze:
                         col='ligand', x='chain_n', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
         sns.despine(trim=True)
 
-        plt.show()
+        #plt.show()
 
         g1.savefig('test.png')
+        '''
 
+        plotly_plot = px.scatter(self.results_long[self.results_long['resnum'] == 155],
+                                 x='ligand', y='pKa', facet_col='chain_n', facet_row='method', color='template',
+                                 template='presentation', width=800, height=400,)
+        plotly_plot.write_html('plotly_plot.html')
 
-read_propka_ligand = ReadPropkaLog(['6i53_propka_ligand.log', '6huk_propka_ligand.log', '6hup_propka_ligand.log', '6huo_propka_ligand.log', '6huj_propka_ligand.log', '6hug_propka_ligand.log'], ["B", "A", "E", "D", "C", "G"], ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-read_propka_free = ReadPropkaLog(['6i53_propka_free.log', '6huk_propka_free.log', '6hup_propka_free.log', '6huo_propka_free.log', '6huj_propka_free.log', '6hug_propka_free.log'], ["B", "A", "E", "D", "C", "G"], ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-
+'''
 read_depth_ligand = ReadDepthLog(['6i53_depth_ligand.log', '6huk_depth_ligand.log', '6hup_depth_ligand.log', '6huo_depth_ligand.log', '6huj_depth_ligand.log', '6hug_depth_ligand.log'], ["B", "A", "E", "D", "C", "G"], ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
 read_depth_free = ReadDepthLog(['6i53_depth_free.log', '6huk_depth_free.log', '6hup_depth_free.log', '6huo_depth_free.log', '6huj_depth_free.log', '6hug_depth_free.log'], ["B", "A", "E", "D", "C", "G"], ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
 
-
-
+analyze = Analyze([read_depth_ligand.results_long, read_depth_free.results_long, read_propka_ligand.results_long, read_propka_free.results_long])
+analyze.exp_plot()
+analyze.parse('B3')
+'''
 
 
 #analyze = Analyze([read_propka_ligand.results_long, read_propka_free.results_long])
-analyze = Analyze([read_depth_ligand.results_long, read_depth_free.results_long, read_propka_ligand.results_long, read_propka_free.results_long])
-
-analyze.exp_plot()
 
 
-analyze.parse('B3')
+
 #analyze.plot_all([48, 69, 84, 95, 101, 112, 119, 146, 153, 155, 182, 191, 267, 270, 274, 282], 'B3', 'depth')
 #analyze.plot_all([48, 69, 84, 95, 101, 112, 119, 146, 153, 155, 182, 191, 267, 270, 274, 282], 'B3', 'propka')
 
@@ -304,4 +308,58 @@ analyze.parse('B3')
 #analyze.plot_all([54, 56, 71, 75, 110, 148, 150, 156, 168, 178, 285, 289, 297], 'Y2', 'propka')
 
 
+read_propka_ligand_Aris = ReadPropkaLog(['6i53_propka_ligand.log', '6huk_propka_ligand.log', '6hup_propka_ligand.log',
+                                         '6huo_propka_ligand.log', '6huj_propka_ligand.log', '6hug_propka_ligand.log'],
+                                        ["B", "A", "E", "D", "C", "G"],
+                                        ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
 
+read_propka_free_Aris = ReadPropkaLog(['6i53_propka_free.log', '6huk_propka_free.log', '6hup_propka_free.log',
+                                       '6huo_propka_free.log', '6huj_propka_free.log', '6hug_propka_free.log'],
+                                      ["B", "A", "E", "D", "C", "G"],
+                                      ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
+
+
+read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log', '6x3u_propka_ligand.log',
+                                    '6x3v_propka_ligand.log', '6x3w_propka_ligand.log', '6x3x_propka_ligand.log',
+                                    '6x3z_propka_ligand.log', '6x40_propka_ligand.log'],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', '6x3u_propka_free.log',
+                                  '6x3v_propka_free.log', '6x3w_propka_free.log', '6x3x_propka_free.log',
+                                  '6x3z_propka_free.log', '6x40_propka_free.log'],
+                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                 ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_depth_ligand = ReadDepthLog(['6i53_depth_ligand.log', '6huk_depth_ligand.log', '6hup_depth_ligand.log',
+                                  '6huo_depth_ligand.log', '6huj_depth_ligand.log', '6hug_depth_ligand.log'],
+                                 ["B", "A", "E", "D", "C", "G"],
+                                 ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
+read_depth_free = ReadDepthLog(['6i53_depth_free.log', '6huk_depth_free.log', '6hup_depth_free.log',
+                                '6huo_depth_free.log', '6huj_depth_free.log', '6hug_depth_free.log'],
+                               ["B", "A", "E", "D", "C", "G"],
+                               ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
+
+
+analyze = Analyze([read_propka_ligand_Aris.results_long, read_propka_free_Aris.results_long,
+                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long,
+                   read_depth_ligand.results_long, read_depth_free.results_long])
+analyze.exp_plot()
+analyze.parse('B2')
+
+'''
+
+read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log',],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', ],
+                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                 ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+analyze = Analyze([
+                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long])
+analyze.exp_plot()
+analyze.parse('B2')
+
+'''
