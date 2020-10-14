@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import statsmodels
 import argparse
+import re
 
 
 class REFERPloter:
@@ -11,6 +12,7 @@ class REFERPloter:
     def __init__(self, rates_tabel, order, config):
 
         self.config = config
+        self.order = order
 
         self.table_results = pd.read_csv(rates_tabel).drop(columns='Unnamed: 0')
 
@@ -27,15 +29,15 @@ class REFERPloter:
         self.table_results.sort_values('type', ascending=False, inplace=True)
         self.cumulative_results.sort_values('type', ascending=False, inplace=True)
 
-        # print(self.table_results)
-        # print(self.cumulative_results)
+        print(self.table_results)
+        print(self.cumulative_results)
 
 
     def REFER_plot(self):
 
         # for each project separately
 
-        for project in args.projectsOrder:
+        for project in self.order:
 
             project_allCells = px.scatter(self.table_results[self.table_results['project'] == project], x='equilibrium', y='forward',
                                           title='single point - single cell',
@@ -69,7 +71,7 @@ class REFERPloter:
                                           title='single point - single cell',
                                           color='project', trendline='ols', template='presentation', width=800, height=800,
                                           hover_data=['type'],
-                                          category_orders={'project': args.projectsOrder},
+                                          category_orders={'project': self.order},
                                           color_discrete_sequence=px.colors.qualitative.Dark24,
                                           )
         allProjects_allCells.write_html('allProjects_allCells.html')
@@ -79,7 +81,7 @@ class REFERPloter:
                                           title='single point - receptor type average',
                                           color='project', trendline='ols', template='presentation', width=800, height=800,
                                           hover_data=['type'],
-                                          category_orders={'project': args.projectsOrder},
+                                          category_orders={'project': self.order},
                                           color_discrete_sequence=px.colors.qualitative.Dark24,
                                           )
         allProjects_cumuCells.write_html('allProjects_cumuCells.html')
@@ -87,20 +89,29 @@ class REFERPloter:
 
     def update_config(self):
 
+        # works only for single project mode
+
         config = pd.read_csv(self.config)
         new_starters = self.cumulative_results.drop(columns=['project', 'model', 'equilibrium', 'forward'])
 
         new_config = pd.merge(new_starters, config.loc[:, ['type', 'file', 'file_scn', 'tres', 'tcrit', 'model']], on='type')
-        new_config.to_csv('hjcfit_config_f200_DC_90_STARTERS3.csv')
+        new_config.to_csv('hjcfit_config_' + self.order[0] + '_iter.csv')
 
 # 'F200', 'F64', 'F45', 'F14', 'F31', 'H55', 'G254', 'F14F31'
 
+
 parser = argparse.ArgumentParser()
-parser.add_argument("-r", "--ratesFile", type=str)
 parser.add_argument("-c", "--configFile", type=str)
 parser.add_argument("-p", "--projectsOrder", type=str, nargs='+')
 args = parser.parse_args()
 
-ploter = REFERPloter(args.ratesFile, args.projectsOrder, args.configFile)
+project = '_'.join(re.split('[_,.]', args.configFile)[2:-1])
+ratesFile = 'hjcfit_rates_' + project + '.csv'
+if args.projectsOrder is not None:
+    projectsOrder = args.projectsOrder
+else:
+    projectsOrder = [project]
+
+ploter = REFERPloter(ratesFile, projectsOrder, args.configFile)
 ploter.update_config()
 ploter.REFER_plot()

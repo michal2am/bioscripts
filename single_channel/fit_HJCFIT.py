@@ -4,6 +4,7 @@ import math
 import numpy as np
 import pandas as pd
 import argparse
+import re
 from scipy.optimize import minimize
 
 from dcpyps.samples import samples
@@ -12,10 +13,12 @@ from dcpyps import mechanism
 
 from dcprogs.likelihood import Log10Likelihood
 
+
 def dcprogslik(x):
     mec.theta_unsqueeze(np.exp(x))
     mec.set_eff('c', 100e-9)
     return -likelihood(mec.Q) * logfac
+
 
 def printiter(theta):
     global iternum
@@ -24,6 +27,7 @@ def printiter(theta):
     if iternum % 10 == 0:
         print("iteration # {0:d}; log-lik = {1:.6f}".format(iternum, -lik))
         print(np.exp(theta))
+
 
 def mechanism_RO(rates):
 
@@ -65,11 +69,11 @@ parser.add_argument('--files', nargs='+')
 parser.add_argument('--tres', type=float)
 parser.add_argument('--tcrit', type=float)
 parser.add_argument('--config')
-parser.add_argument('--project')
 args = parser.parse_args()
 
 if args.config:
     config = pd.read_csv(args.config)
+    project = '_'.join(re.split('[_,.]', args.config)[2:-1])
     results = []
 
     for file_name in config.file.unique():
@@ -123,7 +127,7 @@ if args.config:
             alpha = mec.Rates[0].rateconstants[0]
             beta = mec.Rates[1].rateconstants[0]
 
-            refer_result = {'project': args.project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+            refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
                             'equilibrium': np.log(beta / alpha), 'forward': np.log(beta),
                             'alpha': alpha, 'beta': beta,
                             }
@@ -135,11 +139,11 @@ if args.config:
             gamma = mec.Rates[2].rateconstants[0]
             delta = mec.Rates[3].rateconstants[0]
 
-            refer_result = {'project': args.project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+            refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
                             'equilibrium': np.log((delta * beta) / (gamma * alpha)),
                             'forward': np.log(delta * beta / gamma),
                             'alpha': alpha, 'beta': beta,
-                            'delta': delta, 'gamma': gamma,
+                            'gamma': gamma, 'delta': delta,
                             }
 
 
@@ -147,7 +151,7 @@ if args.config:
 
     results = pd.DataFrame(results)
     print(results)
-    results.to_csv(args.project + '_hjcfit_rates_all.csv')
+    results.to_csv('hjcfit_rates_' + project + '.csv')
 
 
 else:
