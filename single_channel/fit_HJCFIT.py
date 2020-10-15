@@ -86,9 +86,8 @@ if args.config:
         sc_tres = single_cell.at[0, 'tres']/1000000
         sc_tcrit = single_cell.at[0, 'tcrit']/1000
         sc_scns = list(single_cell.loc[:, 'file_scn'])
-        sc_scns = [name + '.SCN' for name in sc_scns]
+        sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
         sc_scns = [full_name.upper() for full_name in sc_scns]
-
         rec = dataset.SCRecord(sc_scns, 100e-9, sc_tres, sc_tcrit)
         rec.record_type = 'recorded'
         rec.printout()
