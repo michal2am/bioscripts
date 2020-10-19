@@ -40,7 +40,7 @@ class REFERPloter:
         for project in self.order:
 
             project_allCells = px.scatter(self.table_results[self.table_results['project'] == project], x='equilibrium', y='forward',
-                                          title='single point - single cell',
+                                          title=project + 'single point - single cell',
                                           color='type', template='presentation', width=800, height=800,
                                           marginal_x='rug', marginal_y='rug',
                                           color_discrete_sequence=px.colors.qualitative.Dark24,
@@ -53,7 +53,7 @@ class REFERPloter:
             project_allCells.write_image(project + '_allCells.png')
 
             project_cumuCells = px.scatter(self.cumulative_results[self.cumulative_results['project'] == project], x='equilibrium', y='forward',
-                                           title='single point - receptor type average',
+                                           title=project + 'single point - receptor type average',
                                            color='type', template='presentation', width=800, height=800,
                                            marginal_x='rug', marginal_y='rug',
                                            color_discrete_sequence=px.colors.qualitative.Dark24,
