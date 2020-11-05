@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 from functools import reduce
+import plotly.graph_objects as go
+import plotly.offline as pyo
+
 
 
 class ReadPropkaLog:
@@ -33,6 +36,8 @@ class ReadPropkaLog:
 
         for file in self.files:
 
+            print("Reading {}".format(file))
+
             with open(file) as rf:
 
                 parsed = []
@@ -52,28 +57,32 @@ class ReadPropkaLog:
                             fullname = "{}{}{}".format(newline[0], newline[1], newline[2])
                             newline.insert(0, fullname)
                             newline.insert(-1, 'S')
-                            newline.insert(3, newline[3][0:2])
+                            newline.insert(3, newline[3][0:3])
                             newline[4] = newline[4][-3:]
                             newline.insert(-1, method)
                             newline.insert(-1, ligand)
                             parsed.append(newline)
 
                         elif (len(line)) == 23:
+
                             newline = [line[1][-3:], int(line[2].lstrip('O')), self.chains_map[line[3][0]], float(line[4][:-1])]
                             fullname = "{}{}{}".format(newline[0], newline[1], newline[2])
                             newline.insert(0, fullname)
                             newline.insert(-1, 'C1')
-                            newline.insert(3, newline[3][0:2])
+                            newline.insert(3, newline[3][0:3])
                             newline[4] = newline[4][-3:]
                             newline.insert(-1, method)
                             newline.insert(-1, ligand)
                             parsed.append(newline)
 
-                            as_std = newline.copy()
-                            as_std[5] = 'S'
-                            parsed.append(as_std)
+                            #as_std = newline.copy()
+                            #as_std[5] = 'S'
+                            #parsed.append(as_std)
 
-
+                        # TODO: line counting is dirty, change for Original/Swapped
+                        #  and take into account triple sets present in Hibbs structures
+                        #  and A1H/A1 naming scheme issue
+                        ''''
                         elif (len(line)) == 24:
 
                             newline = [line[2][-3:], int(line[3].lstrip('O')), self.chains_map[line[4][0]], float(line[5][:-1])]    #! lstrip for PIO
@@ -85,18 +94,25 @@ class ReadPropkaLog:
                             newline.insert(-1, method)
                             newline.insert(-1, ligand)
                             parsed.append(newline)
+                        # '''
 
                 labels = ["fullname", "resname", "resnum", "chain", "chain_n", "type", "method", "ligand", template]
                 df = pd.DataFrame.from_records(parsed, columns=labels)
 
             dfs.append(df)
 
+        print("Reading files completed")
+
         results_human = reduce(lambda left, right: pd.merge(left, right, on=["fullname", "resname", "resnum", "chain", "chain_n", "type", "method", "ligand"], how='outer'), dfs)
         results_long = results_human.melt(id_vars=['fullname', 'resname', 'resnum', 'chain', 'chain_n', 'type', 'method', 'ligand']).copy()
         results_long.rename(columns={'variable': 'template', 'value': 'pKa'}, inplace=True)
 
-        print(results_human)
-        print(results_long)
+        # print(results_human)
+        # print(results_long)
+
+        results_long.to_csv('test.csv')
+
+        print("Files parsed into data frame")
 
         return results_human, results_long
 
@@ -166,119 +182,252 @@ class Analyze:
         analyzing all results method-independently
         :param list longs: long format dataframes
         """
-        self.results_long = pd.concat(longs, axis=0, sort=True)
+        print("Concatenating all data")
+        self.results_long = pd.concat(longs, axis=0, sort=False)
+        self.results_long.to_csv('all_results_long.csv')
 
-    def parse(self, chain):
+    def parse(self, chains):
         """
         finds residues of pKa in range 5.5 - 8.5 in at least one structure
         :param str chain: chain name e.g. 'B3'
         :return: None
         """
 
+        print("Selecting residues in 5.5 - 8.5 pKa range")
         selected = self.results_long[self.results_long['pKa'].between(5.5, 8.5)].copy()
-        selected = selected.reindex(columns=['fullname','resnum', 'resname', 'chain', 'chain_n', 'type', 'method', 'template', 'ligand', 'pKa'])
+        selected = selected.reindex(columns=['fullname', 'resnum', 'resname', 'chain', 'chain_n', 'type', 'method',
+                                             'template', 'ligand', 'pKa'])
         selected = selected.sort_values(by='resnum')
 
-        resnums_selected = selected[selected['chain'] == chain]['resnum'].drop_duplicates(keep='first').sort_values().values
-        print("\nResidues in range 5.5 to 8.5 (at least one measurement in range):")
-        print(resnums_selected)
-        print(selected[((selected['chain'] == chain) & (selected['resnum'].isin(resnums_selected)))])
+        for chain in chains:
 
-        coupled_resnums_selected = selected[(selected['chain'] == chain) & (selected['type'] != 'S')]['resnum'].drop_duplicates(keep='first').sort_values().values
-        print("\nCoupled residues in range 5.5 to 8.5 (at least one measurement in range and at least once coupled:")
-        print(coupled_resnums_selected)
-        print(selected[((selected['chain'] == chain) & (selected['resnum'].isin(coupled_resnums_selected)))])
+            print("Parsing chain {}".format(chain))
 
-        coupled_resnums_all = self.results_long[(self.results_long['chain'] == chain) & (self.results_long['type'] != 'S')]['resnum'].drop_duplicates(keep='first').sort_values().values
-        print("\nCoupled residues (at least once coupled:")
-        print(coupled_resnums_all)
+            resnums_selected = selected[selected['chain'] == chain]['resnum'].drop_duplicates(keep='first').sort_values().values
+            print("\nResidues in range 5.5 to 8.5 (at least one measurement in range):")
+            print(resnums_selected)
+            print(selected[((selected['chain'] == chain) & (selected['resnum'].isin(resnums_selected)))])
+            selected[((selected['chain'] == chain) & (selected['resnum'].isin(resnums_selected)))].to_csv('candidates_' + chain + '.csv')
 
-        def select_for_diff(chain, resnums):
-            """
-            prepares a df for two-column difference analysis
-            :param str chain: chain physiological name, e.g. 'B3'
-            :param list resnums: residue numbers
-            :return: df of selected only residues with fullname removed
-            """
+            coupled_resnums_selected = selected[(selected['chain'] == chain) & (selected['type'] != 'S')]['resnum'].drop_duplicates(keep='first').sort_values().values
+            print("\nCoupled residues in range 5.5 to 8.5 (at least one measurement in range and at least once coupled:")
+            print(coupled_resnums_selected)
+            print(selected[((selected['chain'] == chain) & (selected['resnum'].isin(coupled_resnums_selected)))])
+            selected[((selected['chain'] == chain) & (selected['resnum'].isin(coupled_resnums_selected)))].to_csv('candidates_coupled' + chain + '.csv')
 
-            selected_residues = self.results_long[((self.results_long['chain'] == chain) & (self.results_long['resnum'].isin(resnums)) & (self.results_long['type'] == 'S'))].copy()
-            selected_residues = selected_residues.reindex(columns=['fullname','resnum', 'resname', 'chain', 'chain_n', 'type', 'method', 'template', 'ligand', 'pKa'])
-            selected_residues.drop(labels=['fullname'], axis=1, inplace=True)
+            coupled_resnums_all = self.results_long[(self.results_long['chain'] == chain) & (self.results_long['type'] != 'S')]['resnum'].drop_duplicates(keep='first').sort_values().values
+            print("\nCoupled residues (at least once coupled:")
+            print(coupled_resnums_all)
 
-            return selected_residues
+            def select_for_diff(chain, resnums):
+                """
+                prepares a df for two-column difference analysis
+                :param str chain: chain physiological name, e.g. 'B3'
+                :param list resnums: residue numbers
+                :return: df of selected only residues with fullname removed
+                """
 
-        def pivot_for_diff(selected_residues, property, sort):
-            """
-            find residues with property dependant pKa differences
-            :param df selected_residues: residues to check, prepared by select_for_diff
-            :param str property: property to calculate diff, e.g. "chain_n"
-            :param list sort: properties to sort by results
-            :return:
-            """
+                selected_residues = self.results_long[((self.results_long['chain'] == chain) & (self.results_long['resnum'].isin(resnums)) & (self.results_long['type'] == 'S'))].copy()
+                selected_residues = selected_residues.reindex(columns=['fullname','resnum', 'resname', 'chain', 'chain_n', 'type', 'method', 'template', 'ligand', 'pKa'])
+                selected_residues.drop(labels=['fullname'], axis=1, inplace=True)
 
-            new_columns = selected_residues.columns.values.tolist()
-            new_columns.remove(property)
-            new_columns.remove('pKa')
+                return selected_residues
 
-            selected_pivot = selected_residues.pivot_table(index=new_columns, columns=property, values='pKa')
-            selected_pivot['diff'] = selected_pivot.apply(lambda row: abs(row[-2] - row[-1]), axis=1)
+            def pivot_for_diff(selected_residues, property, sort):
+                """
+                find residues with property dependant pKa differences
+                :param df selected_residues: residues to check, prepared by select_for_diff
+                :param str property: property to calculate diff, e.g. "chain_n"
+                :param list sort: properties to sort by results
+                :return:
+                """
 
-            selected_tresh = selected_pivot[selected_pivot['diff'] >= 0.50].sort_index(level=sort)
+                new_columns = selected_residues.columns.values.tolist()
+                new_columns.remove(property)
+                new_columns.remove('pKa')
 
-            print("\nDifferences >= 0.50 by {}".format(property))
-            print(selected_tresh.reset_index(drop=False)['resnum'].drop_duplicates(keep='first').sort_values().values)
-            print(selected_tresh)
+                selected_pivot = selected_residues.pivot_table(index=new_columns, columns=property, values='pKa')
+                selected_pivot['diff'] = selected_pivot.apply(lambda row: abs(row[-2] - row[-1]), axis=1)
 
-        selected_residues = select_for_diff(chain, resnums_selected)
-        pivot_for_diff(selected_residues, 'ligand', ['template', 'resnum'])
-        pivot_for_diff(selected_residues, 'chain_n', ['resnum'])
+                selected_tresh = selected_pivot[selected_pivot['diff'] >= 0.50].sort_index(level=sort)
+
+                print("\nDifferences >= 0.50 by {}".format(property))
+                print(selected_tresh.reset_index(drop=False)['resnum'].drop_duplicates(keep='first').sort_values().values)
+                print(selected_tresh)
+                selected_tresh.to_csv('candidates_' + property + '_' + chain + '.csv')
+
+            selected_residues = select_for_diff(chain, resnums_selected)
+            pivot_for_diff(selected_residues, 'ligand', ['template', 'resnum'])
+            pivot_for_diff(selected_residues, 'chain_n', ['resnum'])
 
     def plot_all(self, resids, chain, method):
+
+        print("Plotting multi-plot")
+
+        selected = self.results_long[(self.results_long["resnum"].isin(resids)) & (self.results_long["chain"] == chain) & (self.results_long["type"] == 'S') & (self.results_long["method"] == method)]
+
+
+        # plotly
+        #fig = px.scatter_matrix(selected, dimensions=["sepal_width", "sepal_length", "petal_width", "petal_length"],
+        #                       color="species")
+
+        '''
+        plotly_plot = px.scatter(selected, x="ligand", y="pKa", color="template", facet_col="resnum",
+                                 template='presentation', facet_col_wrap=10, title=chain)
+        plotly_plot.write_html('plotly_plot_{}_ligand.html'.format(chain))
+        plotly_plot.show()
+
+
+        plotly_plot = px.scatter(selected, x="chain_n", y="pKa", color="template", facet_col="resnum",
+                                 template='presentation', facet_col_wrap=10, title=chain)
+        plotly_plot.write_html('plotly_plot_{}_chain_n.html'.format(chain))
+        plotly_plot.show()
+
+        plotly_plot = px.box(selected, x="chain_n", y="pKa", facet_col="resnum",
+                                 template='presentation', facet_col_wrap=5, title=chain)
+        plotly_plot.write_html('plotly_plot_box_{}_chain_n.html'.format(chain))
+        plotly_plot.show()
+        '''
+
+        # seaborn
 
         sns.set_style()
         sns.set_context("talk")
 
-        selected = self.results_long[(self.results_long["resnum"].isin(resids)) & (self.results_long["chain"] == chain) & (self.results_long["type"] == 'S') & (self.results_long["method"] == method)]
+        g = sns.catplot(kind='point', data=selected, col_wrap=5, col='resnum', x='ligand', y='pKa',
+                        hue='template', dodge=True, legend_out=True)
 
-        g = sns.catplot(kind='point', data=selected, row='chain_n', col='resnum', x='ligand', y='pKa', hue='template', dodge=True, legend_out=True)
+        # g.set_titles("{col_name} {row_name}")
+        g.set_titles("{col_name}")
 
-        g.set_titles("{col_name} {row_name}")
         g.set_axis_labels("", "")
 
         plt.tight_layout()
         plt.show()
+        plt.savefig('seaborn_plot_{}_lignad.png'.format(chain))
 
-    def exp_plot(self):
+    def single_plot(self, resnums):
 
-        sns.set_style()
-        sns.set_context("talk")
+        print("Plotting single plot")
 
-        '''
-        #g = sns.pairplot(self.results_long[self.results_long['chain'] == 'B3'], hue='template')
-        print(self.results_long[self.results_long['resnum'] == 155])
-        g = sns.PairGrid(self.results_long[self.results_long['resnum'] == 155], y_vars='pKa', x_vars=['chain_n', 'method', 'ligand'], hue='template')
-        g.map(sns.pointplot)
-        g.map(sns.swarmplot)
-        '''
+        for resnum in resnums:
 
-        '''
-        g1 = sns.catplot(kind='point', data=self.results_long[self.results_long['resnum'] == 155], row='method',
-                        col='chain_n', x='ligand', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
-        sns.despine(trim=True)
+            # plotly
+            plotly_plot = px.scatter(self.results_long[self.results_long['resnum'] == resnum],
+                                     x='ligand', y='pKa', facet_col='chain_n', facet_row='method', color='template',
+                                     template='presentation', width=800, height=400, )
+            plotly_plot.write_html('plotly_plot_' + str(resnum) + '.html')
 
-        g2 = sns.catplot(kind='point', data=self.results_long[self.results_long['resnum'] == 155], row='method',
-                        col='ligand', x='chain_n', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
-        sns.despine(trim=True)
+            # seaborn
+            sns.set_style()
+            sns.set_context("talk")
 
-        #plt.show()
+            sns.set_context("paper")
+            g = sns.PairGrid(self.results_long[self.results_long['resnum'] == resnum],
+                             y_vars="pKa",
+                             x_vars=['chain_n', 'ligand'],
+                             hue='template',
+                             height=2, aspect=1,
+                             )
 
-        g1.savefig('test.png')
-        '''
+            g.map(sns.pointplot, scale=1., errwidth=4)
+            # g.set(ylim=(0, 1))
+            # sns.despine(fig=g.fig, left=True)
+            g.add_legend()
 
-        plotly_plot = px.scatter(self.results_long[self.results_long['resnum'] == 155],
-                                 x='ligand', y='pKa', facet_col='chain_n', facet_row='method', color='template',
-                                 template='presentation', width=800, height=400,)
-        plotly_plot.write_html('plotly_plot.html')
+            g.savefig('seaborn_plot_' + str(resnum) + '.png')
+
+
+
+
+
+
+
+
+read_propka_ligand_Aris = ReadPropkaLog(['6i53_propka_ligand.log', '6huk_propka_ligand.log', '6hup_propka_ligand.log',
+                                         '6huo_propka_ligand.log', '6huj_propka_ligand.log', '6hug_propka_ligand.log'],
+                                        ["B", "A", "E", "D", "C", "G"],
+                                        ["B3A_pri", "A1A_pri", "B3A_bis", "A1A_bis", "Y2A_pri", "G0_000"])
+
+
+read_propka_free_Aris = ReadPropkaLog(['6i53_propka_free.log', '6huk_propka_free.log', '6hup_propka_free.log',
+                                       '6huo_propka_free.log', '6huj_propka_free.log', '6hug_propka_free.log'],
+                                      ["B", "A", "E", "D", "C", "G"],
+                                      ["B3A_pri", "A1A_pri", "B3A_bis", "A1A_bis", "Y2A_pri", "G0_000"])
+
+
+read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log', '6x3u_propka_ligand.log',
+                                    '6x3v_propka_ligand.log', '6x3w_propka_ligand.log', '6x3x_propka_ligand.log',
+                                    '6x3z_propka_ligand.log', '6x40_propka_ligand.log'],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2H_pri", "B2H_bis", "Y2H_pri", "A1H_pri", "A1H_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', '6x3u_propka_free.log',
+                                  '6x3v_propka_free.log', '6x3w_propka_free.log', '6x3x_propka_free.log',
+                                  '6x3z_propka_free.log', '6x40_propka_free.log'],
+                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                 ["B2H_pri", "B2H_bis", "Y2H_pri", "A1H_pri", "A1H_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+
+analyze = Analyze([read_propka_ligand_Aris.results_long, read_propka_free_Aris.results_long,
+                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long,])
+                   #read_depth_ligand.results_long, read_depth_free.results_long])
+
+#analyze.single_plot([155, 267])
+analyze.plot_all([48, 69, 84, 95, 101, 112, 146, 153, 155, 182, 191, 267, 270, 274, 298], 'B3A', 'propka')
+analyze.plot_all([43, 48, 52, 84, 95, 112, 119, 146, 153, 155, 163, 165, 182, 267, 270, 274, 279, 298, 317], 'B2H', 'propka')
+analyze.plot_all([42, 44, 56, 59, 63, 98, 105, 110, 138, 142, 149, 151, 156, 166, 170, 199, 216, 218, 250, 303, 393], 'A1A', 'propka')
+analyze.plot_all([40, 44, 56, 59, 63, 98, 110, 117, 138, 142, 151, 156, 166, 170, 199, 218, 225, 234, 279, 287, 293, 303], 'A1H', 'propka')
+
+analyze.parse(['B3A', 'B2H', 'A1A', 'A1H'])
+
+'''
+
+read_propka_ligand_Hibbs = ReadPropkaLog(['6x3v_propka_ligand.log', ],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_pri", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_propka_free_Hibbs = ReadPropkaLog(['6x3v_propka_free.log', ],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_pri", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+analyze = Analyze([read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long])
+                   #read_depth_ligand.results_long, read_depth_free.results_long])
+
+analyze.parse(['A1'])
+'''
+
+### OLD ###
+
+
+'''
+read_depth_ligand = ReadDepthLog(['6i53_depth_ligand.log', '6huk_depth_ligand.log', '6hup_depth_ligand.log',
+                                  '6huo_depth_ligand.log', '6huj_depth_ligand.log', '6hug_depth_ligand.log'],
+                                 ["B", "A", "E", "D", "C", "G"],
+                                 ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
+read_depth_free = ReadDepthLog(['6i53_depth_free.log', '6huk_depth_free.log', '6hup_depth_free.log',
+                                '6huo_depth_free.log', '6huj_depth_free.log', '6hug_depth_free.log'],
+                               ["B", "A", "E", "D", "C", "G"],
+                               ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
+'''
+
+
+'''
+
+read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log',],
+                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', ],
+                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
+                                 ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+
+analyze = Analyze([
+                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long])
+analyze.exp_plot()
+analyze.parse('B2')
+
+'''
 
 '''
 read_depth_ligand = ReadDepthLog(['6i53_depth_ligand.log', '6huk_depth_ligand.log', '6hup_depth_ligand.log', '6huo_depth_ligand.log', '6huj_depth_ligand.log', '6hug_depth_ligand.log'], ["B", "A", "E", "D", "C", "G"], ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
@@ -307,59 +456,24 @@ analyze.parse('B3')
 #analyze.plot_all([54, 56, 71, 75, 110, 148, 150, 156, 161, 163, 168, 178, 285, 289, 297], 'Y2', 'depth')
 #analyze.plot_all([54, 56, 71, 75, 110, 148, 150, 156, 168, 178, 285, 289, 297], 'Y2', 'propka')
 
-
-read_propka_ligand_Aris = ReadPropkaLog(['6i53_propka_ligand.log', '6huk_propka_ligand.log', '6hup_propka_ligand.log',
-                                         '6huo_propka_ligand.log', '6huj_propka_ligand.log', '6hug_propka_ligand.log'],
-                                        ["B", "A", "E", "D", "C", "G"],
-                                        ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-
-read_propka_free_Aris = ReadPropkaLog(['6i53_propka_free.log', '6huk_propka_free.log', '6hup_propka_free.log',
-                                       '6huo_propka_free.log', '6huj_propka_free.log', '6hug_propka_free.log'],
-                                      ["B", "A", "E", "D", "C", "G"],
-                                      ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-
-
-read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log', '6x3u_propka_ligand.log',
-                                    '6x3v_propka_ligand.log', '6x3w_propka_ligand.log', '6x3x_propka_ligand.log',
-                                    '6x3z_propka_ligand.log', '6x40_propka_ligand.log'],
-                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
-                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
-
-read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', '6x3u_propka_free.log',
-                                  '6x3v_propka_free.log', '6x3w_propka_free.log', '6x3x_propka_free.log',
-                                  '6x3z_propka_free.log', '6x40_propka_free.log'],
-                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
-                                 ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
-
-read_depth_ligand = ReadDepthLog(['6i53_depth_ligand.log', '6huk_depth_ligand.log', '6hup_depth_ligand.log',
-                                  '6huo_depth_ligand.log', '6huj_depth_ligand.log', '6hug_depth_ligand.log'],
-                                 ["B", "A", "E", "D", "C", "G"],
-                                 ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-read_depth_free = ReadDepthLog(['6i53_depth_free.log', '6huk_depth_free.log', '6hup_depth_free.log',
-                                '6huo_depth_free.log', '6huj_depth_free.log', '6hug_depth_free.log'],
-                               ["B", "A", "E", "D", "C", "G"],
-                               ["B3_pri", "A1_pri", "B3_bis", "A1_bis", "Y2_pri", "G0_000"])
-
-
-analyze = Analyze([read_propka_ligand_Aris.results_long, read_propka_free_Aris.results_long,
-                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long,
-                   read_depth_ligand.results_long, read_depth_free.results_long])
-analyze.exp_plot()
-analyze.parse('B2')
-
+'''
+#g = sns.pairplot(self.results_long[self.results_long['chain'] == 'B3'], hue='template')
+print(self.results_long[self.results_long['resnum'] == 155])
+g = sns.PairGrid(self.results_long[self.results_long['resnum'] == 155], y_vars='pKa', x_vars=['chain_n', 'method', 'ligand'], hue='template')
+g.map(sns.pointplot)
+g.map(sns.swarmplot)
 '''
 
-read_propka_ligand_Hibbs = ReadPropkaLog(['6x3s_propka_ligand.log', '6x3t_propka_ligand.log',],
-                                   ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
-                                   ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+'''
+g1 = sns.catplot(kind='point', data=self.results_long[self.results_long['resnum'] == 155], row='method',
+                col='chain_n', x='ligand', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
+sns.despine(trim=True)
 
-read_propka_free_Hibbs = ReadPropkaLog(['6x3s_propka_free.log', '6x3t_propka_free.log', ],
-                                 ["A", "C", "E", "B", "D", "G", "M", "F", "H", "I", "L", "J", "K"],
-                                 ["B2_pri", "B2_bis", "Y2_pri", "A1_bis", "A1_bis", "G0_000", "M0_000", "F0_000", "H0_000", "I0_000", "L0_000", "J0_000", "K0_000",])
+g2 = sns.catplot(kind='point', data=self.results_long[self.results_long['resnum'] == 155], row='method',
+                col='ligand', x='chain_n', y='pKa', hue='template', legend_out=True, margin_titles=True, size=3)
+sns.despine(trim=True)
 
-analyze = Analyze([
-                   read_propka_ligand_Hibbs.results_long, read_propka_free_Hibbs.results_long])
-analyze.exp_plot()
-analyze.parse('B2')
+#plt.show()
 
+g1.savefig('test.png')
 '''
