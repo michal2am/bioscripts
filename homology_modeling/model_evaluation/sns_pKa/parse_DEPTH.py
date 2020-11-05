@@ -266,23 +266,21 @@ class Analyze:
 
         selected = self.results_long[(self.results_long["resnum"].isin(resids)) & (self.results_long["chain"] == chain) & (self.results_long["type"] == 'S') & (self.results_long["method"] == method)]
 
-
         # plotly
         #fig = px.scatter_matrix(selected, dimensions=["sepal_width", "sepal_length", "petal_width", "petal_length"],
         #                       color="species")
 
-        '''
         plotly_plot = px.scatter(selected, x="ligand", y="pKa", color="template", facet_col="resnum",
                                  template='presentation', facet_col_wrap=10, title=chain)
         plotly_plot.write_html('plotly_plot_{}_ligand.html'.format(chain))
         plotly_plot.show()
-
 
         plotly_plot = px.scatter(selected, x="chain_n", y="pKa", color="template", facet_col="resnum",
                                  template='presentation', facet_col_wrap=10, title=chain)
         plotly_plot.write_html('plotly_plot_{}_chain_n.html'.format(chain))
         plotly_plot.show()
 
+        '''
         plotly_plot = px.box(selected, x="chain_n", y="pKa", facet_col="resnum",
                                  template='presentation', facet_col_wrap=5, title=chain)
         plotly_plot.write_html('plotly_plot_box_{}_chain_n.html'.format(chain))
@@ -303,8 +301,10 @@ class Analyze:
         g.set_axis_labels("", "")
 
         plt.tight_layout()
-        plt.show()
         plt.savefig('seaborn_plot_{}_lignad.png'.format(chain))
+        plt.show()
+        '''
+        '''
 
     def single_plot(self, resnums):
 
@@ -374,12 +374,22 @@ analyze = Analyze([read_propka_ligand_Aris.results_long, read_propka_free_Aris.r
                    #read_depth_ligand.results_long, read_depth_free.results_long])
 
 #analyze.single_plot([155, 267])
-analyze.plot_all([48, 69, 84, 95, 101, 112, 146, 153, 155, 182, 191, 267, 270, 274, 298], 'B3A', 'propka')
-analyze.plot_all([43, 48, 52, 84, 95, 112, 119, 146, 153, 155, 163, 165, 182, 267, 270, 274, 279, 298, 317], 'B2H', 'propka')
-analyze.plot_all([42, 44, 56, 59, 63, 98, 105, 110, 138, 142, 149, 151, 156, 166, 170, 199, 216, 218, 250, 303, 393], 'A1A', 'propka')
-analyze.plot_all([40, 44, 56, 59, 63, 98, 110, 117, 138, 142, 151, 156, 166, 170, 199, 218, 225, 234, 279, 287, 293, 303], 'A1H', 'propka')
 
 analyze.parse(['B3A', 'B2H', 'A1A', 'A1H'])
+
+analyze.plot_all([48, 69, 84, 95, 101, 146, 153, 155, 182, 191, 267, 270, 298], 'B3A', 'propka')
+analyze.plot_all([112, 274], 'B3A', 'propka')
+
+analyze.plot_all([43, 48, 52, 84, 95, 119, 146, 153, 155, 163, 165, 182, 267, 270, 298, 317], 'B2H', 'propka')
+analyze.plot_all([112, 274, 279], 'B2H', 'propka')
+
+analyze.plot_all([44, 56, 59, 63, 98, 110, 138, 142, 149, 151, 166, 170, 199, 216, 218, 250, 393], 'A1A', 'propka')
+analyze.plot_all([42, 105, 156, 303], 'A1A', 'propka')
+
+analyze.plot_all([40, 44, 56, 59, 63, 110, 138, 142, 151, 166, 170, 199, 218, 234, 287, 293], 'A1H', 'propka')
+analyze.plot_all([98, 117, 156, 225, 279, 303], 'A1H', 'propka')
+
+# 98, Aris low, Hibbs high
 
 '''
 
