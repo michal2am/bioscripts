@@ -75,9 +75,9 @@ class ReadPropkaLog:
                             newline.insert(-1, ligand)
                             parsed.append(newline)
 
-                            #as_std = newline.copy()
-                            #as_std[5] = 'S'
-                            #parsed.append(as_std)
+                            as_std = newline.copy()
+                            as_std[5] = 'S'
+                            parsed.append(as_std)
 
                         # TODO: line counting is dirty, change for Original/Swapped
                         #  and take into account triple sets present in Hibbs structures
@@ -98,6 +98,7 @@ class ReadPropkaLog:
 
                 labels = ["fullname", "resname", "resnum", "chain", "chain_n", "type", "method", "ligand", template]
                 df = pd.DataFrame.from_records(parsed, columns=labels)
+                df.drop_duplicates(inplace=True)
 
             dfs.append(df)
 
@@ -110,7 +111,7 @@ class ReadPropkaLog:
         # print(results_human)
         # print(results_long)
 
-        results_long.to_csv('test.csv')
+        # results_long.to_csv('test.csv')
 
         print("Files parsed into data frame")
 
@@ -184,7 +185,7 @@ class Analyze:
         """
         print("Concatenating all data")
         self.results_long = pd.concat(longs, axis=0, sort=False)
-        self.results_long.to_csv('all_results_long.csv')
+        # self.results_long.to_csv('all_results_long.csv')
 
     def parse(self, chains):
         """
@@ -264,23 +265,26 @@ class Analyze:
 
         print("Plotting multi-plot")
 
-        selected = self.results_long[(self.results_long["resnum"].isin(resids)) & (self.results_long["chain"] == chain) & (self.results_long["type"] == 'S') & (self.results_long["method"] == method)]
+        selected = self.results_long[(self.results_long["resnum"].isin(resids)) & (self.results_long["chain"].isin(chain)) & (self.results_long["type"] == 'S') & (self.results_long["method"] == method)]
+        selected = selected.sort_values(by='resnum')
 
         # plotly
         #fig = px.scatter_matrix(selected, dimensions=["sepal_width", "sepal_length", "petal_width", "petal_length"],
         #                       color="species")
 
+
+        '''
+
         plotly_plot = px.scatter(selected, x="ligand", y="pKa", color="template", facet_col="resnum",
-                                 template='presentation', facet_col_wrap=10, title=chain)
+                                 template='presentation', facet_col_wrap=20, title=chain)
         plotly_plot.write_html('plotly_plot_{}_ligand.html'.format(chain))
         plotly_plot.show()
 
         plotly_plot = px.scatter(selected, x="chain_n", y="pKa", color="template", facet_col="resnum",
-                                 template='presentation', facet_col_wrap=10, title=chain)
+                                 template='presentation', facet_col_wrap=20, title=chain)
         plotly_plot.write_html('plotly_plot_{}_chain_n.html'.format(chain))
         plotly_plot.show()
 
-        '''
         plotly_plot = px.box(selected, x="chain_n", y="pKa", facet_col="resnum",
                                  template='presentation', facet_col_wrap=5, title=chain)
         plotly_plot.write_html('plotly_plot_box_{}_chain_n.html'.format(chain))
@@ -290,18 +294,26 @@ class Analyze:
         # seaborn
 
         sns.set_style()
-        sns.set_context("talk")
+        sns.set_context("paper")
 
-        g = sns.catplot(kind='point', data=selected, col_wrap=5, col='resnum', x='ligand', y='pKa',
-                        hue='template', dodge=True, legend_out=True)
+        pivoted = pd.pivot_table(selected, index=['resnum', 'chain_n', 'template'], columns='ligand', values='pKa')
+        pivoted.reset_index(inplace=True)
+        print(pivoted)
+
+        g = sns.catplot(kind='point', data=selected, col='chain_n', row='ligand', x='resnum', y='pKa',
+                        hue='template',  legend_out=True, height=2, aspect=1, palette=sns.mpl_palette("tab20b", 14))
+
+        g._legend.remove()
 
         # g.set_titles("{col_name} {row_name}")
-        g.set_titles("{col_name}")
+        # g.set_titles("{col_name}")
 
-        g.set_axis_labels("", "")
+        # g.set_axis_labels("", "")
+        g.set_xticklabels(rotation=90)
+        #plt.legend(bbox_to_anchor=(1.2, 0.1), loc=2, borderaxespad=0.)
 
         plt.tight_layout()
-        plt.savefig('seaborn_plot_{}_lignad.png'.format(chain))
+        plt.savefig('seaborn_plot_{}_{}_lignad.png'.format(chain[0], chain[1]))
         plt.show()
         '''
         '''
@@ -340,10 +352,6 @@ class Analyze:
 
 
 
-
-
-
-
 read_propka_ligand_Aris = ReadPropkaLog(['6i53_propka_ligand.log', '6huk_propka_ligand.log', '6hup_propka_ligand.log',
                                          '6huo_propka_ligand.log', '6huj_propka_ligand.log', '6hug_propka_ligand.log'],
                                         ["B", "A", "E", "D", "C", "G"],
@@ -377,17 +385,25 @@ analyze = Analyze([read_propka_ligand_Aris.results_long, read_propka_free_Aris.r
 
 analyze.parse(['B3A', 'B2H', 'A1A', 'A1H'])
 
-analyze.plot_all([48, 69, 84, 95, 101, 146, 153, 155, 182, 191, 267, 270, 298], 'B3A', 'propka')
-analyze.plot_all([112, 274], 'B3A', 'propka')
+# analyze.plot_all([69, 84, 95, 101, 153, 155, 182, 191, 267, 270], 'B3A', 'propka')
+# analyzfe.plot_all([112, 274], 'B3A', 'propka')
 
-analyze.plot_all([43, 48, 52, 84, 95, 119, 146, 153, 155, 163, 165, 182, 267, 270, 298, 317], 'B2H', 'propka')
-analyze.plot_all([112, 274, 279], 'B2H', 'propka')
+# analyze.plot_all([52, 84, 95, 119, 153, 155, 165, 182, 267, 270], 'B2H', 'propka')
+# analyze.plot_all([112, 274, 279], 'B2H', 'propka')
 
-analyze.plot_all([44, 56, 59, 63, 98, 110, 138, 142, 149, 151, 166, 170, 199, 216, 218, 250, 393], 'A1A', 'propka')
-analyze.plot_all([42, 105, 156, 303], 'A1A', 'propka')
+# 191 out
+analyze.plot_all([52, 69, 84, 95, 101, 119, 153, 155, 165, 182, 267, 270], ['B2H', 'B3A'], 'propka')
 
-analyze.plot_all([40, 44, 56, 59, 63, 110, 138, 142, 151, 166, 170, 199, 218, 234, 287, 293], 'A1H', 'propka')
-analyze.plot_all([98, 117, 156, 225, 279, 303], 'A1H', 'propka')
+
+# analyze.plot_all([44, 56, 59, 63, 98, 110, 138, 142, 149, 151, 166, 170, 199, 216, 218], 'A1A', 'propka')
+# analyze.plot_all([42, 105, 156, 303], 'A1A', 'propka')
+
+# analyze.plot_all([44, 56, 59, 63, 110, 138, 142, 151, 166, 170, 199, 218, 234], 'A1H', 'propka')
+# analyze.plot_all([98, 117, 156, 225, 279, 303], 'A1H', 'propka')
+
+# 234 out
+analyze.plot_all([44, 56, 59, 63, 98, 110, 138, 142, 149, 151, 166, 170, 199, 216, 218], ['A1H', 'A1A'], 'propka')
+
 
 # 98, Aris low, Hibbs high
 
