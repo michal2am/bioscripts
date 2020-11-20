@@ -16,15 +16,18 @@ class REFERPloter:
 
         self.table_results = pd.read_csv(rates_tabel).drop(columns='Unnamed: 0')
 
-        # HOWTO: calculate mean values in given categories
+        # WRONG !!!
+        # HOWTO: calculate mean values in given categories WRONG
         # 1. pivot by values to aggregate, gives multiindex series with single column of values from 'values'
         # 2. index reset I: unstack by level=0, being the index level named by 'values'
         # 3. index reset II: reset remaining, unpivoted levels of index, those specified as 'columns' during pivot
 
         self.cumulative_results = self.table_results.drop(columns=['file'])
-        self.cumulative_results = pd.pivot_table(self.cumulative_results, columns=['project', 'type', 'model'], aggfunc=np.mean)
-        self.cumulative_results = self.cumulative_results.unstack(level=0)
-        self.cumulative_results.reset_index(inplace=True)
+        # self.cumulative_results = pd.pivot_table(self.cumulative_results, columns=['project', 'type', 'model'], aggfunc=np.mean)
+        # self.cumulative_results = self.cumulative_results.unstack(level=0)
+        # self.cumulative_results = self.cumulative_results.reset_index(inplace=False)
+
+        self.cumulative_results = self.cumulative_results.groupby(['project', 'type', 'model'], as_index=False)['alpha', 'beta', 'gamma', 'delta', 'equilibrium', 'forward'].mean()
 
         self.table_results.sort_values('type', ascending=False, inplace=True)
         self.cumulative_results.sort_values('type', ascending=False, inplace=True)
@@ -101,17 +104,17 @@ class REFERPloter:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--configFile", type=str)
+parser.add_argument("-c", "--config", type=str)
 parser.add_argument("-p", "--projectsOrder", type=str, nargs='+')
 args = parser.parse_args()
 
-project = '_'.join(re.split('[_,.]', args.configFile)[2:-1])
+project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 ratesFile = 'hjcfit_rates_' + project + '.csv'
 if args.projectsOrder is not None:
     projectsOrder = args.projectsOrder
 else:
     projectsOrder = [project]
 
-ploter = REFERPloter(ratesFile, projectsOrder, args.configFile)
+ploter = REFERPloter(ratesFile, projectsOrder, args.config)
 ploter.update_config()
 ploter.REFER_plot()
