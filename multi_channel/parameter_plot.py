@@ -26,17 +26,19 @@ g = sns.catplot(
     data=data, kind="box",
     x="type", y="amp", hue="pH",
     ci="sd", height=3.54, aspect=1.15,
-    order=['wt', 'cys', 'ser', 'gln', 'leu']
+    palette=sns.xkcd_palette(["pale red", 'windows blue']),
+    order=['WT', 'E155C', 'E155S', 'E155Q', 'E155L'],
 )
 
 #g.map(sns.swarmplot, "type", "amp", "pH", order=['wt', 'cys', 'ser', 'gln', 'leu'])
 
+g.axes[0, 0].axes.set_yticks(ticks=[0.5, 1, 2, 3])
 
-g.despine()
+g.despine(trim=True)
 g.set_axis_labels("", "")
-g.legend.set_title("")
+g.legend.set_title("pH")
 
 g.map(plt.axhline, y=1, ls='--', c='black')
 
-plt.savefig('amplitudes.png')
+plt.savefig('amplitudes.png', dpi=600)
 plt.show()
