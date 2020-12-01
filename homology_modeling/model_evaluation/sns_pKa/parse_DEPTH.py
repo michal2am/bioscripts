@@ -301,19 +301,25 @@ class Analyze:
         print(pivoted)
 
         g = sns.catplot(kind='point', data=selected, col='chain_n', row='ligand', x='resnum', y='pKa',
-                        hue='template',  legend_out=True, height=2, aspect=1, palette=sns.mpl_palette("tab20b", 14))
+                        hue='template', hue_order=['6i53', '6huo', '6hup', '6huk', '6huj', '6hug', '6x3z', '6x3x', '6x3u', '6x3t', '6x3v', '6x3w', '6x3s', '6x40'],
+                        legend_out=True, height=2, aspect=1, palette=sns.mpl_palette("tab20b", 14))
 
         g._legend.remove()
 
         # g.set_titles("{col_name} {row_name}")
         # g.set_titles("{col_name}")
+        g.axes[0, 0].axes.set_ylim(1.5, 8.5)
+        g.axes[0, 0].axes.set_yticks(ticks=[2, 4, 6, 8])
+        #g.axes[0, 0].yaxis.set_major_locator(plt.MaxNLocator(4))
+
+        g.despine(trim=True)
 
         # g.set_axis_labels("", "")
         g.set_xticklabels(rotation=90)
         #plt.legend(bbox_to_anchor=(1.2, 0.1), loc=2, borderaxespad=0.)
 
         plt.tight_layout()
-        plt.savefig('seaborn_plot_{}_{}_lignad.png'.format(chain[0], chain[1]))
+        plt.savefig('seaborn_plot_{}_{}_lignad.png'.format(chain[0], chain[1]), dpi=600)
         plt.show()
         '''
         '''
