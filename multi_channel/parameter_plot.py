@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
-data = pd.read_csv('amplitudes10.csv')
+
+data = pd.read_csv('amplitudes1030.csv')
 print(data)
 
 sns.set_style()
@@ -23,14 +24,16 @@ sns.set_context("paper")
 #plt.show()
 
 g = sns.catplot(
-    data=data, kind="box",
-    x="type", y="amp", hue="pH",
-    ci="sd", height=3.54, aspect=1.15,
+    data=data, kind="point",
+    x="type", y="amp", hue="pH", join=False, estimator=np.mean, ci=95, dodge=True,
+    height=3.54, aspect=1.15,
     palette=sns.xkcd_palette(["pale red", 'windows blue']),
-    order=['WT', 'E155C', 'E155S', 'E155Q', 'E155L'],
+    order=['WT30', 'WT10', 'E155C', 'E155S', 'E155Q', 'E155L'],
 )
 
-#g.map(sns.swarmplot, "type", "amp", "pH", order=['wt', 'cys', 'ser', 'gln', 'leu'])
+
+g.map(sns.swarmplot, "type", "amp", "pH", order=['WT30', 'WT10', 'E155C', 'E155S', 'E155Q', 'E155L'],
+      palette=sns.xkcd_palette(["pale red", 'windows blue']), alpha=0.5, marker='h')
 
 g.axes[0, 0].axes.set_yticks(ticks=[0.5, 1, 2, 3])
 
