@@ -28,6 +28,7 @@ for idx, abf_row in data.iterrows():
 
     new_cell['sweep_mean'] = new_cell.mean(axis=1)
     new_cell['t'] = t *1000
+    new_cell['t'] += abf_row['shift']
     new_cell['type'] = abf_row['type']
     new_cell['pH'] = abf_row['pH']
     new_cell['pH_range'] = abf_row['pH_range']
@@ -72,7 +73,7 @@ for receptor in ['WT', 'E155C', 'E155S', 'E155Q', 'E155L']:
     # fixed axes limits and ticks
     #g.axes[0, 0].axes.set_xlim(0, None)
     g.axes[0, 0].axes.set_ylim(None, 25  )
-    g.axes[0, 0].axes.set_yticks(ticks=[-100, -50, 0])
+    g.axes[0, 0].axes.set_yticks(ticks=[-800, -600, -400, -200, 0])
 
     plt.tight_layout()
     plt.savefig('traces_{}.png'.format(receptor), dpi=600)
