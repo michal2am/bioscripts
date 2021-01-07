@@ -163,7 +163,7 @@ class Model:
 
 class ModelsBuilder:
 
-    def __init__(self, s_rates, topo):
+    def __init__(self, s_rates, topo, annotation):
         """
         builds multiple SCALCS models and performs basic analysis/simulations
         dict:param s_rates: starting rates
@@ -171,6 +171,7 @@ class ModelsBuilder:
         """
         self.topology = topo
         self.start_rates = s_rates
+        self.annotation = annotation
 
     @property
     def topology(self):
@@ -348,8 +349,10 @@ class ModelsBuilder:
                 model_trace = pd.DataFrame()
 
                 model_trace['Popen'] = p_open
-                model_trace = model_trace.divide(model_trace.max(), axis=1)
+                max_a = model_trace.max()
+                model_trace = model_trace.divide(max_a, axis=1)
                 model_trace['t'] = t * 1000
+                model_trace['a'] = max_a.at['Popen']
 
                 model_trace['Rate_name'] = variable_rate
                 model_trace['Rate_value'] = variable_rate_val
@@ -409,30 +412,34 @@ class ModelsBuilder:
         fig2.update_yaxes(matches=None, showticklabels=True)
         fig2.update_traces(mode='lines+markers')
         fig2.update_layout(font=dict(family="Courier New, monospace", size=18))
-        fig2.write_html(self.topology + '_parameters' + '.html')
+        fig2.write_html(self.topology + '_' + self.annotation + '_parameters' + '.html')
+        # fig2.write_image(self.topology + '_parameters' + '.png')
+
 
         fig = px.line(all_traces, x='t', y='Popen', facet_col='Rate_name', color='Rate_value_step',
                       facet_col_wrap=4,
                       height=125 * len(self.start_rates.keys()),
                       template='simple_white',
-                      color_discrete_sequence=px.colors.sequential.RdBu,
+                      color_discrete_sequence=px.colors.diverging.RdYlBu,
                       hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
 
         fig.update_layout(font=dict(family="Courier New, monospace", size=18))
 
-        fig.write_html(self.topology + '_simulations' + '.html')
+        fig.write_html(self.topology + '_' + self.annotation + '_simulations' + '.html')
+        # fig.write_image(self.topology + '_simulations' + '.png')
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-sr", "--start_rates", type=str)
 parser.add_argument("-tp", "--topology", type=str)
+parser.add_argument("-an", "--annotation", type=str)
 
 args = parser.parse_args()
 
 start_rates = pd.read_csv(args.start_rates, header=None)
 start_rates = dict(zip(start_rates[0], start_rates[1]))
 
-builder = ModelsBuilder(start_rates, args.topology)
+builder = ModelsBuilder(start_rates, args.topology, args.annotation)
 builder.build_models_multi()
 
 
