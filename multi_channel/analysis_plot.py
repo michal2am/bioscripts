@@ -4,10 +4,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
+
+
+selected_types = ['WT', 'L300V', 'L296V', 'L300V+L296V']
+selected_who = ['II']
+selected_pulse = [500]
+
+
 data = pd.read_csv('smarts_mm.csv')
+data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
 print(data)
 
-data_long = pd.melt(data, id_vars=['lp', 'type', 'configuration', 'file', 'pulse_length', 'sweep', 'concentration'])
+data_long = pd.melt(data, id_vars=['kto', 'type', 'configuration', 'file', 'pulse_length', 'sweep', 'concentration'])
 print(data_long)
 
 
@@ -23,12 +31,12 @@ def des_joint_plot():
         g = sns.displot(data=data, kind='kde',
                         x=des[0], y=des[1], hue='type',
                         levels=1,
-                        hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+                        hue_order=selected_types,
                         height=4, aspect=1.75,
                         palette=sns.color_palette('deep', n_colors=4),
                         )
         g.map(sns.scatterplot, des[0], des[1], 'type',
-              hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+              hue_order=selected_types,
               palette=sns.color_palette('deep', n_colors=4),
               )
 
@@ -49,15 +57,15 @@ def interval_plot(param):
         data=data, kind="point",
         x="type", y=param, hue='type',
         join=False, estimator=np.mean, ci=95,
-        order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
-        hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+        order=selected_types,
+        hue_order=selected_types,
         height=4, aspect=1.75,
         palette=sns.color_palette('deep'),
     )
 
     g.map(sns.swarmplot, "type", param, 'type',
-          order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
-          hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+          order=selected_types,
+          hue_order=selected_types,
           palette=sns.color_palette('deep'),
           alpha=0.5, marker='h')
 
@@ -77,14 +85,14 @@ def fr_plot():
         x="variable", y="value", hue='type',
         join=True, dodge=False, estimator=np.mean, ci=95,
         order=['FR10', 'FR300', 'FR500'],
-        hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+        hue_order=selected_types,
         height=4, aspect=1.75,
         palette=sns.color_palette('deep'),
     )
 
     g.map(sns.swarmplot, 'variable', 'value', 'type',
           order=['FR10', 'FR300', 'FR500'],
-          hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+          hue_order=selected_types,
           palette=sns.color_palette('deep'),
           alpha=0.5, marker='h')
 
@@ -106,14 +114,14 @@ def des_a_plot():
         x="variable", y="value", hue='type',
         join=True, dodge=False, estimator=np.mean, ci=95,
         order=['des_Af', 'des_As', 'des_AC'],
-        hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+        hue_order=selected_types,
         height=4, aspect=1.75,
         palette=sns.color_palette('deep'),
     )
 
     g.map(sns.swarmplot, 'variable', 'value', 'type',
           order=['des_Af', 'des_As', 'des_AC'],
-          hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
+          hue_order=selected_types,
           palette=sns.color_palette('deep'),
           alpha=0.5, marker='h')
 
