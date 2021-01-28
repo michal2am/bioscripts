@@ -8,6 +8,7 @@ import plotly.express as px
 import argparse
 from scalcs import mechanism
 from scalcs import cjumps
+from scalcs import popen
 from scipy.optimize import curve_fit
 
 
@@ -330,7 +331,7 @@ class ModelsBuilder:
 
         for variable_rate in self.start_rates.keys():
 
-            steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
+            steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0, 10] #0.1  0.3out
             # steps = [0.1, 1.0, 10]
 
             single_var_trace_atf = pd.DataFrame()
@@ -353,6 +354,11 @@ class ModelsBuilder:
                 model_trace = model_trace.divide(max_a, axis=1)
                 model_trace['t'] = t * 1000
                 model_trace['a'] = max_a.at['Popen']
+                try:
+                    model_trace['ec50'] = popen.EC50(sample_model.model_mechanism, 50e-6)
+                except np.linalg.LinAlgError:
+                    model_trace['ec50'] = np.NAN
+                #print(popen.printout(sample_model.model_mechanism, 10))
 
                 model_trace['Rate_name'] = variable_rate
                 model_trace['Rate_value'] = variable_rate_val
