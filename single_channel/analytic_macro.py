@@ -17,7 +17,7 @@ class Model:
     def __init__(self, topology, rates):
         """
         builds a single SCALCS model
-        str:param topology: RAAFOD, RAAFODD or RAAFOODD
+        str:param topology: RAAFOD, RAAFODD or RAAFOODD:
         dict:param rates: compatible with selected topology
         """
         self.model_mechanism = (topology, rates)
@@ -331,7 +331,7 @@ class ModelsBuilder:
 
         for variable_rate in self.start_rates.keys():
 
-            steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0, 10] #0.1  0.3out
+            steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
             # steps = [0.1, 1.0, 10]
 
             single_var_trace_atf = pd.DataFrame()
@@ -354,11 +354,10 @@ class ModelsBuilder:
                 model_trace = model_trace.divide(max_a, axis=1)
                 model_trace['t'] = t * 1000
                 model_trace['a'] = max_a.at['Popen']
-                try:
-                    model_trace['ec50'] = popen.EC50(sample_model.model_mechanism, 50e-6)
-                except np.linalg.LinAlgError:
-                    model_trace['ec50'] = np.NAN
-                #print(popen.printout(sample_model.model_mechanism, 10))
+                
+                print('EC50')
+                print(popen.EC50(sample_model.model_mechanism, 0))
+                model_trace['EC50'] = (popen.EC50(sample_model.model_mechanism, 0))
 
                 model_trace['Rate_name'] = variable_rate
                 model_trace['Rate_value'] = variable_rate_val
