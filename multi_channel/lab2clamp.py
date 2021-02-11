@@ -1,3 +1,5 @@
+# concatenates channel lab traces into multisweep files
+
 import pandas as pd
 import numpy as np
 import neo
