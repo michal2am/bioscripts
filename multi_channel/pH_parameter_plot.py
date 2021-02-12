@@ -1,3 +1,5 @@
+# quick script for pH paper
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

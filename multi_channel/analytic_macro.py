@@ -1,5 +1,5 @@
-
-# ?
+# performs automated macro simulations + parameter estimation
+# example call: analytic_macro.py --start_rates start_rates_RAAFOODD_makIlo_schrels_d396dp185.csv --topology RAAFOODD --annotation wt_makIlo_schrels_d396dp185
 
 import pandas as pd
 import numpy as np

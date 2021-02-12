@@ -1,9 +1,9 @@
+# plots all key parameters of macro traces
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px
-
 
 
 selected_types = ['WT', 'L300V', 'L296V', 'WTr', 'G258Vr']
@@ -13,15 +13,14 @@ selected_pulse = [500]
 
 data = pd.read_csv('smarts_mm.csv')
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
-print(data)
+
+print(data.groupby(['type']).mean().loc[:,['rt_1090','des_Af', 'des_tf', 'des_As', 'des_ts', 'des_AC', 'dea_tm']].round(2))
 
 data_long = pd.melt(data, id_vars=['kto', 'type', 'configuration', 'file', 'pulse_length', 'sweep', 'concentration'])
-print(data_long)
 
 
 sns.set_style()
 sns.set_context('talk')
-
 
 
 def des_joint_plot():
@@ -77,6 +76,7 @@ def interval_plot(param):
 
     plt.savefig(param + '.png', dpi=600)
     plt.show()
+
 
 def fr_plot():
 
@@ -135,56 +135,6 @@ def des_a_plot():
     plt.savefig('des_a_all.png', dpi=600)
     plt.show()
 
-
-
-
-
-
-'''
-# jointy dla des
-
-'''
-
-
-'''
-# joint przez pairgrida
-g = sns.PairGrid(data=data, vars=["des_Af","des_tf", 'des_As', 'des_ts'], hue='type',)
-g.map_upper(sns.scatterplot)
-g.map_lower(sns.kdeplot)
-g.map_diag(sns.kdeplot, lw=1, legend=False)
-'''
-
-'''
-def des_joint_plot_full():
-
-    g = sns.jointplot(
-        data=data, x="des_Af", y="des_tf", hue='type',
-                      hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
-                      kind='scatter'
-                      )
-    g.plot_joint(sns.kdeplot, levels=1)
-    # g.plot_marginals(sns.histplot)
-    # sns.despine(trim=True)
-    plt.show()
-
-    g = sns.jointplot(data=data, x="des_As", y="des_ts", hue='type',
-                      hue_order=['WT', 'L300V', 'L296V', 'L300V+L296V'],
-                      kind='scatter'
-                      )
-    g.plot_joint(sns.kdeplot, levels=1)
-    # g.plot_marginals(sns.histplot)
-    # sns.despine(trim=True)
-    plt.show()
-'''
-
-# pairplot na wszystko
-# sns.pairplot(data, hue='mutant')
-# plt.tight_layout()
-# plt.show()
-
-
-#for param in ['rt_10/90', 'FR10', 'FR300', 'FR500', 'des_ts', 'des_tf', 'des_As', 'des_Af', 'des_AC', 'dea_ts', 'dea_tf', 'dea_As', 'dea_Af', 'dea_tm']:
-#    interval_plot(param)
 
 interval_plot('rt_1090')
 interval_plot('dea_tm')

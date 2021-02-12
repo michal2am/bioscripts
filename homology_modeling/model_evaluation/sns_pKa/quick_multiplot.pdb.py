@@ -25,6 +25,7 @@ sns.set_context("paper")
 #plt.savefig('seaborn_plot_{}_lignad.png'.format(chain))
 #plt.show()
 
+'''
 g = sns.relplot(
     data=data,
     x="Tyr97", y="Ser156", hue="type", #col='pose'
@@ -45,6 +46,7 @@ g = sns.relplot(
     #height=2, aspect=1,
     #palette=sns.xkcd_palette(["pale red", "greyish", 'windows blue'])
 )
+'''
 #g = sns.PairGrid(data, hue="type")
 #g.map_diag(sns.histplot)
 #g.map_offdiag(sns.scatterplot)
@@ -67,18 +69,22 @@ g = sns.catplot(
 #PAPER
 
 g = sns.catplot(
-    data=data_long_selected, kind='box',
-    x="type", y="distance", hue='residue',
-    ci="sd", height=3.54, aspect=1.15,
+    data=data_long_selected, kind='point', join=True,
+    x="type", y="distance", hue='residue', dodge=True,
+    ci=68, height=3.54, aspect=1.15,
     #col_order=['acidic', 'basic'],
     #row='type', col='pH_range',
     #height=2, aspect=1,
     #palette=sns.xkcd_palette(["pale red", "greyish", 'windows blue'])
-    palette=sns.xkcd_palette(['windows blue','dusty orange', 'dark pastel green']),
+    palette=sns.xkcd_palette(['dark pastel green', 'dusty orange', 'windows blue']),
 
+    hue_order=['Ser156', 'Tyr97', 'Tyr157'],
     order=['WT', 'E155C', 'E155S', 'E155Q', 'E155L'],
 
 )
+
+g.map(sns.swarmplot, "type", "distance", "residue", order=['WT', 'E155C', 'E155S', 'E155Q', 'E155L'], hue_order=['Ser156', 'Tyr97', 'Tyr157'],
+      palette=sns.xkcd_palette(['dark pastel green', 'dusty orange', 'windows blue']), alpha=0.5, marker='h')
 
 #PAPER TOO
 #g.axes[0, 0].axes.set_yticks(ticks=[2.5, 3, 3.5, 4.5])
@@ -88,10 +94,10 @@ g.despine(trim=True)
 g.set_axis_labels("", "")
 g.legend.set_title("distance to")
 
-plt.savefig('distances.png', dpi=300)
+plt.savefig('distances_ci68.png', dpi=600)
 plt.show()
 
-
+'''
 g = sns.displot(
     data=data_long_selected, #kind='box',
     x="distance", row='residue', hue='type', kind='kde',
@@ -113,7 +119,7 @@ g = sns.displot(
     #order=['WT', 'E155C', 'E155S', 'E155Q', 'E155L', 'E155A', 'E155N'],
 
 )
-
+'''
 #g.map(sns.swarmplot, "type", "amp", "pH", order=['wt', 'cys', 'ser', 'gln', 'leu'])
 
 
