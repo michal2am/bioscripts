@@ -6,8 +6,8 @@ import plotly.express as px
 
 
 
-selected_types = ['WT', 'L300V', 'L296V', 'L300V+L296V']
-selected_who = ['II']
+selected_types = ['WT', 'L300V', 'L296V', 'WTr', 'G258Vr']
+selected_who = ['II', 'AB']
 selected_pulse = [500]
 
 
@@ -33,11 +33,11 @@ def des_joint_plot():
                         levels=1,
                         hue_order=selected_types,
                         height=4, aspect=1.75,
-                        palette=sns.color_palette('deep', n_colors=4),
+                        palette=sns.color_palette('deep', n_colors=len(selected_types)),
                         )
         g.map(sns.scatterplot, des[0], des[1], 'type',
               hue_order=selected_types,
-              palette=sns.color_palette('deep', n_colors=4),
+              palette=sns.color_palette('deep', n_colors=len(selected_types)),
               )
 
         # g.axes[0, 0].axes.set_yticks(ticks=[0.5, 1, 2, 3])
