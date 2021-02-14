@@ -6,17 +6,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-selected_types = ['WT', 'L300V', 'L296V', 'WTr', 'G258Vr']
-selected_who = ['II', 'AB']
+selected_types = ['WT', 'L300V', 'L296V', 'G258V', 'WT_LC', 'G254V']
+selected_who = ['II', 'AB', 'AD', 'AB']
 selected_pulse = [500]
 
+data = pd.read_csv('smarts_update_statistics_values_mm.csv', sep=';')
+print(data)
 
-data = pd.read_csv('smarts_mm.csv')
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
 
 print(data.groupby(['type']).mean().loc[:,['rt_1090','des_Af', 'des_tf', 'des_As', 'des_ts', 'des_AC', 'dea_tm']].round(2))
 
-data_long = pd.melt(data, id_vars=['kto', 'type', 'configuration', 'file', 'pulse_length', 'sweep', 'concentration'])
+data_long = pd.melt(data, id_vars=['kto', 'type', 'configuration', 'file', 'pulse_length', 'sweep'])
 
 
 sns.set_style()
@@ -87,13 +88,13 @@ def fr_plot():
         order=['FR10', 'FR300', 'FR500'],
         hue_order=selected_types,
         height=4, aspect=1.75,
-        palette=sns.color_palette('deep'),
+        #palette=sns.color_palette('deep', n_colors=len(selected_types)),
     )
 
     g.map(sns.swarmplot, 'variable', 'value', 'type',
           order=['FR10', 'FR300', 'FR500'],
           hue_order=selected_types,
-          palette=sns.color_palette('deep'),
+          #palette=sns.color_palette('deep', n_colors=len(selected_types)),
           alpha=0.5, marker='h')
 
     g.axes[0, 0].axes.set_yticks(ticks=[0, .25, .5, .75, 1])
