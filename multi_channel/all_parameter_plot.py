@@ -3,6 +3,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import ttest_ind
+
 import seaborn as sns
 
 
@@ -14,15 +16,39 @@ data = pd.read_csv('smarts_update_statistics_values_mm.csv', sep=';')
 print(data)
 
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
-
-print(data.groupby(['type']).mean().loc[:,['rt_1090','des_Af', 'des_tf', 'des_As', 'des_ts', 'des_AC', 'dea_tm']].round(2))
-
 data_long = pd.melt(data, id_vars=['kto', 'type', 'configuration', 'file', 'pulse_length', 'sweep'])
-
 
 sns.set_style()
 sns.set_context('talk')
 
+
+def summary():
+    summary = data.groupby(['type']).mean().loc[:,['rt_1090', 'FR10', 'FR300', 'FR500', 'des_Af', 'des_tf', 'des_As', 'des_ts', 'des_AC', 'dea_tm']].round(2)
+    print(summary)
+
+    statistics = pd.DataFrame()
+
+    for parameter in ['rt_1090', 'FR10', 'FR300', 'FR500', 'des_Af', 'des_tf', 'des_As', 'des_ts', 'des_AC', 'dea_tm']:
+        for rec_type in zip(['L300V', 'L296V', 'G258V', 'G254V'], ['WT', 'WT', 'WT', 'WT_LC']):
+
+            wt = data[data.loc[:, 'type'] == rec_type[1]].loc[:, parameter]
+            mut = data[data.loc[:, 'type'] == rec_type[0]].loc[:, parameter]
+
+            stat = ttest_ind(wt, mut, nan_policy='omit')
+            # print(stat)
+            # print(wt, mut)
+            if stat.pvalue < 0.05:
+                print('Significant!')
+                print('{}, {}, {}\n'.format(parameter, rec_type, stat.pvalue.round(6)))
+                statistics = statistics.append({'type': rec_type[0], 'parameter': parameter, 'p_value': stat.pvalue.round(3)}, ignore_index=True)
+            else:
+                pass
+                # print('Not significant!')
+                # print('{}, {}, {}\n'.format(parameter, rec_type, stat.pvalue.round(6)))
+    print(statistics)
+
+    summary.to_csv('smarts_pandas_summary.csv')
+    statistics.to_csv('smarts_pandas_statistics.csv')
 
 def des_joint_plot():
 
@@ -137,13 +163,19 @@ def des_a_plot():
     plt.show()
 
 
-interval_plot('rt_1090')
-interval_plot('dea_tm')
-interval_plot('des_tf')
-interval_plot('des_ts')
+summary()
 
-fr_plot()
+plots = False
 
-des_joint_plot()
-des_a_plot()
+if plots:
+
+    interval_plot('rt_1090')
+    interval_plot('dea_tm')
+    interval_plot('des_tf')
+    interval_plot('des_ts')
+
+    fr_plot()
+
+    des_joint_plot()
+    des_a_plot()
 
