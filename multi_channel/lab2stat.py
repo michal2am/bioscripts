@@ -9,46 +9,36 @@ import seaborn as sns
 
 
 def parse_model_rates():
-    rates = pd.read_csv('simple_model_all_toCsv.csv')
+    rates = pd.read_csv('simple_model_rates.csv')
     means = rates.groupby(['type']).mean()
     print(rates.round(2))
     print(means.round(2))
+
     means.to_csv('rates_means.csv')
+    p_vals = pd.DataFrame()
 
-    statistics = pd.DataFrame()
+    def calc_p(rec_types, control, rates_names, p_vals):
 
-    for rec_type in ['L296V', 'G258V']:
-        for rate in ['delta', 'gamma', 'beta', 'alpha', 'd', 'r']:
+        for rec_type in rec_types:
+            for rate in rates_names:
+                wt = rates[rates.loc[:, 'type'] == control].loc[:, rate]
+                mut = rates[rates.loc[:, 'type'] == rec_type].loc[:, rate]
 
-            wt = rates[rates.loc[:, 'type'] == 'WT'].loc[:, rate]
-            mut = rates[rates.loc[:, 'type'] == rec_type].loc[:, rate]
+                stat = ttest_ind(wt, mut)
+                p_vals = p_vals.append({'type': rec_type, 'rate': rate, 'p_value': stat.pvalue.round(6),
+                                       'control': wt.mean(), 'mut': mut.mean()}, ignore_index=True)
 
-            stat = ttest_ind(wt, mut)
+                if stat.pvalue < 0.05:
+                    print('Significant!')
+                    print('{}, {}, {}\n'.format(rate, rec_type, stat.pvalue.round(6)))
 
-            statistics = statistics.append(
-                {'type': rec_type, 'rate': rate, 'p_value': stat.pvalue.round(6)}, ignore_index=True)
+        return p_vals
 
-            if stat.pvalue < 0.05:
-                print('Significant!')
-                print('{}, {}, {}\n'.format(rate, rec_type, stat.pvalue.round(6)))
+    p_vals = calc_p(['L296V', 'G258V'], 'WT', ['delta', 'gamma', 'beta', 'alpha', 'd', 'r'], p_vals)
+    p_vals = calc_p(['L300V'], 'WT_2D', ['delta', 'gamma', 'beta', 'alpha', 'd', 'r', 'd\'', 'r\''], p_vals)
+    p_vals = calc_p(['G254V'], 'WT_LC', ['delta', 'gamma', 'beta', 'alpha', 'd', 'r'], p_vals)
 
-    for rec_type in ['L300V']:
-        for rate in ['delta', 'gamma', 'beta', 'alpha', 'd', 'r', 'd', 'r']:
-
-            wt = rates[rates.loc[:, 'type'] == 'WT_2D'].loc[:, rate]
-            mut = rates[rates.loc[:, 'type'] == rec_type].loc[:, rate]
-
-            stat = ttest_ind(wt, mut)
-
-            statistics = statistics.append(
-                {'type': rec_type, 'rate': rate, 'p_value': stat.pvalue.round(6)}, ignore_index=True)
-
-            if stat.pvalue < 0.05:
-                print('Significant!')
-                print('{}, {}, {}\n'.format(rate, rec_type, stat.pvalue.round(6)))
-
-
-    statistics.to_csv('rates_pvalues.csv')
+    p_vals.to_csv('rates_pvals.csv')
     long_rates = rates.melt(id_vars=['type', 'cell'])
     return long_rates
 
@@ -88,4 +78,4 @@ def plot_model_rates(long_rates):
 
 
 parse_model_rates()
-plot_model_rates(parse_model_rates())
+#plot_model_rates(parse_model_rates())
