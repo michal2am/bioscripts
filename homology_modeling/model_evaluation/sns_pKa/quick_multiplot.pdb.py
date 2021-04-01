@@ -69,7 +69,7 @@ g = sns.catplot(
 #PAPER
 
 g = sns.catplot(
-    data=data_long_selected, kind='point', join=True,
+    data=data_long_selected, kind='point', join=True, row='BS',
     x="type", y="distance", hue='residue', dodge=True,
     ci=68, height=3.54, aspect=1.15,
     #col_order=['acidic', 'basic'],
