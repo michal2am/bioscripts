@@ -65,7 +65,7 @@ for traj in $dcds; do
 
     if [[ $traj == *"equilibration"* ]] ; then
         stride=${stride_eq}
-    elif [[ $traj == *"production"* ]] ; then
+    elif [[ $traj == *"run"* ]] ; then
         stride=${stride_pr};
     fi
 
