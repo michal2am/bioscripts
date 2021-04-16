@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 
-sim_fit_30_traces = pd.read_csv('traces_30.csv')
+sim_fit_30_traces = pd.read_csv('traces_30.csv', sep=';')
 sim_fit_30_traces = sim_fit_30_traces.melt(id_vars='t', var_name='type', value_name='popen')
 print(sim_fit_30_traces)
 
@@ -37,12 +37,15 @@ def plot_traces30(sim_fit_30_traces, sim_fit_colors, simt_fit_types, file):
 
     sns.relplot(x='t', y='popen', hue='type', kind="line", data=for_plot,
                 palette=sim_fit_colors,
-                style='type',
+                #style='type',
                 height=2, aspect=1.,
+                #linewidth=3,
+                #scale=2,
                 size='type',
+                sizes=(2, 5)
                 )
     plt.savefig(file + '.png', dpi=600)
-    plt.show()
+    #plt.show()
 
 def plot_traces1000(sim_fit_30_traces, sim_fit_colors, simt_fit_types, file):
 
@@ -50,16 +53,20 @@ def plot_traces1000(sim_fit_30_traces, sim_fit_colors, simt_fit_types, file):
 
     sns.relplot(x='t', y='popen', hue='type', kind="line", data=for_plot,
                 palette=sim_fit_colors,
-                style='type',
+                #style='type',
                 height=2, aspect=2.,
+                #linewidth=3,
                 size='type',
+                sizes=(2, 5)
                 )
     plt.savefig(file + '.png', dpi=600)
-    plt.show()
+    #plt.show()
 
 
 plot_traces30(sim_fit_30_traces, ['grey', 'black'], ['WT_exp', 'WT_fit'], 'WT')
 plot_traces30(sim_fit_30_traces, ['grey', 'black'], ['WT_LC_exp', 'WT_LC_fit'], 'WT_LC')
+plot_traces30(sim_fit_30_traces, ['grey', 'black'], ['WT_2D_exp', 'WT_2D_fit'], 'WT_2D')
+
 
 plot_traces30(sim_fit_30_traces, [(0.88, 0.54, 0.31), 'black'], ['G258V_exp', 'G258V_fit'], 'G258V')
 plot_traces30(sim_fit_30_traces, [(0.8, 0.74, 0.43), 'black'], ['L296V_exp', 'L296V_fit'], 'L296V')
