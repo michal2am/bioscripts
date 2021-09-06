@@ -27,13 +27,21 @@ class REFERPloter:
         # self.cumulative_results = self.cumulative_results.unstack(level=0)
         # self.cumulative_results = self.cumulative_results.reset_index(inplace=False)
 
-        self.cumulative_results = self.cumulative_results.groupby(['project', 'type', 'model'], as_index=False)['alpha', 'beta', 'gamma', 'delta', 'equilibrium', 'forward'].mean()
+        self.cumulative_results_m = self.cumulative_results.groupby(['project', 'type', 'model'], as_index=False)['alpha', 'beta', 'gamma', 'delta', 'equilibrium', 'forward'].mean()
+        self.cumulative_results_d = self.cumulative_results.groupby(['project', 'type', 'model'], as_index=False)['alpha', 'beta', 'gamma', 'delta', 'equilibrium', 'forward'].apply(lambda x: np.std(x)/np.mean(x)*100)
 
         self.table_results.sort_values('type', ascending=False, inplace=True)
-        self.cumulative_results.sort_values('type', ascending=False, inplace=True)
+        self.cumulative_results_m.sort_values('type', ascending=False, inplace=True)
+        self.cumulative_results_d.sort_values('type', ascending=False, inplace=True)
 
         print(self.table_results)
-        print(self.cumulative_results)
+        print(self.cumulative_results_m)
+        print(self.cumulative_results_d)
+
+        # may not work for multiple projects
+        self.cumulative_results_m.to_csv('hjcfit_rates_m_' + self.order[0] + '.csv')
+        self.cumulative_results_d.to_csv('hjcfit_rates_d_' + self.order[0] + '.csv')
+
 
 
     def REFER_plot(self):
@@ -55,13 +63,13 @@ class REFERPloter:
             project_allCells.write_html(project + '_allCells.html')
             project_allCells.write_image(project + '_allCells.png')
 
-            project_cumuCells = px.scatter(self.cumulative_results[self.cumulative_results['project'] == project], x='equilibrium', y='forward',
+            project_cumuCells = px.scatter(self.cumulative_results_m[self.cumulative_results_m['project'] == project], x='equilibrium', y='forward',
                                            title=project + 'single point - receptor type average',
                                            color='type', template='presentation', width=800, height=800,
                                            marginal_x='rug', marginal_y='rug',
                                            color_discrete_sequence=px.colors.qualitative.Dark24,
                                            )
-            project_cumuCells.add_trace(px.scatter(self.cumulative_results[self.cumulative_results['project'] == project], x='equilibrium', y='forward',
+            project_cumuCells.add_trace(px.scatter(self.cumulative_results_m[self.cumulative_results_m['project'] == project], x='equilibrium', y='forward',
                                                    trendline='ols',
                                                    color_discrete_sequence=px.colors.qualitative.Dark24,
                                                    ).data[1])
@@ -95,7 +103,7 @@ class REFERPloter:
         # works only for single project mode
 
         config = pd.read_csv(self.config)
-        new_starters = self.cumulative_results.drop(columns=['project', 'model', 'equilibrium', 'forward'])
+        new_starters = self.cumulative_results_m.drop(columns=['project', 'model', 'equilibrium', 'forward'])
 
         new_config = pd.merge(new_starters, config.loc[:, ['type', 'file', 'file_scn', 'tres', 'tcrit', 'model']], on='type')
         new_config.to_csv('hjcfit_config_' + self.order[0] + '_iter.csv')
