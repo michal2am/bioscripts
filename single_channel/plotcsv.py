@@ -40,6 +40,14 @@ fit.loc[:, 'prediction'] = fit.loc[:, 'prediction'] - 2
 fit.loc[:, 'time_deep'] -= 0.0328
 
 
+fit_r = pd.read_csv('r_hilde_ideal.csv', usecols=['Time_start', 'Value in [pA]'])
+fit_r.rename(columns={'Time_start': 'time_r','Value in [pA]': ''
+                                                              'r_prediction'}, inplace=True)
+fit_r.loc[:, 'r_prediction'] = fit_r.loc[:, 'r_prediction'] / 10
+fit_r.loc[:, 'r_prediction'] = fit_r.loc[:, 'r_prediction'] - 2
+fit_r.loc[:, 'time_r'] -= 0.0328
+
+
 '''
 output2 = 'result_89145k1_2kFilter.csv'
 
@@ -65,6 +73,8 @@ g.map(sns.lineplot, x='time_scan', y='scan_amp_n', data=scan, color='teal', draw
 # g.map(sns.lineplot, x='time_scan', y='scan_amp_n', data=scan[scan.loc[:, 'scan_cat'] < 1.9], color='turquoise', drawstyle='steps-pre')
 g.map(sns.scatterplot, x='time_scan', y='scan_cat_w', data=scan, color='tomato')
 g.map(sns.lineplot, x='time_deep', y='prediction', data=sch_fit, color='goldenrod', drawstyle='steps-pre')
+g.map(sns.lineplot, x='time_r', y='r_prediction', data=fit_r, color='dodgerblue', drawstyle='steps-post')
+
 
 # g.map(sns.lineplot, x='time_deep_2', y='prediction_2', data=sch_fit, color='pink')
 
