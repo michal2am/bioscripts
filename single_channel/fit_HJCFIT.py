@@ -86,6 +86,11 @@ for file_name in config.file.unique():
     sc_type = single_cell.at[0, 'type']
     sc_tres = single_cell.at[0, 'tres']/1000000
     sc_tcrit = single_cell.at[0, 'tcrit']/1000
+    sc_t1_exp = single_cell.at[0, 't1_exp']
+    sc_t2_exp = single_cell.at[0, 't2_exp']
+    sc_p1_exp = single_cell.at[0, 'p1_exp']
+    sc_p2_exp = single_cell.at[0, 'p2_exp']
+
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
     # TODO: should upper only the .scn extension
@@ -126,10 +131,12 @@ for file_name in config.file.unique():
     print(scl.printout_distributions(mec, sc_tres))
     shuts = scl.printout_distributions(mec, sc_tres)
 
-    shuts_format = 't1: ' + shuts.splitlines()[10].split('\t')[1] + ' p1: ' + shuts.splitlines()[10].split('\t')[2] + \
-                   ' t2: ' + shuts.splitlines()[11].split('\t')[1] + ' p2: ' + shuts.splitlines()[11].split('\t')[2]
+    t1_mod = shuts.splitlines()[10].split('\t')[1]
+    p1_mod = shuts.splitlines()[10].split('\t')[2]
+    t2_mod = shuts.splitlines()[11].split('\t')[1]
+    p2_mod = shuts.splitlines()[11].split('\t')[2]
 
-
+    shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
 
     t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
     plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
@@ -159,12 +166,14 @@ for file_name in config.file.unique():
         delta = mec.Rates[3].rateconstants[0]
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
-                        'f1': np.log(delta),
-                        'f2': np.log(delta/gamma),
-                        'f3': np.log(delta * beta / gamma),
-                        'e': np.log((delta * beta) / (gamma * alpha)),
+                        # 'f1': np.log(delta),
+                        # 'f2': np.log(delta/gamma),
+                        # 'f3': np.log(delta * beta / gamma),
+                        # 'e': np.log((delta * beta) / (gamma * alpha)),
                         'alpha': alpha, 'beta': beta,
                         'gamma': gamma, 'delta': delta,
+                        't1_mod': t1_mod, 'p1_mod': p1_mod, 't2_mod': t2_mod, 'p2_mod': p2_mod,
+                        't1_exp': sc_t1_exp, 'p1_exp': sc_p1_exp, 't2_exp': sc_t2_exp, 'p2_exp': sc_p2_exp
                         }
 
 
