@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from outliers import smirnov_grubbs as grubbs
+#from outliers import smirnov_grubbs as grubbs
 from scikit_posthocs import outliers_iqr
 import plotly.graph_objects as go
 import statsmodels
@@ -83,7 +83,7 @@ class REFERPloter:
         self.project = project
 
         self.table_results = pd.read_csv(rates_table).drop(
-            columns=['Unnamed: 0', 'e', 'f1', 'f2', 'f3'])  # remove e and fx drops after fit script cleanup
+            columns=['Unnamed: 0',])  # remove e and fx drops after fit script cleanup - done
         self.wt_results = pd.read_csv('hjcfit_rates_WT_pooled.csv').drop(columns=['Unnamed: 0', 'e', 'f1', 'f2', 'f3'])
 
         self.table_results = pd.concat([self.table_results, self.wt_results])     # pooled WT results
@@ -186,8 +186,8 @@ class REFERPloter:
         config = pd.read_csv(self.config)
         new_starters = self.cumulative_results_m.drop(columns=['project', 'model'])
 
-        new_config = pd.merge(new_starters, config.loc[:, ['type', 'file', 'file_scn', 'tres', 'tcrit', 'model']],
-                              on='type')
+        new_config = pd.merge(new_starters, config.loc[:, ['type', 'file', 'file_scn', 'tres', 'tcrit', 'model',
+                                                           't1_exp', 'p1_exp', 't2_exp', 'p2_exp',]], on='type')
         new_config.to_csv('hjcfit_config_' + self.project + '_iter.csv')
 
 
