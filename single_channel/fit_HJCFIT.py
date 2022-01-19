@@ -110,12 +110,14 @@ for file_name in config.file.unique():
     likelihood = Log10Likelihood(bursts, mec.kA, sc_tres, sc_tcrit)
 
     iternum = 0
-    start = time.clock()
+    #start = time.clock()
+    print(dcprogslik(theta))
+    print("Minimizing starts")
     res = minimize(dcprogslik, np.log(theta), method='Nelder-Mead', callback=printiter, )
-    t3 = time.clock() - start
-    print("\n\n\nScyPy.minimize (Nelder-Mead) Fitting finished: %4d/%02d/%02d %02d:%02d:%02d\n"
-          % time.localtime()[0:6])
-    print('time in ScyPy.minimize (Nelder-Mead)=', t3)
+    #t3 = time.clock() - start
+    #print("\n\n\nScyPy.minimize (Nelder-Mead) Fitting finished: %4d/%02d/%02d %02d:%02d:%02d\n"
+    #      % time.localtime()[0:6])
+    #print('time in ScyPy.minimize (Nelder-Mead)=', t3)
     print('xout', res.x)
     mec.theta_unsqueeze(np.exp(res.x))
     print("\n Final rate constants:")
