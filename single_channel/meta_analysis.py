@@ -1,18 +1,27 @@
+import numpy as np
 import pandas as pd
 import plotly.express as px
 
 
 meta = pd.read_csv('moje_meta_raw.csv', header=[0, 1])
 models = pd.read_csv('moje_meta_models_raw.csv', header=[0, 1])
-merged = meta.merge(models)
+models.drop_duplicates(inplace=True, ignore_index=True)
+
+print(meta)
+meta
+print(models)
+
+merged = meta.merge(models, left_on=[('meta', 'file')], right_on=[('meta', 'file')], how='left')
+#merged.drop_duplicates(inplace=True, ignore_index=True )
 
 merged.to_csv('moje_meta_merged_raw.csv')
+print(merged)
 
 def rates_vs_res():
 
     model_vs_res = merged[['rates', 'meta']].droplevel(0, axis=1)
-    model_vs_res = model_vs_res[model_vs_res['min_res'].notna()]
-    model_vs_res['min_res'] = pd.to_numeric(model_vs_res['min_res'])
+    model_vs_res = model_vs_res[model_vs_res['min_res'].notna()]                                                        # only first row with full cell data
+    model_vs_res['min_res'] = pd.to_numeric(model_vs_res['min_res'])                                                    # res as numeric
 
     print(model_vs_res)
 
@@ -23,4 +32,6 @@ def rates_vs_res():
         # fig.show()
 
 
-print(merged['t_crit'])
+event_times = merged[['shuts', 'openings']]
+event_times.columns = [' '.join(col).strip() for col in event_times.columns.values]
+#print(event_times)
