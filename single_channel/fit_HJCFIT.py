@@ -122,7 +122,7 @@ for file_name in config.file.unique():
     #start = time.clock()
     print(dcprogslik(theta))
     print("Minimizing starts")
-    res = minimize(dcprogslik, np.log(theta), method='Nelder-Mead', callback=printiter, )
+    res = minimize(dcprogslik, np.log(theta), method='Powell', callback=printiter, )
     #t3 = time.clock() - start
     #print("\n\n\nScyPy.minimize (Nelder-Mead) Fitting finished: %4d/%02d/%02d %02d:%02d:%02d\n"
     #      % time.localtime()[0:6])
