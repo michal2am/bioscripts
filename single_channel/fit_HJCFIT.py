@@ -86,10 +86,12 @@ for file_name in config.file.unique():
     sc_type = single_cell.at[0, 'type']
     sc_tres = single_cell.at[0, 'tres']/1000000
     sc_tcrit = single_cell.at[0, 'tcrit']/1000
-    sc_t1_exp = single_cell.at[0, 't1_exp']
-    sc_t2_exp = single_cell.at[0, 't2_exp']
-    sc_p1_exp = single_cell.at[0, 'p1_exp']
-    sc_p2_exp = single_cell.at[0, 'p2_exp']
+
+    # TODO: temporary commented out for CO testings
+    # sc_t1_exp = single_cell.at[0, 't1_exp']
+    # sc_t2_exp = single_cell.at[0, 't2_exp']
+    # sc_p1_exp = single_cell.at[0, 'p1_exp']
+    #sc_p2_exp = single_cell.at[0, 'p2_exp']
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
@@ -130,6 +132,9 @@ for file_name in config.file.unique():
     lik = dcprogslik(res.x)
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
+    # TODO: temporary commented out for CO testings
+
+    '''
     print(scl.printout_distributions(mec, sc_tres))
     shuts = scl.printout_distributions(mec, sc_tres)
 
@@ -149,6 +154,7 @@ for file_name in config.file.unique():
     plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
     plt.close()
     #plt.show()
+    '''
 
     if sc_model == 'CO':
 
