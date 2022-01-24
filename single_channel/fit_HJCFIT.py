@@ -118,6 +118,7 @@ for file_name in config.file.unique():
     print(sc_tres, sc_tcrit)
     likelihood = Log10Likelihood(bursts, mec.kA, sc_tres, sc_tcrit)
 
+    print('\nFirst iter ...')
     iternum = 0
     #start = time.clock()
     print(dcprogslik(theta))
