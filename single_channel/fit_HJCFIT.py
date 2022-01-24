@@ -114,6 +114,7 @@ for file_name in config.file.unique():
 
     bursts = rec.bursts.intervals()
     logfac = math.log(10)
+    print('\nFirst likelihood calculation ...')
     likelihood = Log10Likelihood(bursts, mec.kA, sc_tres, sc_tcrit)
 
     iternum = 0
