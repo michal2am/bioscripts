@@ -88,10 +88,12 @@ for file_name in config.file.unique():
     sc_tcrit = single_cell.at[0, 'tcrit']/1000
 
     # TODO: temporary commented out for CO testings
-    # sc_t1_exp = single_cell.at[0, 't1_exp']
-    # sc_t2_exp = single_cell.at[0, 't2_exp']
-    # sc_p1_exp = single_cell.at[0, 'p1_exp']
-    #sc_p2_exp = single_cell.at[0, 'p2_exp']
+    '''
+    sc_t1_exp = single_cell.at[0, 't1_exp']
+    sc_t2_exp = single_cell.at[0, 't2_exp']
+    sc_p1_exp = single_cell.at[0, 'p1_exp']
+    sc_p2_exp = single_cell.at[0, 'p2_exp']
+    '''
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
@@ -121,9 +123,9 @@ for file_name in config.file.unique():
     print('\nFirst iter ...')
     iternum = 0
     #start = time.clock()
-    print(dcprogslik(theta))
+    #print(dcprogslik(theta))
     print("Minimizing starts")
-    res = minimize(dcprogslik, np.log(theta), method='Powell', callback=printiter, )
+    res = minimize(dcprogslik, np.log(theta), method='Nelder-Mead', callback=printiter, )
     #t3 = time.clock() - start
     #print("\n\n\nScyPy.minimize (Nelder-Mead) Fitting finished: %4d/%02d/%02d %02d:%02d:%02d\n"
     #      % time.localtime()[0:6])
@@ -136,7 +138,6 @@ for file_name in config.file.unique():
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
     # TODO: temporary commented out for CO testings
-
     '''
     print(scl.printout_distributions(mec, sc_tres))
     shuts = scl.printout_distributions(mec, sc_tres)
@@ -165,7 +166,7 @@ for file_name in config.file.unique():
         beta = mec.Rates[1].rateconstants[0]
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
-                        'equilibrium': np.log(beta / alpha), 'forward': np.log(beta),
+                        # 'equilibrium': np.log(beta / alpha), 'forward': np.log(beta),
                         'alpha': alpha, 'beta': beta,
                         }
 
