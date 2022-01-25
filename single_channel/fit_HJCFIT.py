@@ -60,7 +60,6 @@ def mechanism_RFO(rates):
 
     return complete_mechanism
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--config')
 args = parser.parse_args()
@@ -74,10 +73,15 @@ for file_name in config.file.unique():
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
     single_cell.reset_index(inplace=True)
 
+
+    # TODO: function for tcritscaling
+    tcrit_scale = 1
+    tres_scale = 1
+
     sc_model = single_cell.at[0, 'model']
     sc_type = single_cell.at[0, 'type']
-    sc_tres = single_cell.at[0, 'tres']/1000000
-    sc_tcrit = single_cell.at[0, 'tcrit']/1000
+    sc_tres = (single_cell.at[0, 'tres']/1000000)*tres_scale
+    sc_tcrit = (single_cell.at[0, 'tcrit']/1000)*tcrit_scale
 
     # TODO: temporary commented out for CO testings
     '''

@@ -169,6 +169,9 @@ class REFERPloter:
                            ).data[1])
             plot.show()
 
+            with open(self.project + '_co.html', 'w') as f:
+                    f.write(plot.to_html())
+
 
     def REFER_plot_Auerbach(self):
 
