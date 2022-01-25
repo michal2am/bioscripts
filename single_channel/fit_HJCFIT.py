@@ -1,22 +1,14 @@
 import sys
-import time
 import math
 import numpy as np
 import pandas as pd
 import argparse
 import re
-from scipy.optimize import minimize
 
-from dcpyps.samples import samples
+from scipy.optimize import minimize
 from dcpyps import dataset
 from dcpyps import mechanism
-
 from dcprogs.likelihood import Log10Likelihood
-from scalcs import scalcslib as scl
-from scalcs import scplotlib as scpl
-import matplotlib.pyplot as plt
-
-
 
 
 def dcprogslik(x):
@@ -112,7 +104,6 @@ for file_name in config.file.unique():
     mec.update_mr()
     mec.printout(sys.stdout)
     theta = mec.theta()
-    print('\ntheta=', theta)
 
     bursts = rec.bursts.intervals()
     logfac = math.log(10)
@@ -122,14 +113,10 @@ for file_name in config.file.unique():
 
     print('\nFirst iter ...')
     iternum = 0
-    #start = time.clock()
-    #print(dcprogslik(theta))
+
     print("Minimizing starts")
     res = minimize(dcprogslik, np.log(theta), method='Nelder-Mead', callback=printiter, )
-    #t3 = time.clock() - start
-    #print("\n\n\nScyPy.minimize (Nelder-Mead) Fitting finished: %4d/%02d/%02d %02d:%02d:%02d\n"
-    #      % time.localtime()[0:6])
-    #print('time in ScyPy.minimize (Nelder-Mead)=', t3)
+
     print('xout', res.x)
     mec.theta_unsqueeze(np.exp(res.x))
     print("\n Final rate constants:")
@@ -166,7 +153,6 @@ for file_name in config.file.unique():
         beta = mec.Rates[1].rateconstants[0]
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
-                        # 'equilibrium': np.log(beta / alpha), 'forward': np.log(beta),
                         'alpha': alpha, 'beta': beta,
                         }
 
@@ -178,16 +164,11 @@ for file_name in config.file.unique():
         delta = mec.Rates[3].rateconstants[0]
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
-                        # 'f1': np.log(delta),
-                        # 'f2': np.log(delta/gamma),
-                        # 'f3': np.log(delta * beta / gamma),
-                        # 'e': np.log((delta * beta) / (gamma * alpha)),
                         'alpha': alpha, 'beta': beta,
                         'gamma': gamma, 'delta': delta,
                         't1_mod': t1_mod, 'p1_mod': p1_mod, 't2_mod': t2_mod, 'p2_mod': p2_mod,
                         't1_exp': sc_t1_exp, 'p1_exp': sc_p1_exp, 't2_exp': sc_t2_exp, 'p2_exp': sc_p2_exp
                         }
-
 
     results.append(refer_result)
 

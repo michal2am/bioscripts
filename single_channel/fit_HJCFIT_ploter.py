@@ -46,7 +46,7 @@ class REFERPloter:
 
     def outliers_grubbs(self):
         '''
-        apparently something wrong, the test is oversensitive compared to graphpad
+        TODO: apparently something wrong, the test is oversensitive compared to graphpad
         TODO: make it work like graphpad ???
         :return:
         '''
@@ -88,21 +88,20 @@ class REFERPloter:
 
     def __init__(self, rates_table, project, config):
 
+        # TODO: those should be in config file
+        pooled_WT = False
+        model = 'CO'
+
         self.config = config
         self.project = project
 
-        self.table_results = pd.read_csv(rates_table).drop(
-            columns=['Unnamed: 0',])  # remove e and fx drops after fit script cleanup - done
-
-        pooled_WT = False
+        self.table_results = pd.read_csv(rates_table).drop(columns=['Unnamed: 0'])                                     # remove e and fx drops after fit script cleanup - done
 
         if pooled_WT:
             self.wt_results = pd.read_csv('hjcfit_rates_WT_pooled.csv').drop(columns=['Unnamed: 0', 'e', 'f1', 'f2', 'f3'])
             self.table_results = pd.concat([self.table_results, self.wt_results])     # pooled WT results
 
         self.table_results['project'] = self.project
-
-        model = 'CO'
 
         if model == 'CFO':
             rates_list = ['alpha', 'beta', 'gamma', 'delta']
@@ -113,7 +112,6 @@ class REFERPloter:
         self.outliers_iqrsckit(rates_list)
         print(self.table_results)
         print('Outliers done.')
-
 
         self.cumulative_results = self.table_results.drop(columns=['file'])
         self.cumulative_results_m = self.cumulative_results.groupby(
@@ -140,7 +138,6 @@ class REFERPloter:
                 lambda cell: self.forward_co(cell), axis=1)
             self.cumulative_results_m['equilibrium'] = self.cumulative_results_m.apply(
                 lambda cell: self.equilibrium_co(cell), axis=1)
-
 
         self.cumulative_results_m.sort_values('type', ascending=False, inplace=True)
         print(self.cumulative_results_m)
@@ -172,6 +169,7 @@ class REFERPloter:
                            ).data[1])
             plot.show()
 
+
     def REFER_plot_Auerbach(self):
 
         plots = []
@@ -197,6 +195,7 @@ class REFERPloter:
                 f.write(plot.to_html(full_html=False, include_plotlyjs='cdn'))
 
     def REFER_plot_Neudecker(self):
+        # TODO: this one may not work anymore, also is for separate means and full populations
 
         for step in ['f1', 'f2', 'f3']:
             project_allCells = (
@@ -232,6 +231,7 @@ class REFERPloter:
             # project_cumuCells.write_image(self.project + '_cumuCells.png', width=400, height=400)
 
     def update_config(self):
+        # TODO: not working for CO, problem with model times calculatrion and config files
 
         config = pd.read_csv(self.config)
         new_starters = self.cumulative_results_m.drop(columns=['project', 'model'])
@@ -247,9 +247,6 @@ args = parser.parse_args()
 
 project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 ratesFile = 'hjcfit_rates_' + project + '.csv'
-
-# project = 'bambi_test'
-# ratesFile = 'hjcfit_rates_f64_bambi_test.csv'                                                                           # test file
 
 ploter = REFERPloter(ratesFile, project, args.config)
 ploter.REFER_plot_co()
