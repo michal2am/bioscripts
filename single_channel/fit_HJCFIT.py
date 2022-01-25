@@ -121,7 +121,7 @@ for file_name in config.file.unique():
     print('\nFirst iter ...')
     iternum = 0
     #start = time.clock()
-    print(dcprogslik(np.log(theta)))
+    print(dcprogslik(theta))
     print("Minimizing starts")
     res = minimize(dcprogslik, np.log(theta), method='Powell', callback=printiter, )
     #t3 = time.clock() - start

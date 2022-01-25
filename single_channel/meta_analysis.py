@@ -9,8 +9,6 @@ models.drop_duplicates(inplace=True, ignore_index=True)
 merged = meta.merge(models, left_on=[('meta', 'file')], right_on=[('meta', 'file')], how='left')
 
 merged.to_csv('moje_meta_merged_raw.csv')
-merged.to_csv('moje_meta_merged_raw.csv')
-
 
 def rates_vs_res():
 
@@ -26,49 +24,64 @@ def rates_vs_res():
         # fig = px.scatter(model_vs_res, x='fc', y=rate, color='residue_mut', symbol='type')
         # fig.show()
 
-# event time based REFER
 
+def REFER_time(merged):
+    """event time based REFER"""
 
-def mean_shut(cell):
-    percent_p1_p2 = cell[('shuts', '%P1')] + cell[('shuts', '%P2')]
-    norm_P1 = cell[('shuts', '%P1')] / percent_p1_p2
-    norm_P2 = cell[('shuts', '%P2')] / percent_p1_p2
-    mean_t1_t2 = cell[('shuts', 't1')] * norm_P1 + cell[('shuts', 't2')] * norm_P2
-    return mean_t1_t2
+    def mean_shut(cell):
+        percent_p1_p2 = cell[('shuts', '%P1')] + cell[('shuts', '%P2')]
+        norm_P1 = cell[('shuts', '%P1')] / percent_p1_p2
+        norm_P2 = cell[('shuts', '%P2')] / percent_p1_p2
+        mean_t1_t2 = cell[('shuts', 't1')] * norm_P1 + cell[('shuts', 't2')] * norm_P2
+        return mean_t1_t2
 
+    def forward(cell):
+        return np.log(1/cell[('shuts', 't12_mean')])
 
-def forward(cell):
-    return np.log(1/cell[('shuts', 't12_mean')])
+    def equi(cell):
+        return np.log(cell[('openings', 't_mean')]/cell[('shuts', 't12_mean')])
 
+    merged = merged[merged[('meta', 'min_res')].notna()]                                                                # only first row with full cell data
 
-def equi(cell):
-    return np.log(cell[('openings', 't_mean')]/cell[('shuts', 't12_mean')])
+    merged[('shuts', 't12_mean')] = merged.apply(lambda cell: mean_shut(cell), axis=1)                                  # calculate parameters
+    merged[('REFER_times', 'forward')] = merged.apply(lambda cell: forward(cell), axis=1)
+    merged[('REFER_times', 'equi')] = merged.apply(lambda cell: equi(cell), axis=1)
 
+    meta_REFERtimes = merged[['meta', 'REFER_times']].droplevel(0, axis=1)                                              # flaten and select
+    meta_REFERtimes_grouped =meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi']].mean()
+    # print(meta_REFERtimes_grouped)
 
-merged = merged[merged[('meta', 'min_res')].notna()]                                                                    # only first row with full cell data
+    meta_REFERtimes_grouped.reset_index(inplace=True)                                                                   # no multiindex for plotly
+    print(meta_REFERtimes_grouped)
 
-merged[('shuts', 't12_mean')] = merged.apply(lambda cell: mean_shut(cell), axis=1)                                      # calculate parameters
+    for control, mutant in zip(['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)'],
+                               ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277']):
 
+        cont_mut = meta_REFERtimes_grouped[(meta_REFERtimes_grouped['residue'] == mutant) | (meta_REFERtimes_grouped['type'] == control)]
+        fig = px.scatter(cont_mut, x='equi', y='forward', title=mutant, hover_name='residue_mut',
+                         template='presentation', width=600, height=600,)
+        fig.add_trace(
+            px.scatter(cont_mut, x='equi', y='forward',
+                       trendline='ols',
+                       color_discrete_sequence=px.colors.qualitative.Dark24,
+                       ).data[1])
+        fig.show()
 
-merged[('REFER_times', 'forward')] = merged.apply(lambda cell: forward(cell), axis=1)
-print(merged[['meta','openings', 'shuts', 'REFER_times']])
+        with open(mutant + '_auerbach_times.html', 'w') as f:
+            f.write(fig.to_html())
 
-merged[('REFER_times', 'equi')] = merged.apply(lambda cell: equi(cell), axis=1)
-meta_REFERtimes = merged[['meta', 'REFER_times']].droplevel(0, axis=1)                                                  # flaten and select
-meta_REFERtimes_grouped =meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi']].mean()
-# print(meta_REFERtimes_grouped)
-meta_REFERtimes_grouped.reset_index(inplace=True)                                                                       # no multiindex for plotly
-print(meta_REFERtimes_grouped)
+print(merged)
 
-for control, mutant in zip(['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)'],
-                           ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277']):
+mutant = 'F200'
+control = 'WT(F200)'
+selected = merged[(merged[('meta', 'residue')] == mutant) | (merged[('meta', 'type')] == control)]
 
-    cont_mut = meta_REFERtimes_grouped[(meta_REFERtimes_grouped['residue'] == mutant) | (meta_REFERtimes_grouped['type'] == control)]
-    fig = px.scatter(cont_mut, x='equi', y='forward', title=mutant, hover_name='residue_mut')
-    fig.add_trace(
-        px.scatter(cont_mut, x='equi', y='forward',
-                   trendline='ols',
-                   color_discrete_sequence=px.colors.qualitative.Dark24,
-                   ).data[1])
+selected = selected.loc[:, ['meta', 't_crit']].droplevel(0, axis=1)
+selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'tcrit_CFO']]
+selected.fillna(method='ffill', inplace=True)
+selected['beta'] = 5000
+selected['alpha'] = 5000
+selected['model'] = 'CO'
 
-    fig.show()
+print(selected)
+selected.to_csv('test.csv')
