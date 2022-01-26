@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import argparse
 import re
+import os
 
 from scipy.optimize import minimize
 from dcpyps import dataset
@@ -93,9 +94,20 @@ for file_name in config.file.unique():
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
-    # TODO: should upper only the .scn extension
-    sc_scns = [full_name.upper() for full_name in sc_scns]
-    rec = dataset.SCRecord(sc_scns, 100e-9, sc_tres, sc_tcrit)
+
+    checked_scns = []
+    for scn in sc_scns:
+        if scn in (os.listdir()):
+            print('SCN file found {}.'.format(scn))
+            checked_scns.append(scn)
+        elif scn.upper() in (os.listdir()):
+            print('SCN file found {}, changing to uppercase.'.format(scn))
+            up_scn = scn.upper()
+            checked_scns.append(up_scn)
+        else:
+            print('SCN file not found {}.'.format(scn))
+
+    rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, sc_tcrit)
     rec.record_type = 'recorded'
     rec.printout()
 

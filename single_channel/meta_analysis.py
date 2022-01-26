@@ -80,7 +80,9 @@ def prepare_hjcfit_config(mutant, control, file_name, model):
     selected = merged[(merged[('meta', 'residue')] == mutant) | (merged[('meta', 'type')] == control)]
 
     selected = selected.loc[:, ['meta', 't_crit']].droplevel(0, axis=1)
-    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'tcrit_CFO']]
+    # selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'tcrit_CFO']]
+    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'final_tcrit']]
+
     selected.fillna(method='ffill', inplace=True)
 
     selected['beta'] = 5000
@@ -88,6 +90,8 @@ def prepare_hjcfit_config(mutant, control, file_name, model):
     selected['model'] = model
 
     selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', 'tcrit_CFO': 'tcrit'}, inplace=True)
+    selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', 'final_tcrit': 'tcrit'}, inplace=True)
+
     selected.replace({'brak': 'WT'}, inplace=True)
     print(selected)
 
@@ -106,10 +110,11 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 
 # PLAYGROUND BELOW
-prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f64_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f45_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCO.csv', 'CO')
-prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCO.csv', 'CO')
+prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO')
+prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO')
+prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO')
+
+# prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCO.csv', 'CO')
+# prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCO.csv', 'CO')
+# prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCO.csv', 'CO')
+# prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCO.csv', 'CO')
