@@ -157,7 +157,7 @@ class REFERPloter:
 
     def REFER_plot_co(self):
             plot = (px.scatter(self.cumulative_results_m, x='equilibrium', y='forward',
-                               title=self.project,
+                               title="{} REFER by HJCFIT CO".format(self.project),
                                color='type', template='presentation', width=400, height=400,
                                hover_name='type',
                                color_discrete_sequence=px.colors.qualitative.Dark24,

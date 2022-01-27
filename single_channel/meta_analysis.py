@@ -52,7 +52,8 @@ def REFER_time(merged):
                                ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277']):
 
         cont_mut = meta_REFERtimes_grouped[(meta_REFERtimes_grouped['residue'] == mutant) | (meta_REFERtimes_grouped['type'] == control)]
-        fig = px.scatter(cont_mut, x='equi', y='forward', title=mutant, hover_name='residue_mut',
+        fig = px.scatter(cont_mut, x='equi', y='forward', title="{} REFER by event time".format(mutant),
+                         hover_name='residue_mut', color='residue_mut',
                          template='presentation', width=600, height=600,)
         fig.add_trace(
             px.scatter(cont_mut, x='equi', y='forward',
@@ -65,7 +66,7 @@ def REFER_time(merged):
             f.write(fig.to_html())
 
 
-def prepare_hjcfit_config(mutant, control, file_name, model):
+def prepare_hjcfit_config(mutant, control, file_name, model, tcrit):
     '''
     parses meta-file with Bambi analysis for input into python-hjcfit
     TODO: supports only CO-model
@@ -74,26 +75,29 @@ def prepare_hjcfit_config(mutant, control, file_name, model):
     :param control: e.g 'WT(F200)'
     :param file_name: e.g 'hjcfit_config_f200_MetaBambiCO.csv'
     :param model: e.g 'CO'
+    :param tcrit: tcrit_CFO (first KT approx) or final_tcrit (second KT approx)
     :return: csv file ready for hjcfit
     '''
 
     selected = merged[(merged[('meta', 'residue')] == mutant) | (merged[('meta', 'type')] == control)]
 
     selected = selected.loc[:, ['meta', 't_crit']].droplevel(0, axis=1)
-    # selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'tcrit_CFO']]
-    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', 'final_tcrit']]
+    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', tcrit]]
 
+    # careful here! missing data may be copied from the wrong cell, works fine only for copying info for subsequent scns from same cell
     selected.fillna(method='ffill', inplace=True)
+    print('Cells with t critical 0, will be removed ... ')
+    print(selected[selected[tcrit] == 0])
+    selected.drop(selected[selected[tcrit] == 0].index, inplace=True)
 
     selected['beta'] = 5000
     selected['alpha'] = 5000
     selected['model'] = model
 
-    selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', 'tcrit_CFO': 'tcrit'}, inplace=True)
-    selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', 'final_tcrit': 'tcrit'}, inplace=True)
+    selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', tcrit: 'tcrit'}, inplace=True)
 
     selected.replace({'brak': 'WT'}, inplace=True)
-    print(selected)
+    # print(selected)
 
     selected.to_csv(file_name)
 
@@ -108,13 +112,14 @@ merged = meta.merge(models, left_on=[('meta', 'file')], right_on=[('meta', 'file
 merged.to_csv('moje_meta_merged_raw.csv')
 
 
-
 # PLAYGROUND BELOW
-prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO')
-prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO')
-prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO')
 
-# prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCO.csv', 'CO')
-# prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCO.csv', 'CO')
-# prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCO.csv', 'CO')
-# prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCO.csv', 'CO')
+REFER_time(merged)
+
+prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCO.csv', 'CO', 'tcrit_CFO')     # f64g?
+prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
