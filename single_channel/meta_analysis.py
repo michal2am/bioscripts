@@ -114,12 +114,12 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 # PLAYGROUND BELOW
 
-REFER_time(merged)
+# REFER_time(merged)
 
-prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
-prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCO.csv', 'CO', 'tcrit_CFO')     # f64g?
-prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
-prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
-prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
-prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
-prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCO.csv', 'CO', 'tcrit_CFO')
+prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
