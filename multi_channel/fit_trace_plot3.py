@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 
 
-sim_30_traces = ['WT_fl.abf', 'P277K_fl.abf', 'P277H_fl.abf', 'P277H_poprawki.abf']
+sim_30_traces = ['WT_fl.abf', 'P277K_fl.abf', 'P277H_fl.abf', 'P277H_poprawki_fl.abf']                                  # those should be abf 2.0+ files
 sim_30_titles = ['P277_WT', 'P277K', 'P277H', 'P277H_pop']
 sim_30_colors = [(0, 0, 0), (0.88, 0.54, 0.31), (0.8, 0.74, 0.43), 'black']
 
