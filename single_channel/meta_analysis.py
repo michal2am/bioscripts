@@ -35,21 +35,39 @@ def REFER_time(merged):
     def equi(cell):
         return np.log(cell[('openings', 't_mean')]/cell[('shuts', 't12_mean')])
 
-    merged = merged[merged[('meta', 'min_res')].notna()]                                                                # only first row with full cell data
+    # TODO: cruterium for cell selection
+    # merged = merged[merged[('meta', 'min_res')].notna()]                                                                # only first row with full cell data
+    merged = merged[merged[('meta', 'clusters_no')].notna()]                                                                # only first row with full cell data
+
 
     merged[('shuts', 't12_mean')] = merged.apply(lambda cell: mean_shut(cell), axis=1)                                  # calculate parameters
     merged[('REFER_times', 'forward')] = merged.apply(lambda cell: forward(cell), axis=1)
     merged[('REFER_times', 'equi')] = merged.apply(lambda cell: equi(cell), axis=1)
 
+    pd.set_option('display.max_rows', None)
+    print(merged[['meta', 'REFER_times']])
+
     meta_REFERtimes = merged[['meta', 'REFER_times']].droplevel(0, axis=1)                                              # flaten and select
-    meta_REFERtimes_grouped =meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi']].mean()
+
+    # option for receptor type averages:
+    # meta_REFERtimes_grouped =meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi']].mean()
+    # option for single cell values to evaluate spread:
+    meta_REFERtimes_grouped =meta_REFERtimes
+
+
     # print(meta_REFERtimes_grouped)
 
     meta_REFERtimes_grouped.reset_index(inplace=True)                                                                   # no multiindex for plotly
     print(meta_REFERtimes_grouped)
 
-    for control, mutant in zip(['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)'],
-                               ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277']):
+    # controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)']
+    # mutatnts = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267']
+    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F14/F31)']
+    mutants = ['H267', 'L296', 'L300',]
+
+
+
+    for control, mutant in zip(controls, mutants):
 
         cont_mut = meta_REFERtimes_grouped[(meta_REFERtimes_grouped['residue'] == mutant) | (meta_REFERtimes_grouped['type'] == control)]
         fig = px.scatter(cont_mut, x='equi', y='forward', title="{} REFER by event time".format(mutant),
@@ -114,12 +132,13 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 # PLAYGROUND BELOW
 
-# REFER_time(merged)
+REFER_time(merged)
 
-prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('L296', 'WT(F14/F31)', 'hjcfit_config_l296_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
