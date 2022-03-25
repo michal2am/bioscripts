@@ -32,7 +32,7 @@ class GABAModel(automodel):
         # self.patch(residue_type='DISU', residues=(self.residues['31:E'], self.residues['15:D']))
         # self.patch(residue_type='DISU', residues=(self.residues['31:B'], self.residues['15:A']))
 
-
+        # remove bottom
 
 
     def special_restraints(self, aln):

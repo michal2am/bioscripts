@@ -88,8 +88,8 @@ def REFER_time(merged):
     meta_REFERtimes.reset_index(inplace=True)  # no multiindex for plotly
     print(meta_REFERtimes)
 
-    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)']
-    mutants = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267']
+    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)', 'WT(F14/F31)']
+    mutants = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267', 'E270']
     # controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F14/F31)']
     # mutants = ['H267', 'L296', 'L300',]
 
@@ -158,7 +158,7 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 # PLAYGROUND BELOW
 
-REFER_time(merged)
+#REFER_time(merged)
 
 #prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
@@ -168,3 +168,5 @@ REFER_time(merged)
 #prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('L296', 'WT(F14/F31)', 'hjcfit_config_l296_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('E270', 'WT(F14/F31)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('H267', 'WT(F14/F31)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
