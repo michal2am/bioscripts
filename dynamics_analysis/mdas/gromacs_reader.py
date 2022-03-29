@@ -27,9 +27,10 @@ to_save.write('test.trr', frames='all')
 to_save.write('test.xtc', frames='all')
 '''
 
-u = mda.Universe('step7_1.tpr', 'step7_1.trr', in_memory=True)
+u = mda.Universe('step7_1.tpr', 'all_runsteps.xtc', in_memory=False)
 protein = u.select_atoms('protein')
 for ts in u.trajectory:
+    print(ts)
     protein.unwrap(compound='fragments')
 for ts in u.trajectory:
     protein_center = protein.center_of_mass(pbc=True)
