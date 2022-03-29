@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-# test
-
 pdb = 'step5_input_chains.pdb'
 xtc = 'all_runsteps.xtc'
 
