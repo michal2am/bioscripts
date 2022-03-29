@@ -12,13 +12,14 @@ from plotly.subplots import make_subplots
 
 class REFERPloter:
 
-    @staticmethod
-    def forward_co(cell):
-        return np.log(cell['beta'])
 
     @staticmethod
-    def equilibrium_co(cell):
-        return np.log(cell['beta'] / cell['alpha'])
+    def forward_norm_co(cell, wt_beta):
+        return np.log(cell['beta']/wt_beta)
+
+    @staticmethod
+    def equilibrium_norm_co(cell, wt_beta, wt_alpha):
+        return np.log((cell['beta'] / wt_beta) / (cell['alpha'] / wt_alpha))
 
     @staticmethod
     def forward_flip(cell):
@@ -134,10 +135,13 @@ class REFERPloter:
 
         if model == 'CO':
 
+            wt_alpha = self.cumulative_results_m.loc[self.cumulative_results_m['type'] == 'WT', 'alpha'].iloc[0]
+            wt_beta = self.cumulative_results_m.loc[self.cumulative_results_m['type'] == 'WT', 'beta'].iloc[0]
+
             self.cumulative_results_m['forward'] = self.cumulative_results_m.apply(
-                lambda cell: self.forward_co(cell), axis=1)
+                lambda cell: self.forward_norm_co(cell, wt_beta), axis=1)
             self.cumulative_results_m['equilibrium'] = self.cumulative_results_m.apply(
-                lambda cell: self.equilibrium_co(cell), axis=1)
+                lambda cell: self.equilibrium_norm_co(cell, wt_beta, wt_alpha), axis=1)
 
         self.cumulative_results_m.sort_values('type', ascending=False, inplace=True)
         print(self.cumulative_results_m)
@@ -159,7 +163,7 @@ class REFERPloter:
             plot = (px.scatter(self.cumulative_results_m, x='equilibrium', y='forward',
                                title="{} REFER by HJCFIT CO".format(self.project),
                                color='type', template='presentation', width=400, height=400,
-                               hover_name='type',
+                               hover_name='type', hover_data=['alpha', 'beta'],
                                color_discrete_sequence=px.colors.qualitative.Dark24,
                                ))
             plot.add_trace(

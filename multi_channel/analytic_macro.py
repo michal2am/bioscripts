@@ -331,8 +331,9 @@ class ModelsBuilder:
 
         for variable_rate in self.start_rates.keys():
 
-            steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
-            # steps = [0.1, 1.0, 10]
+            # steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
+            steps = [0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
+            # steps = [0.5, 1.0, 5]
 
             single_var_trace_atf = pd.DataFrame()
 
@@ -372,7 +373,7 @@ class ModelsBuilder:
                 trace_rise = model_trace.iloc[1250:model_trace['Popen'].idxmax()].copy()
                 trace_rise.loc[:, 't'] -= 100.00
                 param_rt = self.fit_rise(trace_rise)
-                model_trace['rt'] = param_rt
+                model_trace['rt'] = float(param_rt)
 
                 if self.topology == 'RAAFOD':
                     trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
@@ -383,16 +384,16 @@ class ModelsBuilder:
                     trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
                     params_des = self.fit_des(trace_des)
 
-                model_trace['d_a1'] = params_des[0]
-                model_trace['d_t1'] = params_des[1]
-                model_trace['d_a2'] = params_des[2]
-                model_trace['d_t2'] = params_des[3]
-                model_trace['d_a3'] = params_des[4]
+                model_trace['d_a1'] = float(params_des[0])
+                model_trace['d_t1'] = float(params_des[1])
+                model_trace['d_a2'] = float(params_des[2])
+                model_trace['d_t2'] = float(params_des[3])
+                model_trace['d_a3'] = float(params_des[4])
 
                 trace_dea = model_trace.iloc[7500:].copy()
                 trace_dea.loc[:, 't'] -= 600
                 param_dea = self.fit_dea(trace_dea)
-                model_trace['dea_m'] = param_dea
+                model_trace['dea_m'] = float(param_dea)
 
                 model_traces.append(model_trace)
                 single_var_trace_atf[variable_rate_val] = p_open
@@ -406,6 +407,14 @@ class ModelsBuilder:
         parameters = all_traces.drop_duplicates(subset=['Rate_name', 'Rate_value'])
         parameters = parameters.drop(labels=['Popen', 't'], axis=1)
         parameters = parameters.melt(id_vars=['Rate_name', 'Rate_value', 'Rate_value_step'])
+
+        parameters.to_csv('parameters.csv')
+
+        # Somehow got messed up - y-axis is not ordered, maybe values are not floats?
+        # fixed by float() where params are put into the df
+        # print(parameters)
+        # parameters = pd.to_numeric(parameters['value'], errors='coerce')
+        # print(parameters.dtypes)
 
         fig2 = px.scatter(parameters, x='Rate_value_step', y='value', facet_col='variable', color='Rate_name',
                           facet_col_wrap=4,

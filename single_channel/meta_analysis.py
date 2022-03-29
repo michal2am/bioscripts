@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from scikit_posthocs import outliers_iqr
+
 
 
 
@@ -29,38 +31,80 @@ def REFER_time(merged):
         mean_t1_t2 = cell[('shuts', 't1')] * norm_P1 + cell[('shuts', 't2')] * norm_P2
         return mean_t1_t2
 
+    def alpha(cell):
+        return 1/cell[('openings', 't_mean')]
+
+    def beta(cell):
+        return 1/cell[('shuts', 't12_mean')]
+
     def forward(cell):
-        return np.log(1/cell[('shuts', 't12_mean')])
+        return np.log(cell['beta'])
 
     def equi(cell):
-        return np.log(cell[('openings', 't_mean')]/cell[('shuts', 't12_mean')])
+        return np.log(cell['beta']/cell['alpha'])
 
-    merged = merged[merged[('meta', 'min_res')].notna()]                                                                # only first row with full cell data
+    def outliers_iqrsckit(flat_cells):
+
+        for mut in flat_cells.residue_mut.unique():
+            # TODO: outliers for WT
+            if mut == 'brak': continue
+            print('Looking for outliers in {}'.format(mut))
+            for rate in ['alpha', 'beta']:
+                print('Checking rate {}'.format(rate))
+                rates = list(
+                    flat_cells[flat_cells['residue_mut'] == mut][rate])  # list() just for index reset
+                cells = list(flat_cells[flat_cells['residue_mut'] == mut]['file'])
+                outliers_val = outliers_iqr(rates, ret='outliers')
+                outliers_ind = outliers_iqr(rates, ret='outliers_indices')
+
+                if outliers_val.size > 0:
+                    outliers_cel = [cells[ind] for ind in outliers_ind]
+                    print('{} value outliers in {} type; cells: {}, values: {} \n within: {}'.
+                          format(rate, mut, outliers_cel, outliers_val, rates))
+                    flat_cells.loc[flat_cells['file'].isin(outliers_cel), 'alpha'] = np.NAN
+
+    # TODO: cruterium for cell selection
+    pd.set_option('display.max_rows', None)
+    # merged = merged[merged[('meta', 'min_res')].notna()]                                                              # only first row with full cell data
+    merged = merged[merged[('meta', 'clusters_no')].notna()]                                                            # only first row with full cell data
 
     merged[('shuts', 't12_mean')] = merged.apply(lambda cell: mean_shut(cell), axis=1)                                  # calculate parameters
-    merged[('REFER_times', 'forward')] = merged.apply(lambda cell: forward(cell), axis=1)
-    merged[('REFER_times', 'equi')] = merged.apply(lambda cell: equi(cell), axis=1)
+    merged[('REFER_times', 'alpha')] = merged.apply(lambda cell: alpha(cell), axis=1)
+    merged[('REFER_times', 'beta')] = merged.apply(lambda cell: beta(cell), axis=1)
 
-    meta_REFERtimes = merged[['meta', 'REFER_times']].droplevel(0, axis=1)                                              # flaten and select
-    meta_REFERtimes_grouped =meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi']].mean()
-    # print(meta_REFERtimes_grouped)
+    #print(merged[['meta', 'REFER_times']])
 
-    meta_REFERtimes_grouped.reset_index(inplace=True)                                                                   # no multiindex for plotly
-    print(meta_REFERtimes_grouped)
+    meta_REFERtimes = merged[['meta', 'REFER_times']].droplevel(0, axis=1)                                              # flaten and select for outliers and plots
+    outliers_iqrsckit(meta_REFERtimes)
 
-    for control, mutant in zip(['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)'],
-                               ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277']):
+    meta_REFERtimes['forward'] = meta_REFERtimes.apply(lambda cell: forward(cell), axis=1)
+    meta_REFERtimes['equi'] = meta_REFERtimes.apply(lambda cell: equi(cell), axis=1)
+    print(meta_REFERtimes)
 
-        cont_mut = meta_REFERtimes_grouped[(meta_REFERtimes_grouped['residue'] == mutant) | (meta_REFERtimes_grouped['type'] == control)]
+    cell_averages = True
+    if cell_averages:
+        meta_REFERtimes = meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi', 'alpha', 'beta']].mean()
+
+    meta_REFERtimes.reset_index(inplace=True)  # no multiindex for plotly
+    print(meta_REFERtimes)
+
+    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)', 'WT(F14/F31)']
+    mutants = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267', 'E270']
+    # controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F14/F31)']
+    # mutants = ['H267', 'L296', 'L300',]
+
+    for control, mutant in zip(controls, mutants):
+
+        cont_mut = meta_REFERtimes[(meta_REFERtimes['residue'] == mutant) | (meta_REFERtimes['type'] == control)]
         fig = px.scatter(cont_mut, x='equi', y='forward', title="{} REFER by event time".format(mutant),
-                         hover_name='residue_mut', color='residue_mut',
+                         hover_name='residue_mut', hover_data=['alpha', 'beta'], color='residue_mut',
                          template='presentation', width=600, height=600,)
         fig.add_trace(
             px.scatter(cont_mut, x='equi', y='forward',
                        trendline='ols',
                        color_discrete_sequence=px.colors.qualitative.Dark24,
                        ).data[1])
-        fig.show()
+        #fig.show()
 
         with open(mutant + '_auerbach_times.html', 'w') as f:
             f.write(fig.to_html())
@@ -114,12 +158,15 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 # PLAYGROUND BELOW
 
-# REFER_time(merged)
+#REFER_time(merged)
 
-prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('L296', 'WT(F14/F31)', 'hjcfit_config_l296_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('E270', 'WT(F14/F31)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('H267', 'WT(F14/F31)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')

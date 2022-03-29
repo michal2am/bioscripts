@@ -3,7 +3,7 @@
 # michaladammichalowski@gmail.com
 # ? - creation
 # 14.12.15 - refactor
-# EXAMPLE CALL: python2 --alnfile a1b2g2_3jad_mm.pir --knows 3JAD_pos --sequence a1b2g2_mm --start_res 8 10 8 10 23 --number 4
+# EXAMPLE CALL: python2 --alnfile a1b2g2_3jad_mm.pir --knows 6I53... --sequence a1b2g2_mm --start_res 8 10 8 10 23 --number 4
 
 from modeller import *
 from modeller.automodel import *
