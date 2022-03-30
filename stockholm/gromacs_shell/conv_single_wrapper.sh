@@ -7,6 +7,6 @@ laststep=$2
 while [ $step -lt $laststep ]
 do
         echo $step
-        ./nethome/michal/repos/bioscripts/stockhoolm/gromacs_shell/conv_single.sh $step
+        ./conv_single.sh $step
         step=$((step+1))
 done
