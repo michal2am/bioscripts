@@ -3,13 +3,15 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+# gmx trjconv -f step5_input.pdb -s step7_1.tpr -o step5_input_chains.pdb
+
 pdb = 'step5_input_chains.pdb'
 xtc = 'all_runsteps.xtc'
 
 u = MDAnalysis.Universe(pdb, xtc)
 psi_angles = []
 
-for segid in ['A', 'B']:
+for segid in ['A', 'C']:
 
     selection = 'segid {} and resname {} and resid {} and name {}'
     phe1 = selection.format(segid, 'PHE', 289, 'CG')

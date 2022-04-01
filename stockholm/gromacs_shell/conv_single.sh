@@ -1,7 +1,6 @@
 #! /bin/bash
 # converts raw single .trr file from charmm-gui MD according to AS advices
 # $1 is a file number according to standard charmm-gui notation and output is step7_$1.xtc
-# test
 
 step=$1
 

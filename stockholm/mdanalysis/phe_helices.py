@@ -9,17 +9,20 @@ xtc = 'all_runsteps.xtc'
 
 u = MDAnalysis.Universe(pdb, xtc)
 
-selection = 'segid {} and resid {} and name {}'
-phe289 = selection.format('A', 289, 'CA')
-met236 = selection.format('B', 236, 'CA')
-asn265 = selection.format('A', 265, 'CA')
+for interface in [['A', 'B'], ['C', 'D']]:
 
-phe289 = u.select_atoms(phe289)
-met236 = u.select_atoms(met236)
-asn265 = u.select_atoms(asn265)
+    selection = 'segid {} and resid {} and name {}'
+    phe289 = selection.format(interface[0], 289, 'CA')
+    met236 = selection.format(interface[1], 236, 'CA')
+    asn265 = selection.format(interface[0], 265, 'CA')
 
-distances_m3m1 = []
-distances_m3m2 = []
+    # TODO: messed up with added second interface since there
+    phe289 = u.select_atoms(phe289)
+    met236 = u.select_atoms(met236)
+    asn265 = u.select_atoms(asn265)
+
+    distances_m3m1 = []
+    distances_m3m2 = []
 
 for ts in tqdm(u.trajectory):
     dist_arr1 = distances.distance_array(phe289.positions,  # reference
