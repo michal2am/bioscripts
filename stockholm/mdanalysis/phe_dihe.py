@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 # gmx trjconv -f step5_input.pdb -s step7_1.tpr -o step5_input_chains.pdb
 
-pdb = 'step5_input_chains.pdb'
-xtc = 'all_runsteps.xtc'
+pdb = '/mnt/as_cephfs/sim/Etom_Apo/view.pdb'
+xtc = '/mnt/as_cephfs/sim/Etom_Apo/MD1/view.xtc'
 
 u = MDAnalysis.Universe(pdb, xtc)
 psi_angles = []

@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--pdb") # 'step5_input_chains.pdb'
 parser.add_argument("--xtc") # 'all_runsteps.xtc'
 parser.add_argument("--dir") # 'sys'
+parser.add_argument("--num", type=int) # '4'
 parser.add_argument("--l_type") # 'etomidate'
 parser.add_argument("--l_state") # 'apo'
 
@@ -18,6 +19,7 @@ args = parser.parse_args()
 pdb = args.pdb
 xtc_f = args.xtc
 dir_name = args.dir
+dir_num = args.num
 ligand_type = args.l_type
 ligand_state = args.l_state
 
@@ -55,7 +57,7 @@ interface_configs = [['1st_beta/alpha', '(segid A and resid 289) or (segid A and
                      ['gamma/beta', '(segid E and resid 304) or (segid E and resid 301) or (segid E and resid 280) or (segid A and resid 227)']]
 interfaces_all_systems = {'sys1': [], 'sys2': [], 'sys3': [], 'sys4': []}
 
-for i in range(1, 5):
+for i in range(1, dir_num + 1):
 
     current_sys = 'sys{}'.format(i)
     print('Going to {}'.format(current_sys))
