@@ -5,6 +5,8 @@ from tqdm import tqdm
 import os
 import pandas as pd
 import argparse
+from joblib import Parallel, delayed
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--pdb") # 'step5_input_chains.pdb'
@@ -50,11 +52,20 @@ class SubunitInterface:
 # '2nd_ba', '(segid B and resid 289) or (segid B and resid 286) or (segid B and resid 265) or (segid D and resid 232) or (segid D and resid 233)'
 
 # [interface name, atom selection for lipid contacts, XXX]
-interface_configs = [['1st_beta/alpha', '(segid A and resid 289) or (segid A and resid 286) or (segid A and resid 265) or (segid C and resid 232)'],
-                     ['2nd_beta/alpha', '(segid B and resid 289) or (segid B and resid 286) or (segid B and resid 265) or (segid D and resid 232)'],
-                     ['alpha/beta', '(segid C and resid 294) or (segid C and resid 291) or (segid C and resid 270) or (segid B and resid 227)'],
-                     ['alpha/gamma', '(segid D and resid 294) or (segid D and resid 291) or (segid D and resid 270) or (segid E and resid 242)'],
-                     ['gamma/beta', '(segid E and resid 304) or (segid E and resid 301) or (segid E and resid 280) or (segid A and resid 227)']]
+'''
+interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or (segid A and resid 265) or (segid C and resid 232))'],
+                     ['2nd_beta/alpha', '((segid B and resid 289) or (segid B and resid 286) or (segid B and resid 265) or (segid D and resid 232))'],
+                     ['alpha/beta', '((segid C and resid 294) or (segid C and resid 291) or (segid C and resid 270) or (segid B and resid 227))'],
+                     ['alpha/gamma', '((segid D and resid 294) or (segid D and resid 291) or (segid D and resid 270) or (segid E and resid 242))'],
+                     ['gamma/beta', '((segid E and resid 304) or (segid E and resid 301) or (segid E and resid 280) or (segid A and resid 227))']]
+'''
+interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or (segid A and resid 265) or (segid B and resid 232))'],
+                     ['2nd_beta/alpha', '((segid C and resid 289) or (segid C and resid 286) or (segid C and resid 265) or (segid D and resid 232))'],
+                     ['alpha/beta', '((segid B and resid 294) or (segid B and resid 291) or (segid B and resid 270) or (segid C and resid 227))'],
+                     ['alpha/gamma', '((segid D and resid 294) or (segid D and resid 291) or (segid D and resid 270) or (segid E and resid 242))'],
+                     ['gamma/beta', '((segid E and resid 304) or (segid E and resid 301) or (segid E and resid 280) or (segid A and resid 227))']]
+
+
 interfaces_all_systems = {'sys1': [], 'sys2': [], 'sys3': [], 'sys4': []}
 
 for i in range(1, dir_num + 1):
