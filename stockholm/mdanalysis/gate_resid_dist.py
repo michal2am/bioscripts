@@ -1,3 +1,5 @@
+# TODO: needs small refactor like gate_resid_dihe
+
 import MDAnalysis
 from tqdm import tqdm
 import pandas as pd
