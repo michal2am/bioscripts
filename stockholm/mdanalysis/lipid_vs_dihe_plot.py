@@ -10,7 +10,8 @@ args = parser.parse_args()
 datas_lipid = pd.concat([pd.read_csv(df) for df in args.dfl])
 datas_dihe = pd.concat([pd.read_csv(df) for df in args.dfd])
 
-data = pd.merge(datas_lipid, datas_dihe)
+#data = pd.merge(datas_lipid, datas_dihe)
+data = datas_lipid.merge(datas_dihe)    # in this case merging works by default finding correct 'on' and 'how'
 data['dihe'] = data['dihe'].abs()
 print(data)
 
