@@ -12,7 +12,7 @@ lipid_data = pd.DataFrame()
 
 for df in data_file:
 
-    single_data = pd.read_csv(df + '.csv')
+    single_data = pd.read_csv(df)
     lipid_data = pd.concat([lipid_data, single_data])
 
 print(lipid_data)
