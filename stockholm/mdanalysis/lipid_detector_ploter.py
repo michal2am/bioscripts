@@ -3,7 +3,10 @@ import plotly.express as px
 import argparse
 
 parser = argparse.ArgumentParser()
+# python ~/repos/bioscripts/stockholm/mdanalysis/lipid_detector_ploter.py --df *lipids.csv
+
 parser.add_argument("--df", nargs='+') # 'etomidate_apo_lipids'
+
 args = parser.parse_args()
 
 data_file = args.df
@@ -17,13 +20,12 @@ for df in data_file:
 
 print(lipid_data)
 
-fig_traj = px.scatter(lipid_data, x='frame', y='occupied', color='interface', facet_col='system')
-#fig_traj.write_html(data_file + '_traj.html')
-fig_traj.write_html('lipid_contacts' + '_traj.html')
+#fig_traj = px.scatter(lipid_data, x='frame', y='occupied', color='interface', facet_col='system')
+#fig_traj.write_html('lipid_contacts' + '_traj.html')
 
 
-# num_frame = max(lipid_data['frame'])
-# cumulative_data = lipid_data.groupby(['system', 'interface', 'ligand_type', 'ligand_state'])['occupied'].sum()/num_frame
+#fig_all = px.histogram(lipid_data, x='interface', y='occupied', facet_col='ligand_state', color='ligand_type')
+#fig_all.write_html('lipid_contacts' + '_all.html')
 
 cumulative_data = lipid_data.groupby(['system', 'interface', 'ligand_type', 'ligand_state']).apply(lambda x: x['occupied'].sum()/len(x))
 
@@ -31,8 +33,8 @@ cumulative_data = cumulative_data.reset_index(name='occupied')
 
 print(cumulative_data)
 
-# fig_sum = px.box(cumulative_data, x='interface', y='occupied', hover_name='system', points='all', facet_col='ligand_state', facet_row='ligand_type')
-fig_sum = px.box(cumulative_data, x='interface', y='occupied', hover_name='system', points='all', facet_col='ligand_state', color='ligand_type')
+#fig_sum = px.box(cumulative_data, x='interface', y='occupied', hover_name='system', points='all', facet_col='ligand_state', color='ligand_type')
+fig_sum = px.box(cumulative_data, x='interface', y='occupied', hover_name='system', hover_data=['ligand_type', 'ligand_state'], points='all', facet_col='ligand_state', color='ligand_type')
 
 # fig_sum.write_html(data_file + '_sum.html')
 fig_sum.write_html('lipid_contacts' + '_sum.html')

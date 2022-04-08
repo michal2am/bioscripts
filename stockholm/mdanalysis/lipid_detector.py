@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 
 parser = argparse.ArgumentParser()
+#python ~/repos/bioscripts/stockholm/mdanalysis/lipid_detector.py --pdb /mnt/my_cephfs/as_retraj/Phenobarb/sim/phenobarb_holo_protligpopcion.pdb --dir /mnt/my_cephfs/as_retraj/Phenobarb/sim/MD --l_type phenobarbital --l_state holo --ord ABCDE --xtc phenobarb_holo_protligpopcion_2.xtc --num 2
 
 parser.add_argument("--pdb")    # full path to pdb
 parser.add_argument("--ord")    # chain id order
@@ -51,7 +52,7 @@ class SubunitInterface:
         return data
 
 
-if chain_order == 'ABCDE':
+if chain_order == 'ACBDE':
     interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or '
                                             '(segid A and resid 265) or (segid C and resid 232))'],
                          ['2nd_beta/alpha', '((segid B and resid 289) or (segid B and resid 286) or '
@@ -62,7 +63,7 @@ if chain_order == 'ABCDE':
                                          '(segid D and resid 270) or (segid E and resid 242))'],
                          ['gamma/beta', '((segid E and resid 304) or (segid E and resid 301) or '
                                         '(segid E and resid 280) or (segid A and resid 227))']]
-if chain_order == 'ACBDE':
+if chain_order == 'ABCDE':
     interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or '
                                             '(segid A and resid 265) or (segid B and resid 232))'],
                          ['2nd_beta/alpha', '((segid C and resid 289) or (segid C and resid 286) or '
