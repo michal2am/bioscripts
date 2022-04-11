@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#~/repos/bioscripts/stockholm/gromacs_shell/conv_single_ASstyle.sh ../propofol_holo_protligpopcion.pdb ../propofol_holo_protligpopcion.ndx 19 propofol_holo_protligpopcion_MD1.xtc
 # those should be done before to prepare files with selected atoms and chain IDs
 # gmx make_ndx -f step5_input.gro -n index.ndx -o new_index.ndx
 # gmx trjconv -f step5_input.gro -s md.tpr -n new_index.ndx -o new_pdb.pdb
