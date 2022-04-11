@@ -2,12 +2,12 @@
 
 # those should be done before to prepare files with selected atoms and chain IDs
 # gmx make_ndx -f step5_input.gro -n index.ndx -o new_index.ndx
-# gmx trajconv -f step5_input.gro -s md.tpr -n new_index.ndx -o new_pdb.pdb
+# gmx trjconv -f step5_input.gro -s md.tpr -n new_index.ndx -o new_pdb.pdb
 
 pdbfile=$1    # new pdb file with selected atoms only
 indexfile=$2  # new index file with selection corresponding to new pdb
 select=$3     # new group number from new index
-outname=$4    # should be the same as pdb and ndx, e.g. gaba_holo_protligpopcion_MD!.xtc
+outname=$4    # should be the same as pdb and ndx, e.g. gaba_holo_protligpopcion_MD1.xtc
 
 gmx trjconv -f traj_comp.xtc -s md.tpr -pbc whole -n $indexfile  -o view1.xtc <<EOF
 $select
