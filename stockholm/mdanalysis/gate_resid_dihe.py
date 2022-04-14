@@ -4,6 +4,8 @@ import pandas as pd
 import argparse
 
 parser = argparse.ArgumentParser()
+#python ~/repos/bioscripts/stockholm/mdanalysis/gate_resid_dihe.py --pdb /mnt/my_cephfs/as_retraj/Prop_Apo/propofol_apo_protligpopcion.pdb --dir /mnt/my_cephfs/as_retraj/Prop_Apo/MD  --l_type propofol --ord ACBDE --l_state apo --xtc propofol_apo_protligpopcion_MD1.xtc --num 1
+
 
 parser.add_argument("--pdb")    # full path to pdb
 parser.add_argument("--ord")    # chain id order

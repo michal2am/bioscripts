@@ -17,5 +17,6 @@ for df in data_file:
 data['dihe'] = data['dihe'].abs()
 print(data)
 
-fig = px.box(data, x='interface', y='dihe', hover_name='system', facet_col='ligand_state', facet_row='ligand_type', color='system')
+fig = px.box(data, x='interface', y='dihe', hover_name='system', facet_col='ligand_state', facet_row='ligand_type', color='system',)
+
 fig.write_html('gate_resid_dihe' + '.html')
