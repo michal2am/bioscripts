@@ -39,7 +39,7 @@ class SubunitInterface:
         self.lignad_state = l_state
 
         # only for lipids:
-        self.lipids_selection = '((resname POPC) and sphzone 5.0 {})'.format(lipid_contact_selection)
+        self.lipids_selection = '((resname POPC) and sphzone 4.0 {})'.format(lipid_contact_selection)
         self.lipids_contacts = []
 
     def data(self):
