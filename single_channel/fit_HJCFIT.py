@@ -94,6 +94,7 @@ for file_name in config.file.unique():
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
+    print(sc_scns)
 
     checked_scns = []
     for scn in sc_scns:
