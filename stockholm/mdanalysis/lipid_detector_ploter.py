@@ -19,6 +19,8 @@ for df in data_file:
     lipid_data = pd.concat([lipid_data, single_data])
 
 print(lipid_data)
+lipid_data = lipid_data[lipid_data.frame > 0]
+
 
 #fig_traj = px.scatter(lipid_data, x='frame', y='occupied', color='interface', facet_col='system')
 #fig_traj.write_html('lipid_contacts' + '_traj.html')
@@ -33,7 +35,7 @@ cumulative_data = lipid_data.groupby(['system', 'interface', 'ligand_type', 'lig
 cumulative_data = cumulative_data.reset_index(name='occupied')
 
 print(cumulative_data)
-cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['etomidate', 'propofol', 'phenobarbital', 'flumazenil', 'flumazenil_nogaba', 'bicuculline'])
+cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['etomidate', 'propofol', 'zolpidem4', 'diazepam4', 'phenobarbital', 'flumazenilnogaba', 'bicuculline', ],)
 cumulative_data = cumulative_data.sort_values('ligand_type')
 
 #fig_sum = px.box(cumulative_data, x='interface', y='occupied', hover_name='system', points='all', facet_col='ligand_state', color='ligand_type')

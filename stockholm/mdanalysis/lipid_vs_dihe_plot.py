@@ -3,12 +3,20 @@ import plotly.express as px
 import argparse
 
 parser = argparse.ArgumentParser()
+# python ~/repos/bioscripts/stockholm/mdanalysis/lipid_vs_dihe_plot.py --dfl lipids_5/diazepam_* -dfd diazepam_*
+
 parser.add_argument("--dfl", nargs='+')
 parser.add_argument("--dfd", nargs='+')
 args = parser.parse_args()
 
+print(args.dfl)
+print(args.dfd)
+
 datas_lipid = pd.concat([pd.read_csv(df) for df in args.dfl])
 datas_dihe = pd.concat([pd.read_csv(df) for df in args.dfd])
+
+print(datas_lipid)
+print(datas_dihe)
 
 #data = pd.merge(datas_lipid, datas_dihe)
 data = datas_lipid.merge(datas_dihe)    # in this case merging works by default finding correct 'on' and 'how'
