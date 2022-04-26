@@ -39,7 +39,7 @@ class SubunitInterface:
         self.lignad_state = l_state
 
         # only for lipids:
-        self.lipids_selection = '((resname POPC) and sphzone 4.0 {})'.format(lipid_contact_selection)
+        self.lipids_selection = '((resname POPC) and sphzone 5.0 {})'.format(lipid_contact_selection)
         self.lipids_contacts = []
 
     def data(self):
@@ -53,6 +53,15 @@ class SubunitInterface:
 
 
 if chain_order == 'ACBDE':
+    interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 265) or (segid C and resid 233))'],
+                         ['2nd_beta/alpha', '((segid B and resid 289) or (segid B and resid 265) or (segid D and resid 233))'],
+
+                         ['alpha/beta', '((segid C and resid 294) or (segid C and resid 270) or (segid B and resid 228))'],
+                         ['alpha/gamma', '((segid D and resid 294) or (segid D and resid 270) or (segid E and resid 243))'],
+
+                         ['gamma/beta', '((segid E and resid 304) or (segid E and resid 280) or (segid A and resid 228))']]
+    '''
+    # original:
     interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or '
                                             '(segid A and resid 265) or (segid C and resid 232))'],
                          ['2nd_beta/alpha', '((segid B and resid 289) or (segid B and resid 286) or '
@@ -63,7 +72,18 @@ if chain_order == 'ACBDE':
                                          '(segid D and resid 270) or (segid E and resid 242))'],
                          ['gamma/beta', '((segid E and resid 304) or (segid E and resid 301) or '
                                         '(segid E and resid 280) or (segid A and resid 227))']]
+    '''
+
 if chain_order == 'ABCDE':
+    interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 265) or (segid B and resid 233))'],
+                         ['2nd_beta/alpha', '((segid C and resid 289) or (segid C and resid 265) or (segid D and resid 233))'],
+
+                         ['alpha/beta', '((segid B and resid 294) or (segid B and resid 270) or (segid C and resid 228))'],
+                         ['alpha/gamma', '((segid D and resid 294) or (segid D and resid 270) or (segid E and resid 243))'],
+
+                         ['gamma/beta', '((segid E and resid 304) or (segid E and resid 280) or (segid A and resid 228))']]
+    '''
+    # original:
     interface_configs = [['1st_beta/alpha', '((segid A and resid 289) or (segid A and resid 286) or '
                                             '(segid A and resid 265) or (segid B and resid 232))'],
                          ['2nd_beta/alpha', '((segid C and resid 289) or (segid C and resid 286) or '
@@ -74,6 +94,7 @@ if chain_order == 'ABCDE':
                                          '(segid D and resid 270) or (segid E and resid 242))'],
                          ['gamma/beta', '((segid E and resid 304) or (segid E and resid 301) or '
                                         '(segid E and resid 280) or (segid A and resid 227))']]
+    '''
 
 # mda universe
 universe = MDAnalysis.Universe(pdb, xtc)
