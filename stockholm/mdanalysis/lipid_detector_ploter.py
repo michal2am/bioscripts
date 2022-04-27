@@ -22,19 +22,19 @@ print(lipid_data)
 lipid_data = lipid_data[lipid_data.frame > 1600]
 
 
-cumulative_data = lipid_data.groupby(['system', 'interface', 'ligand_type', 'ligand_state']).apply(lambda x: x['occupied'].sum()/len(x))
+cumulative_data = lipid_data.groupby(['system', 'interface', 'ligand_type', 'ligand_state', 'detection_radius']).apply(lambda x: x['occupied'].sum()/len(x))
 cumulative_data = cumulative_data.reset_index(name='occupied')
 
 print(cumulative_data)
 
 # cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['etomidate', 'propofol', 'zolpidem4', 'diazepam4', 'phenobarbital', 'flumazenilnogaba', 'bicuculline', ],)
-cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['propofol5nr', 'etomidate5nr','diazepam5nr', 'zolpidem5nr', 'phenobarbital5nr', 'bicuculline5nr'])
-# cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['propofol5nr', 'propofol6nr'])
+# cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['propofol5nr', 'etomidate5nr','diazepam5nr', 'zolpidem5nr', 'phenobarbital5nr', 'bicuculline5nr'])
+cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type)
 
 cumulative_data = cumulative_data.sort_values('ligand_type')
 
 fig_sum = px.box(cumulative_data, x='ligand_type', y='occupied', points='all', hover_name='system',
-                 hover_data=['ligand_type', 'ligand_state'], facet_col='interface',
+                 hover_data=['ligand_type', 'ligand_state', 'detection_radius'], facet_col='interface', facet_row='detection_radius',
                  category_orders={'interface': ['1st_beta/alpha', '2nd_beta/alpha', 'gamma/beta', 'alpha/gamma', 'gamma/beta']},
                  color='ligand_state')
 
