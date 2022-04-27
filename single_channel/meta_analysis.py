@@ -79,17 +79,17 @@ def REFER_time(merged):
 
     meta_REFERtimes['forward'] = meta_REFERtimes.apply(lambda cell: forward(cell), axis=1)
     meta_REFERtimes['equi'] = meta_REFERtimes.apply(lambda cell: equi(cell), axis=1)
-    print(meta_REFERtimes)
+    # print(meta_REFERtimes)
 
-    cell_averages = False
+    cell_averages = True
     if cell_averages:
         meta_REFERtimes = meta_REFERtimes.groupby(by=['type', 'residue','residue_mut'])[['forward', 'equi', 'alpha', 'beta']].mean()
 
     meta_REFERtimes.reset_index(inplace=True)  # no multiindex for plotly
     print(meta_REFERtimes)
 
-    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(E153)']
-    mutants = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267', 'E270', 'E153']
+    controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F200)','WT(F45)', 'WT(F64)', 'WT(H55)', 'WT(P277)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(F45)', 'WT(F14/F31)', 'WT(F14/F31)', 'WT(E153)', 'WT(E153)']
+    mutants = ['F14', 'F31', 'F200', 'F45', 'F64', 'H55', 'P277', 'L296', 'L300', 'P273', 'H267', 'E270', 'E153', 'V53']
     # controls = ['WT(F14/F31)', 'WT(F14/F31)', 'WT(F14/F31)']
     # mutants = ['H267', 'L296', 'L300',]
 
@@ -158,7 +158,7 @@ merged.to_csv('moje_meta_merged_raw.csv')
 
 # PLAYGROUND BELOW
 
-#REFER_time(merged)
+REFER_time(merged)
 
 #prepare_hjcfit_config('F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
@@ -174,5 +174,7 @@ merged.to_csv('moje_meta_merged_raw.csv')
 #prepare_hjcfit_config('E153', 'WT(E153)', 'hjcfit_config_e153_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('F45', 'WT(E153)', 'hjcfit_config_f45wte153_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config('F45', 'WT(F14/F31)', 'hjcfit_config_f45wtBambi_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F200', 'WT(F14/F31)', 'hjcfit_config_f200wtBambi_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config('F200', 'WT(E153)', 'hjcfit_config_f200wte153_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F200', 'WT(F14/F31)', 'hjcfit_config_f200wtBambi_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('F200', 'WT(E153)', 'hjcfit_config_f200wte153_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config('E270', 'WT(F14/F31)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config('V53', 'WT(E153)', 'hjcfit_config_v53_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
