@@ -28,17 +28,21 @@ cumulative_data = cumulative_data.reset_index(name='occupied')
 print(cumulative_data)
 
 # cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['etomidate', 'propofol', 'zolpidem4', 'diazepam4', 'phenobarbital', 'flumazenilnogaba', 'bicuculline', ],)
-# cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['propofol5nr', 'etomidate5nr','diazepam5nr', 'zolpidem5nr', 'phenobarbital5nr', 'bicuculline5nr'])
-cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type)
+cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type, categories=['bicuculline', 'gaba', 'etomidate', 'propofol', 'zolpidem', 'diazepam', 'phenobarbital'])
+# cumulative_data.ligand_type = pd.Categorical(cumulative_data.ligand_type)
 
 cumulative_data = cumulative_data.sort_values('ligand_type')
 
-fig_sum = px.box(cumulative_data, x='ligand_type', y='occupied', points='all', hover_name='system',
-                 hover_data=['ligand_type', 'ligand_state', 'detection_radius'], facet_col='interface', facet_row='detection_radius',
+fig_sum = px.box(cumulative_data, x='ligand_state', y='occupied', points='all', hover_name='system',
+                 hover_data=['ligand_type', 'ligand_state', 'detection_radius'], facet_col='interface', facet_row='ligand_type',
                  category_orders={'interface': ['1st_beta/alpha', '2nd_beta/alpha', 'gamma/beta', 'alpha/gamma', 'gamma/beta']},
                  color='ligand_state')
 
+for annotation in fig_sum.layout.annotations:
+    annotation.text = annotation.text.split("=")[1]
+
 fig_sum.write_html('lipid_contacts' + '_sum.html')
+fig_sum.write_image('lipid_contacts' + '_sum.png', width=800, height=1200, scale=2)
 
 #fig_circle = px.scatter_polar(cumulative_data, r="occupied", theta="interface", color="ligand_type", symbol="ligand_state")
 #fig_circle.write_html('lipid_contacts' + '_circle.html')

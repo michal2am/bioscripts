@@ -74,7 +74,6 @@ if chain_order == 'ACBDE':
                          ]
 
 # mda universe
-print(pdb, xtc)
 universe = MDAnalysis.Universe(pdb, xtc)
 
 # create data container for each subunit interface
