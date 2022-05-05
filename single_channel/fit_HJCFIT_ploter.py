@@ -18,8 +18,16 @@ class REFERPloter:
         return np.log(cell['beta']/wt_beta)
 
     @staticmethod
+    def forward_raw_co(cell):
+        return np.log(cell['beta'])
+
+    @staticmethod
     def equilibrium_norm_co(cell, wt_beta, wt_alpha):
         return np.log((cell['beta'] / wt_beta) / (cell['alpha'] / wt_alpha))
+
+    @staticmethod
+    def equilibrium_raw_co(cell):
+        return np.log(cell['beta'] / cell['alpha'])
 
     @staticmethod
     def forward_flip(cell):
@@ -140,8 +148,12 @@ class REFERPloter:
 
             self.cumulative_results_m['forward'] = self.cumulative_results_m.apply(
                 lambda cell: self.forward_norm_co(cell, wt_beta), axis=1)
+            self.cumulative_results_m['forward_raw'] = self.cumulative_results_m.apply(
+                lambda cell: self.forward_raw_co(cell), axis=1)
             self.cumulative_results_m['equilibrium'] = self.cumulative_results_m.apply(
                 lambda cell: self.equilibrium_norm_co(cell, wt_beta, wt_alpha), axis=1)
+            self.cumulative_results_m['equilibrium_raw'] = self.cumulative_results_m.apply(
+                lambda cell: self.equilibrium_raw_co(cell), axis=1)
 
         self.cumulative_results_m.sort_values('type', ascending=False, inplace=True)
         print(self.cumulative_results_m)
