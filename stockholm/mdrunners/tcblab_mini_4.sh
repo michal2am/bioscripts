@@ -2,7 +2,7 @@
 
 #SBATCH -p lindahl
 #SBATCH -J 6x3z_wt_abu_equL
-#SBATCH -t 24:00:00
+#SBATCH -t 2:00:00
 #SBATCH -N 1
 #SBATCH -C gpu --gres=gpu:4
 #SBATCH -e job-%j.err -o job-%j.out

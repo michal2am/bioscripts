@@ -16,7 +16,8 @@ $select
 EOF
 
 gmx trjconv -f view2.xtc -s $inname_tpr -pbc mol -ur compact -center -n $indexfile -o $outname <<EOF
-3
+#3
+0
 $select
 EOF
 
