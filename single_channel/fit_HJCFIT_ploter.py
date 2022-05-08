@@ -1,13 +1,9 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
-#from outliers import smirnov_grubbs as grubbs
 from scikit_posthocs import outliers_iqr
-import plotly.graph_objects as go
-import statsmodels
 import argparse
 import re
-from plotly.subplots import make_subplots
 
 
 class REFERPloter:
@@ -53,30 +49,6 @@ class REFERPloter:
     def energy_gate(cell):
         return -0.59 * np.log(cell['beta'] / cell['alpha'])
 
-    def outliers_grubbs(self):
-        '''
-        TODO: apparently something wrong, the test is oversensitive compared to graphpad
-        TODO: make it work like graphpad ???
-        :return:
-        '''
-
-        for mut in self.table_results.type.unique():
-            for rate in ['alpha', 'beta', 'gamma', 'delta']:
-
-                rates = list(
-                    self.table_results.loc[self.table_results['type'] == mut][rate])  # list() just for index reset
-                cells = list(self.table_results.loc[self.table_results['type'] == mut]['file'])
-                print(rates)
-                outliers_val = grubbs.two_sided_test_outliers(rates, alpha=.05)
-                outliers_ind = grubbs.two_sided_test_indices(rates, alpha=.05)
-
-                if outliers_val:
-                    print(rates)
-                    outliers_cel = [cells[ind] for ind in outliers_ind]
-                    print('{} value outliers in {} type; cells: {}, values: {}'.format(rate, mut, outliers_cel,
-                                                                                       outliers_val))
-                    self.table_results.loc[self.table_results['file'].isin(outliers_cel), rate] = np.NAN
-
     def outliers_iqrsckit(self, rates_list):
 
         for mut in self.table_results.type.unique():
@@ -97,24 +69,16 @@ class REFERPloter:
 
     def __init__(self, rates_table, project, config):
 
-        # TODO: those should be in config file
-        pooled_WT = False
-        model = 'CO'
-
         self.config = config
         self.project = project
 
-        self.table_results = pd.read_csv(rates_table).drop(columns=['Unnamed: 0'])                                     # remove e and fx drops after fit script cleanup - done
-
-        if pooled_WT:
-            self.wt_results = pd.read_csv('hjcfit_rates_WT_pooled.csv').drop(columns=['Unnamed: 0', 'e', 'f1', 'f2', 'f3'])
-            self.table_results = pd.concat([self.table_results, self.wt_results])     # pooled WT results
-
+        self.table_results = pd.read_csv(rates_table)
+        self.model = self.table_results['model'].unique()[0]
         self.table_results['project'] = self.project
 
-        if model == 'CFO':
+        if self.model == 'CFO':
             rates_list = ['alpha', 'beta', 'gamma', 'delta']
-        if model == 'CO':
+        if self.model == 'CO':
             rates_list = ['alpha', 'beta']
 
         print('Detecting outliers ...')
@@ -126,7 +90,7 @@ class REFERPloter:
         self.cumulative_results_m = self.cumulative_results.groupby(
             ['project', 'type', 'model'], as_index=False)[rates_list].mean()
 
-        if model == 'CFO':
+        if self.model == 'CFO':
 
             self.cumulative_results_m['forward_flip'] = self.cumulative_results_m.apply(
                 lambda cell: self.forward_flip(cell), axis=1)
@@ -141,7 +105,7 @@ class REFERPloter:
             self.cumulative_results_m['energy_gate'] = self.cumulative_results_m.apply(
                 lambda cell: self.energy_gate(cell), axis=1)
 
-        if model == 'CO':
+        if self.model == 'CO':
 
             wt_alpha = self.cumulative_results_m.loc[self.cumulative_results_m['type'] == 'WT', 'alpha'].iloc[0]
             wt_beta = self.cumulative_results_m.loc[self.cumulative_results_m['type'] == 'WT', 'beta'].iloc[0]
@@ -161,17 +125,10 @@ class REFERPloter:
 
         self.table_results.sort_values('type', ascending=False, inplace=True)
 
-
-        # % errors
-        # TODO: for CO model
-        '''
-        self.cumulative_results_d = self.cumulative_results.groupby(['project', 'type', 'model'], as_index=False)[
-            ['alpha', 'beta', 'gamma', 'delta']].apply(lambda x: np.std(x) / np.mean(x) * 100)
-        self.cumulative_results_d.sort_values('type', ascending=False, inplace=True)
-        self.cumulative_results_d.to_csv('hjcfit_rates_d_' + self.project + '.csv')
-        '''
-
     def REFER_plot_co(self):
+            """
+            simple plot for CO model
+            """
             plot = (px.scatter(self.cumulative_results_m, x='equilibrium', y='forward',
                                title="{} REFER by HJCFIT CO".format(self.project),
                                color='type', template='presentation', width=400, height=400,
@@ -185,11 +142,13 @@ class REFERPloter:
                            ).data[1])
             plot.show()
 
-            with open(self.project + '_co.html', 'w') as f:
-                    f.write(plot.to_html())
+            plot.write_html(self.project + '_co.html', 'w')
 
 
     def REFER_plot_Auerbach(self):
+        """
+        triple plot for CFO model (phi flip, phi gate, efficiency)
+        """
 
         plots = []
         for axes in zip(['phi_flip', 'phi_gate', 'efficiency'],
@@ -214,6 +173,7 @@ class REFERPloter:
                 f.write(plot.to_html(full_html=False, include_plotlyjs='cdn'))
 
     def REFER_plot_Neudecker(self):
+        # triple plot for CFO model, triple phi by Neudecker
         # TODO: this one may not work anymore, also is for separate means and full populations
 
         for step in ['f1', 'f2', 'f3']:
@@ -250,7 +210,8 @@ class REFERPloter:
             # project_cumuCells.write_image(self.project + '_cumuCells.png', width=400, height=400)
 
     def update_config(self):
-        # TODO: not working for CO, problem with model times calculatrion and config files
+        # legacy
+        # TODO: not working for CO, problem with model times calculation and config files
 
         config = pd.read_csv(self.config)
         new_starters = self.cumulative_results_m.drop(columns=['project', 'model'])
@@ -271,4 +232,3 @@ ploter = REFERPloter(ratesFile, project, args.config)
 ploter.REFER_plot_co()
 # ploter.REFER_plot_Auerbach()
 # ploter.update_config()
-# ploter.REFER_plot()

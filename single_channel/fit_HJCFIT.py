@@ -5,18 +5,21 @@ import pandas as pd
 import argparse
 import re
 import os
+import matplotlib as plt
 
 from scipy.optimize import minimize
 from dcpyps import dataset
 from dcpyps import mechanism
 from dcprogs.likelihood import Log10Likelihood
+from scalcs import scalcslib as scl
+from scalcs import scplotlib as scpl
+
 
 
 def dcprogslik(x):
     mec.theta_unsqueeze(np.exp(x))
     mec.set_eff('c', 100e-9)
     return -likelihood(mec.Q) * logfac
-
 
 def printiter(theta):
     global iternum
@@ -25,7 +28,6 @@ def printiter(theta):
     if iternum % 10 == 0:
         print("iteration # {0:d}; log-lik = {1:.6f}".format(iternum, -lik))
         print(np.exp(theta))
-
 
 def mechanism_RO(rates):
 
@@ -41,7 +43,6 @@ def mechanism_RO(rates):
     complete_mechanism.set_eff('c', 100e-9)
 
     return complete_mechanism
-
 
 def mechanism_RFO(rates):
 
@@ -74,7 +75,6 @@ for file_name in config.file.unique():
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
     single_cell.reset_index(inplace=True)
 
-
     # TODO: function for tcritscaling
     tcrit_scale = 1
     tres_scale = 1
@@ -84,13 +84,14 @@ for file_name in config.file.unique():
     sc_tres = (single_cell.at[0, 'tres']/1000000)*tres_scale
     sc_tcrit = (single_cell.at[0, 'tcrit']/1000)*tcrit_scale
 
-    # TODO: temporary commented out for CO testings
-    '''
-    sc_t1_exp = single_cell.at[0, 't1_exp']
-    sc_t2_exp = single_cell.at[0, 't2_exp']
-    sc_p1_exp = single_cell.at[0, 'p1_exp']
-    sc_p2_exp = single_cell.at[0, 'p2_exp']
-    '''
+    # experimental event times, for further analysis, works only for CFO
+    # needs to be in a config file, not supported by fit_HJCFIT_config.py
+    if sc_model == 'CFO':
+        sc_t1_exp = single_cell.at[0, 't1_exp']
+        sc_t2_exp = single_cell.at[0, 't2_exp']
+        sc_p1_exp = single_cell.at[0, 'p1_exp']
+        sc_p2_exp = single_cell.at[0, 'p2_exp']
+
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
@@ -141,28 +142,28 @@ for file_name in config.file.unique():
     lik = dcprogslik(res.x)
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
-    # TODO: temporary commented out for CO testings
-    '''
-    print(scl.printout_distributions(mec, sc_tres))
-    shuts = scl.printout_distributions(mec, sc_tres)
+    # plot and event times of shuts, works only for CFO model
+    if sc_model == 'CFO':
+        print(scl.printout_distributions(mec, sc_tres))
+        shuts = scl.printout_distributions(mec, sc_tres)
 
-    t1_mod = shuts.splitlines()[10].split('\t')[1]
-    p1_mod = shuts.splitlines()[10].split('\t')[2]
-    t2_mod = shuts.splitlines()[11].split('\t')[1]
-    p2_mod = shuts.splitlines()[11].split('\t')[2]
+        t1_mod = shuts.splitlines()[10].split('\t')[1]
+        p1_mod = shuts.splitlines()[10].split('\t')[2]
+        t2_mod = shuts.splitlines()[11].split('\t')[1]
+        p2_mod = shuts.splitlines()[11].split('\t')[2]
 
-    shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
+        shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
 
-    t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-    plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-    plt.ylabel('fshut(t)')
-    plt.xlabel('Shut time, ms')
-    plt.title(file_name + ' ' + sc_type + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) + '\n' + shuts_format)
-    print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-    plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
-    plt.close()
-    #plt.show()
-    '''
+        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        plt.ylabel('fshut(t)')
+        plt.xlabel('Shut time, ms')
+        plt.title(file_name + ' ' + sc_type + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) + '\n' + shuts_format)
+        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+        plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
+        plt.close()
+        #plt.show()
+
 
     if sc_model == 'CO':
 
