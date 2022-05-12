@@ -17,7 +17,7 @@ sysmax=4
 while (($sys <= $sysmax))
 do
         cd sys${sys}
-        gmx grompp -f ../mdp/step7_production.mdp -o step7_production -c step6.6_equilibration.gro -p ../system.top -n ../index.ndx
+        gmx grompp -f ../mdp/step7_production.mdp -o step7_production -c step6.6_equilibration.gro -r ../step5_charmm2gmx.pdb -p ../system.top -n ../index.ndx
         cd ..
         sys=$((sys+1))
 done

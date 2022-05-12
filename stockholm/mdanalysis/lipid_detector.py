@@ -4,7 +4,7 @@ import pandas as pd
 import argparse
 
 parser = argparse.ArgumentParser()
-#python ~/repos/bioscripts/stockholm/mdanalysis/lipid_detector.py --pdb /mnt/my_cephfs/as_retraj/Phenobarb/sim/phenobarb_holo_protligpopcion.pdb --dir /mnt/my_cephfs/as_retraj/Phenobarb/sim/MD --l_type phenobarbital --l_state holo --ord ABCDE --xtc phenobarb_holo_protligpopcion_MD2.xtc --num 2
+#python ~/repos/bioscripts/stockholm/mdanalysis/lipid_detector.py --pdb /mnt/my_cephfs/as_retraj/Phenobarb/sim/phenobarb_holo_protligpopcion.pdb --dir /mnt/my_cephfs/as_retraj/Phenobarb/sim/MD --l_type phenobarbital --l_state holo --ord ABCDE --xtc phenobarb_holo_protligpopcion_MD2.xtc --num 2 --rad 6
 
 parser.add_argument("--pdb")    # full path to pdb
 parser.add_argument("--ord")    # chain id order

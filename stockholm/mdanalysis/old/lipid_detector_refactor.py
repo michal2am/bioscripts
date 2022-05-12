@@ -77,7 +77,7 @@ def check_interfaces(i):
 
         for ts in tqdm(U.trajectory):
             for interface in interfaces_all_systems[current_sys]:
-                interface.lipids_contacts.append(0) if len(interface.lipids) == 0 else interface.lipids_contacts.append(1)
+                interface.lipids_distances.append(0) if len(interface.lipids) == 0 else interface.lipids_distances.append(1)
 
 for i in range(1, dir_num + 1):
     check_interfaces(i)

@@ -87,7 +87,7 @@ for i in range(1, dir_num + 1):
         for ts in tqdm(U.trajectory):
             for interface in interfaces_all_systems[current_sys]:
                 lipid_atoms = U.select_atoms(interface.lipids_selection)
-                interface.lipids_contacts.append(0) if len(lipid_atoms) == 0 else interface.lipids_contacts.append(1)
+                interface.lipids_distances.append(0) if len(lipid_atoms) == 0 else interface.lipids_distances.append(1)
 
 all_complete = pd.DataFrame()
 
