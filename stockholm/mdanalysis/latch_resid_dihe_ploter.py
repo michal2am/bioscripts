@@ -38,14 +38,17 @@ def selective_plot_dihe(data, selected_lig, title, file):
         row='ligand_state',
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
         height=4, aspect=2,
-        facet_kws={'sharey':False}
+        common_norm=False,
+        facet_kws={'sharey':False},
+        row_order = ['holo', 'apo'],
+        hue_order=['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam','zolpidem']
     )
-    g.set(xlim=(0, 360))
+
+    g.set(xlim=(-10, 370), xlabel=r'$\beta$2M286 dihedral angle [$\degree$]', yticklabels=[], ylabel=None, yticks=[])
     g.set_titles("{row_name}")
     g.fig.suptitle(title)
     g.fig.subplots_adjust(top=0.8)
-    g.despine(trim=True)
-    # g.set_axis_labels("", "")
+    g.despine(trim=False, left=True)
     g.legend.set_title("")
 
     plt.savefig('latch_dihe_sns_{}.png'.format(file), dpi=300)
@@ -58,5 +61,3 @@ selective_plot_dihe(dihe_data, ['gaba', 'bicuculline', 'flumazenil', 'phenobarbi
 selective_plot_dihe(dihe_data, ['etomidate', 'propofol', 'diazepam', 'zolpidem'],
                r'$\beta$/$\alpha$ interface' +'\n' +'(directly bonding ligands)', 'BA_occu')
 
-selective_plot_dihe(dihe_data, ['bicuculline', 'flumazenil'],
-               r'$\beta$/$\alpha$ interface' +'\n' +'(negative ligands)', 'BA_negative')

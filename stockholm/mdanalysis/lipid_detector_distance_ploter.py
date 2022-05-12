@@ -21,6 +21,7 @@ for df in data_file:
     single_data = pd.read_csv(df)
     lipid_data = pd.concat([lipid_data, single_data], ignore_index=True)
 
+#lipid_data['ligand_typ'] = lipid_data['ligand_type'].astype('category')
 print(lipid_data)
 lipid_data = lipid_data[lipid_data.frame > 1600]
 
@@ -40,13 +41,17 @@ def selective_plot_distance(data, selected_lig, selected_int, title, file):
         row='ligand_state',
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
         height=4, aspect=2,
-        facet_kws={'sharey':False}
+        common_norm=False,
+        facet_kws={'sharey':False},
+        row_order=['holo', 'apo'],
+        hue_order=['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem']
     )
 
     g.set_titles("{row_name}")
+    g.set(xlim=(-1.5, 13), xlabel=r'distance to nearest lipid atom [$\AA$]', yticklabels=[], ylabel=None, yticks=[])
     g.fig.suptitle(title)
     g.fig.subplots_adjust(top=0.8)
-    g.despine(trim=True)
+    g.despine(trim=False, left=True)
     # g.set_axis_labels("", "")
     g.legend.set_title("")
 
@@ -78,3 +83,5 @@ selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'etomi
 
 selective_plot_distance(lipid_data, ['phenobarbital', 'diazepam'], ['gamma/beta'],
                         r'$\gamma$/$\beta$ interface' +'\n' +'(directly bonding ligands)', 'GB_occu')
+'''
+'''
