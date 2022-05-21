@@ -77,28 +77,28 @@ def REFER_time(merged):
 
     for control, mutant in zip(controls, mutants):
 
+        print(control, mutant)
+
         cont_mut = meta_REFERtimes[(meta_REFERtimes['residue'] == mutant) | (meta_REFERtimes['type'] == control)]
-        fig = px.scatter(cont_mut, x='equi', y='forward', title="{} REFER by event time".format(mutant),
-                         hover_name='residue_mut', hover_data=['alpha', 'beta'], color='residue_mut',
-                         template='presentation', width=600, height=600,)
-        fig.add_trace(
+
+        plot = (px.scatter(cont_mut, x='equi', y='forward',
+                           # title="{} REFER by HJCFIT CO, WT from {}".format(project, WT_project),
+                           title="{}".format(mutant.upper()),
+                           labels={'equilibrium_raw': 'log(equilibrium rate)',
+                                   'forward_raw': 'log(forward rate)'},
+                           color='type', template='presentation', width=400, height=400,
+                           hover_name='type', hover_data=['alpha', 'beta'],
+                           color_discrete_sequence=px.colors.qualitative.Dark24,
+                           ))
+        plot.add_trace(
             px.scatter(cont_mut, x='equi', y='forward',
                        trendline='ols',
                        color_discrete_sequence=px.colors.qualitative.Dark24,
                        ).data[1])
-        #fig.show()
 
-        with open(mutant + '_auerbach_times.html', 'w') as f:
-            f.write(fig.to_html())
-
+        plot.write_html(mutant + '_auerbach_times.html',)
 
 # Bambi's meta file with all the data
 meta = pd.read_csv('moje_meta_raw.csv', header=[0, 1])
-# my file with Bambi's modeling results, just a copy with rows corresponding to the cell file name and rates
-models = pd.read_csv('moje_meta_models_raw.csv', header=[0, 1])
-models.drop_duplicates(inplace=True, ignore_index=True)                                                                 # necessary for duplicated WT cells
 
-merged = meta.merge(models, left_on=[('meta', 'file')], right_on=[('meta', 'file')], how='left')                        # basically all Bambi's spreadsheets in one dataframe
-merged.to_csv('moje_meta_merged_raw.csv')
-
-REFER_time()
+REFER_time(meta)

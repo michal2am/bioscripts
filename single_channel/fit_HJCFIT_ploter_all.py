@@ -26,8 +26,11 @@ def plot_each_project_single_wt(wt):
         print(new_set)
 
         plot = (px.scatter(new_set, x='equilibrium_raw', y='forward_raw',
-                           title="{} REFER by HJCFIT CO, WT from {}".format(project, WT_project),
-                           color='type', template='presentation', width=600, height=600,
+                           # title="{} REFER by HJCFIT CO, WT from {}".format(project, WT_project),
+                           title="{}".format(project.upper()),
+                           labels={'equilibrium_raw': 'log(equilibrium rate)',
+                                   'forward_raw': 'log(forward rate)'},
+                           color='type', template='presentation', width=400, height=400,
                            hover_name='type', hover_data=['alpha', 'beta'],
                            color_discrete_sequence=px.colors.qualitative.Dark24,
                            ))
@@ -36,9 +39,9 @@ def plot_each_project_single_wt(wt):
                        trendline='ols',
                        color_discrete_sequence=px.colors.qualitative.Dark24,
                        ).data[1])
-        plot.show()
+        #plot.show()
 
-        plot.write_html(plot.to_html('project_' + project + '_wt_' + WT_project  + '_co.html'))
-        plot.write_image('lipid_contacts' + '_sum.png', width=800, height=1200, scale=2)
+        plot.write_html('project_' + project + '_wt_' + WT_project  + '_co.html')
+        plot.write_image('project_' + project + '_wt_' + WT_project  + '.png', width=400, height=400, scale=1)
 
-#plot_each_project_single_wt('e153')
+plot_each_project_single_wt('e153')
