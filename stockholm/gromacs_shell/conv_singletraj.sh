@@ -11,14 +11,21 @@ gmx trjconv -f $inname_xtc -s $inname_tpr -pbc whole -n $indexfile -o view1.xtc 
 $select
 EOF
 
+# this one returns perfectly centered, but lipidis diffuesed outside the box
 gmx trjconv -f view1.xtc -s $pdbfile -pbc nojump -n $indexfile -o view2.xtc <<EOF
 $select
 EOF
 
+# change -s tpr for pdb?
 gmx trjconv -f view2.xtc -s $inname_tpr -pbc mol -ur compact -center -n $indexfile -o $outname <<EOF
-#3
-0
+5
 $select
 EOF
 
 rm view1.xtc view2.xtc
+
+
+#gmx trjconv -f view2.xtc -s $inname_tpr -pbc mol -ur compact -center -n $indexfile -o $outname <<EOF
+#3
+#$select
+#EOF

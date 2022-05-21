@@ -39,7 +39,7 @@ def selective_plot_dihe(data, selected_lig, title, file):
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
         height=4, aspect=2,
         common_norm=False,
-        facet_kws={'sharey':False},
+        # facet_kws={'sharey':False},
         row_order = ['holo', 'apo'],
         hue_order=['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam','zolpidem']
     )

@@ -42,7 +42,7 @@ def selective_plot_distance(data, selected_lig, selected_int, title, file):
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
         height=4, aspect=2,
         common_norm=False,
-        facet_kws={'sharey':False},
+        # facet_kws={'sharey':False},
         row_order=['holo', 'apo'],
         hue_order=['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem']
     )
@@ -61,27 +61,27 @@ def selective_plot_distance(data, selected_lig, selected_int, title, file):
 
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'phenobarbital'],
                         ['1st_beta/alpha', '2nd_beta/alpha'],
-                        r'$\beta$/$\alpha$ interface' +'\n' +'(not directly bonding ligands)', 'BA_free')
+                        r'$\beta$/$\alpha$ interface' +'\n' +'(not directly binding ligands)', 'BA_free')
 
 selective_plot_distance(lipid_data, ['etomidate', 'propofol', 'diazepam', 'zolpidem'],
                         ['1st_beta/alpha', '2nd_beta/alpha'],
-                        r'$\beta$/$\alpha$ interface' +'\n' +'(directly bonding ligands)', 'BA_occu')
+                        r'$\beta$/$\alpha$ interface' +'\n' +'(directly binding ligands)', 'BA_occu')
 
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
                         ['alpha/beta'],
-                        r'$\alpha$/$\beta$ interface' +'\n' +'(not directly bonding ligands)', 'AB_free')
+                        r'$\alpha$/$\beta$ interface' +'\n' +'(not directly binding ligands)', 'AB_free')
 
 selective_plot_distance(lipid_data, ['phenobarbital'], ['alpha/beta'],
-                        r'$\alpha$/$\beta$ interface' +'\n' +'(directly bonding ligands)', 'AB_occu')
+                        r'$\alpha$/$\beta$ interface' +'\n' +'(directly binding ligands)', 'AB_occu')
 
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
                         ['alpha/gamma'],
-                        r'$\alpha$/$\gamma$ interface' +'\n' +'(not directly bonding ligands)', 'AG_free')
+                        r'$\alpha$/$\gamma$ interface' +'\n' +'(not directly binding ligands)', 'AG_free')
 
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'etomidate', 'propofol', 'zolpidem'],
-                        ['gamma/beta'], r'$\gamma$/$\beta$ interface' +'\n' +'(not directly bonding ligands)', 'GB_free')
+                        ['gamma/beta'], r'$\gamma$/$\beta$ interface' +'\n' +'(not directly binding ligands)', 'GB_free')
 
 selective_plot_distance(lipid_data, ['phenobarbital', 'diazepam'], ['gamma/beta'],
-                        r'$\gamma$/$\beta$ interface' +'\n' +'(directly bonding ligands)', 'GB_occu')
+                        r'$\gamma$/$\beta$ interface' +'\n' +'(directly binding ligands)', 'GB_occu')
 '''
 '''

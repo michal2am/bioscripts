@@ -44,7 +44,7 @@ do
         module unload gromacs
         module load gromacs/2021.5 gromacs=gmx_mpi
 
-        mpirun -np 4 gmx_mpi mdrun -v -deffnm ${istep} -multidir sys1/ sys2/ sys3/ sys4/ -nb gpu -pme gpu -update gpu -bonded gpu
+        mpirun -np 4 gmx_mpi mdrun -v -deffnm ${istep} -cpi -multidir sys1/ sys2/ sys3/ sys4/ -nb gpu -pme gpu -update gpu -bonded gpu
 
         cnt=$((cnt+1))
 
