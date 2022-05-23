@@ -33,11 +33,6 @@ do
         sys=$((sys+1))
 done
 
-module unload gromacs
-module load gromacs/2021.5
-
-mpirun -np 4 gmx_mpi mdrun -v -deffnm step6.0_minimization -multidir sys1/ sys2/ sys3/ sys4/
-
 # minimization step 1
 
 sys=1
