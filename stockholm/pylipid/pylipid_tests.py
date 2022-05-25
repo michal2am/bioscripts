@@ -2,18 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pylipid.api import LipidInteraction
 from pylipid.util import check_dir
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-l", "--lipid")
+args = parser.parse_args()
 
 
-trajfile_list = ["step7_production.parts1to8.xtc"]
-topfile_list = ["../6x3z_CG.pdb"]
+trajfile_list = ["sys1/step7_production.parts1to8.xtc", "sys2/step7_production.parts1to8.xtc",
+                 "sys3/step7_production.parts1to8.xtc", "sys4/step7_production.parts1to8.xtc"]
+topfile_list = ["step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb",]
 
 dt_traj = None            # not needed
-stride = 50
+stride = 1
 
-lipid = "CHOL"          # residue name in the topology.
+lipid = args.lipid      # residue name in the topology.
 lipid_atoms = None      # means all
-cutoffs = [0.5, 0.8]    # dual-cutoff scheme for coarse-grained simulations
-pdb_file_to_map = None  # need to generate pdb? or maybe charmm-gui provides?
+cutoffs = [0.6, 0.8]    # dual-cutoff scheme for coarse-grained simulations
+pdb_file_to_map = '6x3z_prot.pdb'  # need to generate pdb? or maybe charmm-gui provides?
 
 
 binding_site_size = 4   # binding site should contain at least four residues.
@@ -28,7 +34,9 @@ timeunit = "us"
 resi_offset = 0         # shift the residue index, useful for MARTINI models.
 radii = None            # Martini 2.2 are defined in pylipid
 fig_format = "png"
-num_cpus = 8
+num_cpus = 4
+
+#TODO: chain ids ... how are chains detected for pdbs in Coordinate dir?
 
 #####################################
 ###### no changes needed below ######
@@ -38,7 +46,14 @@ num_cpus = 8
 li = LipidInteraction(trajfile_list, topfile_list=topfile_list, cutoffs=cutoffs, lipid=lipid,
                       lipid_atoms=lipid_atoms, nprot=1, resi_offset=resi_offset,
                       timeunit=timeunit, save_dir=save_dir, stride=stride, dt_traj=dt_traj)
+
+
 li.collect_residue_contacts()
+#li.compute_residue_duration(residue_id=None)
+
+#print(*li.residue_list, sep='\n')
+#print(li.dataset)
+
 li.compute_residue_duration(residue_id=None)
 li.compute_residue_occupancy(residue_id=None)
 li.compute_residue_lipidcount(residue_id=None)
