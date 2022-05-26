@@ -14,7 +14,7 @@ trajfile_list = ["sys1/step7_production.parts1to8.xtc", "sys2/step7_production.p
 topfile_list = ["step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb",]
 
 dt_traj = None            # not needed
-stride = 1
+stride = 10
 
 lipid = args.lipid      # residue name in the topology.
 lipid_atoms = None      # means all
@@ -36,7 +36,6 @@ radii = None            # Martini 2.2 are defined in pylipid
 fig_format = "png"
 num_cpus = 4
 
-#TODO: chain ids ... how are chains detected for pdbs in Coordinate dir?
 
 #####################################
 ###### no changes needed below ######

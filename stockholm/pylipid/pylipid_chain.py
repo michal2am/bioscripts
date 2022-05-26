@@ -3,6 +3,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lipid")
+parser.add_argument("-s", "--system")
 args = parser.parse_args()
 
 dataset = pd.read_csv('Interaction_{}/Dataset_{}/Dataset.csv'.format(args.lipid, args.lipid))      # pylipid generated dataset file
@@ -30,9 +31,11 @@ with open(pdb_cg) as f:
 
 resid_data = pd.DataFrame(list(zip(residues, residueIds, residueChains)), columns=['Residue', 'Residue ID', 'Residue Chain'])
 resid_data['Lipid'] = args.lipid
+resid_data['Residue Num'] = resid_data['Residue'].apply(lambda num: int(num[0:-3]))
+resid_data['System'] = args.system
 
 new_dataset = resid_data.merge(dataset)
-new_dataset.to_csv(new_dataset_file)
+new_dataset.to_csv(new_dataset_file, index=False)
 
 # selected = new_dataset.iloc[:, 0:15]
 # selected.drop(axis=1, inplace=True, labels=['Occupancy std', 'Lipid Count', 'Lipid Count std'])

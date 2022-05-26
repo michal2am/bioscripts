@@ -7,9 +7,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--datasets", nargs='+')
 args = parser.parse_args()
 
-datasets = pd.concat([pd.read_csv(dataset).drop(['Unnamed: 0'],axis=1) for dataset in args.datasets])
+datasets = pd.concat([pd.read_csv(dataset) for dataset in args.datasets])
 datasets.reset_index(inplace=True, drop=True)
-datasets['Residue Num'] = datasets['Residue'].apply(lambda num: int(num[0:-3]))
 datasets.to_csv('all_dataset.csv')
 
 print(datasets)
