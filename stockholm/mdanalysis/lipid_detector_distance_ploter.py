@@ -58,7 +58,12 @@ def selective_plot_distance(data, selected_lig, selected_int, title, file):
     plt.savefig('lipid_distances_sns_{}.png'.format(file), dpi=300)
     plt.show()
 
+'''
+selective_plot_distance(lipid_data, ['diazepam'],
+                        ['1st_beta/alpha', '2nd_beta/alpha'],
+                        r'$\beta$/$\alpha$ interface' +'\n' +'diazepam test', 'diazepam_test')
 
+'''
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'phenobarbital'],
                         ['1st_beta/alpha', '2nd_beta/alpha'],
                         r'$\beta$/$\alpha$ interface' +'\n' +'(not directly binding ligands)', 'BA_free')
@@ -83,5 +88,4 @@ selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'etomi
 
 selective_plot_distance(lipid_data, ['phenobarbital', 'diazepam'], ['gamma/beta'],
                         r'$\gamma$/$\beta$ interface' +'\n' +'(directly binding ligands)', 'GB_occu')
-'''
-'''
+

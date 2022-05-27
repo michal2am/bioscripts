@@ -21,7 +21,7 @@ def res_plot(data):
     sns.set_context("talk")
     g = sns.relplot(
         data=datasets[datasets['Occupancy'] > 0],
-        x='Residue Num', y='Occupancy', hue='Lipid',
+        x='Residue Num', y='Residence Time', hue='Lipid',
         row='Residue Chain',
         col='Lipid',
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
