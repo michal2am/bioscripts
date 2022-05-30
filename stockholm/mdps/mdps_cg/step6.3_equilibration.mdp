@@ -2,7 +2,7 @@ define                   = -DPOSRES -DPOSRES_FC=500 -DBILAYER_LIPIDHEAD_FC=100
 integrator               = md
 tinit                    = 0.0
 dt                       = 0.005
-nsteps                   = 20000000
+nsteps                   = 2000000
 
 nstlog                   = 1000
 nstenergy                = 1000

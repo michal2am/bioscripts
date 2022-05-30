@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -p lindahl
-#SBATCH -J 6x3z_wt_abu
+#SBATCH -J jobname
 #SBATCH -t 1:00:00
 #SBATCH -N 1
 #SBATCH -C gpu --gres=gpu:4

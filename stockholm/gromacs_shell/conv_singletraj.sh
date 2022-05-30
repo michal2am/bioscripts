@@ -13,7 +13,7 @@ gmx trjconv -f $inname_xtc -s $inname_tpr -pbc whole -n $indexfile -o view1.xtc 
 $select
 EOF
 
-# this one returns perfectly centered, but lipidis diffuesed outside the box
+# this one returns perfectly centered, but lipids diffused outside the box
 gmx trjconv -f view1.xtc -s $pdbfile -pbc nojump -n $indexfile -o view2.xtc <<EOF
 $select
 EOF
