@@ -10,11 +10,11 @@ inname_tpr=$6 # step7_production.tpr
 outname=$7    # just the template, e.g. gaba_holo_protligpopcion_MD
 
 cd sys1
-~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh $pdbfile $indexfile $select $center $inname_xtc $inname_tpr "${outname}1.xtc" &
+~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh ../$pdbfile ../$indexfile $select $center $inname_xtc $inname_tpr ${outname}1.xtc &
 cd ../sys2
-~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh $pdbfile $indexfile $select $center $inname_xtc $inname_tpr "${outname}2.xtc" &
+~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh ../$pdbfile ../$indexfile $select $center $inname_xtc $inname_tpr ${outname}2.xtc &
 cd ../sys3
-~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh $pdbfile $indexfile $select $center $inname_xtc $inname_tpr "${outname}3.xtc" &
+~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh ../$pdbfile ../$indexfile $select $center $inname_xtc $inname_tpr ${outname}3.xtc &
 cd ../sys4
-~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh $pdbfile $indexfile $select $center $inname_xtc $inname_tpr "${outname}4.xtc" &
+~/repos/bioscripts/stockholm/gromacs_shell/conv_singletraj.sh ../$pdbfile ../$indexfile $select $center $inname_xtc $inname_tpr ${outname}4.xtc &
 cd ..

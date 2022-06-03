@@ -6,12 +6,18 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lipid")
+parser.add_argument("-c", "--cgpdb")
+parser.add_argument('-a', '--aapdb')
 args = parser.parse_args()
 
 
-trajfile_list = ["sys1/step7_production.parts1to8.xtc", "sys2/step7_production.parts1to8.xtc",
-                 "sys3/step7_production.parts1to8.xtc", "sys4/step7_production.parts1to8.xtc"]
-topfile_list = ["step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb","step5_charmm2gmx.pdb",]
+prefix = args.cgpdb[0:-4]
+
+#trajfile_list = ['sys1/{}_MD1.xtc'.format(prefix), 'sys2/{}_MD2.xtc'.format(prefix),
+#                 'sys3/{}_MD3.xtc'.format(prefix), 'sys4/{}_MD4.xtc'.format(prefix),]
+trajfile_list = ['sys1/step7_production.xtc', 'sys2/step7_production.xtc',
+                 'sys3/step7_production.xtc', 'sys4/step7_production.xtc',]
+topfile_list = [args.cgpdb] * 4
 
 dt_traj = None            # not needed
 stride = 10
@@ -19,7 +25,7 @@ stride = 10
 lipid = args.lipid      # residue name in the topology.
 lipid_atoms = None      # means all
 cutoffs = [0.6, 0.8]    # dual-cutoff scheme for coarse-grained simulations
-pdb_file_to_map = '6x3z_prot.pdb'  # need to generate pdb? or maybe charmm-gui provides?
+pdb_file_to_map = args.aapdb  # need to generate pdb? or maybe charmm-gui provides?
 
 
 binding_site_size = 4   # binding site should contain at least four residues.
@@ -48,10 +54,6 @@ li = LipidInteraction(trajfile_list, topfile_list=topfile_list, cutoffs=cutoffs,
 
 
 li.collect_residue_contacts()
-#li.compute_residue_duration(residue_id=None)
-
-#print(*li.residue_list, sep='\n')
-#print(li.dataset)
 
 li.compute_residue_duration(residue_id=None)
 li.compute_residue_occupancy(residue_id=None)
