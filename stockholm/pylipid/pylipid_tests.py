@@ -13,10 +13,10 @@ args = parser.parse_args()
 
 prefix = args.cgpdb[0:-4]
 
-#trajfile_list = ['sys1/{}_MD1.xtc'.format(prefix), 'sys2/{}_MD2.xtc'.format(prefix),
-#                 'sys3/{}_MD3.xtc'.format(prefix), 'sys4/{}_MD4.xtc'.format(prefix),]
-trajfile_list = ['sys1/step7_production.xtc', 'sys2/step7_production.xtc',
-                 'sys3/step7_production.xtc', 'sys4/step7_production.xtc',]
+trajfile_list = ['sys1/{}_MD1.xtc'.format(prefix), 'sys2/{}_MD2.xtc'.format(prefix),
+                 'sys3/{}_MD3.xtc'.format(prefix), 'sys4/{}_MD4.xtc'.format(prefix),]
+#trajfile_list = ['sys1/step7_production.xtc', 'sys2/step7_production.xtc',
+#                 'sys3/step7_production.xtc', 'sys4/step7_production.xtc',]
 topfile_list = [args.cgpdb] * 4
 
 dt_traj = None            # not needed

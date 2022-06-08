@@ -11,8 +11,8 @@ datasets = pd.concat([pd.read_csv(dataset) for dataset in args.datasets])
 datasets.reset_index(inplace=True, drop=True)
 datasets.to_csv('all_dataset.csv')
 
-print(datasets)
-print(datasets[datasets['Occupancy'] > 15])
+# print(datasets)
+# print(datasets[datasets['Occupancy'] > 15])
 
 
 def res_plot_system(data):
@@ -46,14 +46,17 @@ def res_plot_system(data):
 
 #res_plot_system(datasets)
 
-lipid='CHOL'
-def res_plot_lipid(data):
+def res_plot_lipid(data, lipid, parameter):
 
     sns.set_style()
     sns.set_context("talk")
+    data = data[data['Lipid'] == lipid]
+
+    print(data.sort_values(parameter, ascending=False)[['Residue', 'Residue Chain TypePos', 'System', parameter]].iloc[0:25, :])
+
     g = sns.relplot(
-        data=data[data['Occupancy'] > 0],
-        x='Residue Num', y='Duration', hue='Residue Chain TypePos',
+        data=data[data[parameter] > 0],
+        x='Residue Num', y=parameter, hue='Residue Chain TypePos',
         row='Residue Chain Type',
         col='System',
         # palette=sns.xkcd_palette(["pale red", 'windows blue']),
@@ -66,15 +69,18 @@ def res_plot_lipid(data):
 
     g.set_titles("{row_name} | {col_name}")
     # g.set(xlim=(-1.5, 13), xlabel=r'distance to nearest lipid atom [$\AA$]', yticklabels=[], ylabel=None, yticks=[])
-    # g.fig.suptitle(title)
-    # g.fig.subplots_adjust(top=0.8)
+    g.fig.suptitle(lipid)
+    g.fig.subplots_adjust(top=0.9)
     # g.despine(trim=False, left=True)
     # g.set_axis_labels("", "")
-    # g.legend.set_title("")
+    g.legend.set_title('subunit_position')
 
     # plt.savefig('lipid_distances_sns_{}.png'.format(file), dpi=300)
-    plt.savefig('lipid_occupancy.png', dpi=300)
+    # plt.text(x=250, y=0.5, s='test')
+    plt.savefig('{}_{}.png'.format(lipid, parameter), dpi=300)
     plt.show()
 
-
-res_plot_lipid(datasets[datasets['Lipid'] == lipid])
+lipids = ['POPC', 'CHOL', 'PUPE', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
+parameter = 'Residence Time'
+for lipid in lipids:
+    res_plot_lipid(datasets, lipid, parameter)
