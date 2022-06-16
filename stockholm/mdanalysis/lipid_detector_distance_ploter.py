@@ -58,10 +58,55 @@ def selective_plot_distance(data, selected_lig, selected_int, title, file):
     plt.savefig('lipid_distances_sns_{}.png'.format(file), dpi=300)
     plt.show()
 
-'''
-selective_plot_distance(lipid_data, ['diazepam'],
-                        ['1st_beta/alpha', '2nd_beta/alpha'],
-                        r'$\beta$/$\alpha$ interface' +'\n' +'diazepam test', 'diazepam_test')
+def selective_plot_distance_custom(data, selected_lig, selected_int, selected_state, title, file):
+
+    data = data[data.ligand_type.isin(selected_lig) & data.interface.isin(selected_int) & data.ligand_state.isin(selected_state)]
+
+    sns.set_style()
+    sns.set_context("talk")
+    g = sns.displot(
+        data=data, kind="kde",
+        x='distance', hue='ligand_type',
+        # row='ligand_state',
+        # palette=sns.xkcd_palette(["pale red", 'windows blue']),
+        height=4, aspect=2,
+        common_norm=False,
+        # facet_kws={'sharey':False},
+        # row_order=['holo', 'apo'],
+        hue_order=['gaba', 'bicuculline', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem']
+    )
+
+    g.set_titles("{row_name}")
+    g.set(xlim=(-1.5, 13), xlabel=r'distance to nearest lipid atom [$\AA$]', yticklabels=[], ylabel=None, yticks=[])
+    g.fig.suptitle(title)
+    g.fig.subplots_adjust(top=0.8)
+    g.despine(trim=False, left=True)
+    # g.set_axis_labels("", "")
+    g.legend.set_title("")
+
+    plt.savefig('lipid_distances_sns_{}.png'.format(file), dpi=300)
+    plt.show()
+
+
+selective_plot_distance_custom(lipid_data, ['gaba', 'bicuculline', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
+                        ['1st_beta/alpha', '2nd_beta/alpha'], ['apo'],
+                        r'$\beta$/$\alpha$ interface' +'\n' +'(apo state)', 'BA_all_apo')
+
+selective_plot_distance_custom(lipid_data, ['bicuculline',],
+                        ['1st_beta/alpha', '2nd_beta/alpha'], ['holo'],
+                        r'$\beta$/$\alpha$ interface' +'\n' +'(holo state)', 'BA_bicuculline_holo')
+
+selective_plot_distance_custom(lipid_data, ['gaba', 'bicuculline', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
+                        ['alpha/beta'], ['apo'],
+                        r'$\alpha$/$\beta$ interface' +'\n' +'(apo state)', 'AB_all_apo')
+
+selective_plot_distance_custom(lipid_data, ['gaba', 'bicuculline', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
+                        ['alpha/gamma'], ['apo'],
+                        r'$\alpha$/$\gamma$ interface' +'\n' +'(apo state)', 'AG_all_apo')
+
+selective_plot_distance_custom(lipid_data, ['gaba', 'bicuculline', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem'],
+                        ['gamma/beta'], ['apo'],
+                        r'$\gamma$/$\beta$ interface' +'\n' +'(apo state)', 'GB_all_apo')
 
 '''
 selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'phenobarbital'],
@@ -88,4 +133,4 @@ selective_plot_distance(lipid_data, ['gaba', 'bicuculline', 'flumazenil', 'etomi
 
 selective_plot_distance(lipid_data, ['phenobarbital', 'diazepam'], ['gamma/beta'],
                         r'$\gamma$/$\beta$ interface' +'\n' +'(directly binding ligands)', 'GB_occu')
-
+'''

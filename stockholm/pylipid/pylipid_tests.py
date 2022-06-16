@@ -20,7 +20,7 @@ trajfile_list = ['sys1/{}_MD1.xtc'.format(prefix), 'sys2/{}_MD2.xtc'.format(pref
 topfile_list = [args.cgpdb] * 4
 
 dt_traj = None            # not needed
-stride = 10
+stride = 15             # timestep 20 fs, xtc freq 200 000 => 0.004 us/frame, stride 15 => 0.06 us resolution
 
 lipid = args.lipid      # residue name in the topology.
 lipid_atoms = None      # means all
