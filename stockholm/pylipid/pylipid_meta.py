@@ -77,10 +77,11 @@ def res_plot_lipid(data, lipid, systems, parameter):
     # g.set_axis_labels("", "")
     g.legend.set_title('subunit_position')
 
-    plt.savefig('{}_{}.png'.format(lipid, parameter), dpi=300)
-    plt.show()
+    plt.savefig('{}_{}.png'.format(lipid, parameter.replace(" ", "")), dpi=300)
+    # plt.show()
 
 lipids = ['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
+#lipids = ['CHOL']
 parameter = 'Residence Time'
 for lipid in lipids:
     res_plot_lipid(datasets, lipid, ['6x3z', '6x3s'], parameter)
