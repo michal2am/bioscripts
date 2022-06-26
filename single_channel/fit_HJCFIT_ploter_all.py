@@ -33,7 +33,7 @@ def plot_each_project_single_wt(wt):
         plot = (px.scatter(new_set, x='equilibrium_raw', y='forward_raw',
                            # title="{} REFER by HJCFIT CO, WT from {}".format(project, WT_project),
                            title="{}".format(project.upper()),
-                           labels={'equilibrium_raw': 'log(equilibrium rate)',
+                           labels={'equilibrium_raw': 'log(equilibrium constant)',
                                    'forward_raw': 'log(forward rate)'},
                            color='type', template='presentation', width=400, height=400,
                            hover_name='type', hover_data=['alpha', 'beta'],
