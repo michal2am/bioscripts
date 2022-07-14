@@ -38,6 +38,8 @@ with open(pdb_cg) as f:
                 prev_resnum = atom[4]
                 residueId += 1
 
+
+
 resid_data = pd.DataFrame(list(zip(residues, residueIds, residueChains)), columns=['Residue', 'Residue ID', 'Residue Chain'])
 resid_data['Lipid'] = args.lipid
 resid_data['Residue Num'] = resid_data['Residue'].apply(lambda num: int(num[0:-3]))
@@ -46,11 +48,25 @@ resid_data['System'] = args.system
 resid_data['Residue Chain Type'] = resid_data['Residue Chain'].apply(lambda chain: chains_type[chain])
 resid_data['Residue Chain TypePos'] = resid_data['Residue Chain'].apply(lambda chain: chains_typepos[chain])
 
-dataset.drop(['Residue'], axis=1, inplace=True)             # in case of pdb input for pylipid messed up numbering
-new_dataset = resid_data.merge(dataset, on=['Residue ID', 'Residue Name'])
+# dataset.drop(['Residue'], axis=1, inplace=True)             # in case of pdb input for pylipid messed up numbering
+new_dataset = resid_data.merge(dataset, on=['Residue','Residue ID', 'Residue Name'])
+
+
+# reads raw pickles with all duration times for each replica
+
+resid_times = pd.read_pickle('Interaction_{}/Dataset_{}/Duration.pickle'.format(args.lipid, args.lipid))
+resid_times = pd.DataFrame.from_dict(resid_times, orient='index')
+resid_times['Residue ID'] = resid_times.index
+resid_times['Durations All'] = resid_times.apply(lambda row: row[0] + row[1] + row[2] + row[3], axis=1)
+resid_times.rename(columns={0: 'Durations Sys1', 1: 'Durations Sys2', 2: 'Durations Sys3', 3: 'Durations Sys4'}, inplace=True)
+
+new_dataset = new_dataset.merge(resid_times, on=['Residue ID'])
 
 new_dataset.to_csv(new_dataset_file, index=False)
-print(new_dataset)
+
+# print(new_dataset[new_dataset['Residue ID'] == 951])
+# print(resid_times[951])
+
 if len(dataset) != len(new_dataset):
     print('Problem with residue data merging, some residues omitted!')
 

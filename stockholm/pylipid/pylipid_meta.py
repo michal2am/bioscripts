@@ -2,6 +2,8 @@ import pandas as pd
 import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
+import statistics
+import ast
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--datasets", nargs='+')
@@ -9,6 +11,15 @@ args = parser.parse_args()
 
 datasets = pd.concat([pd.read_csv(dataset) for dataset in args.datasets])
 datasets.reset_index(inplace=True, drop=True)
+
+# those are to fix dictionaries read from pickles
+datasets['Durations Sys1'] = datasets['Durations Sys1'].apply(lambda values: ast.literal_eval(values))
+datasets['Durations Sys2'] = datasets['Durations Sys2'].apply(lambda values: ast.literal_eval(values))
+datasets['Durations Sys3'] = datasets['Durations Sys3'].apply(lambda values: ast.literal_eval(values))
+datasets['Durations Sys4'] = datasets['Durations Sys4'].apply(lambda values: ast.literal_eval(values))
+datasets['Durations All'] = datasets['Durations All'].apply(lambda values: ast.literal_eval(values))
+
+
 datasets.to_csv('all_dataset.csv')
 
 # print(datasets)
@@ -51,11 +62,11 @@ def res_plot_lipid(data, lipid, systems, parameter):
     sns.set_style()
     sns.set_context("talk")
     data = data[(data['Lipid'] == lipid) & (data['System'].isin(systems))]
-    print(data)
+    # print(data)
 
     for subunit in data['Residue Chain Type'].unique():
         data_subunit = data[data['Residue Chain Type'] == subunit]
-        print(data_subunit.sort_values(parameter, ascending=False)[['Residue', 'Residue ID', 'Residue Chain Type','Residue Chain TypePos', 'System', parameter]].iloc[0:25, :])
+        # print(data_subunit.sort_values(parameter, ascending=False)[['Residue', 'Residue ID', 'Residue Chain Type','Residue Chain TypePos', 'System', parameter]].iloc[0:25, :])
 
     g = sns.relplot(
         data=data[data[parameter] > 0],
@@ -77,11 +88,33 @@ def res_plot_lipid(data, lipid, systems, parameter):
     # g.set_axis_labels("", "")
     g.legend.set_title('subunit_position')
 
-    plt.savefig('{}_{}.png'.format(lipid, parameter.replace(" ", "")), dpi=300)
+    plt.savefig('{}_{}_{}.png'.format(lipid, parameter.replace(" ", ""), ''.join([str(sys) for sys in systems])), dpi=300)
     # plt.show()
 
-lipids = ['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
-#lipids = ['CHOL']
-parameter = 'Residence Time'
-for lipid in lipids:
-    res_plot_lipid(datasets, lipid, ['6x3z', '6x3s'], parameter)
+
+make_plots = False
+print_tops = False
+
+if make_plots:
+    #lipids = ['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
+    lipids = ['CHOL']
+    parameters = ['Occupancy', 'Residence Time']
+    for parameter in parameters:
+        for lipid in lipids:
+            res_plot_lipid(datasets, lipid, ['6x3z', '6x3s'], parameter)
+            res_plot_lipid(datasets, lipid, ['7qn7', '7qn9'], parameter)
+
+if print_tops:
+    selected = datasets[(datasets['Lipid'] == 'CHOL') & (datasets['System'] == '6x3z')]
+    #selected = selected[selected['Binding Site ID'].isin([9])]
+    selected = selected.sort_values(by='Residence Time', ascending=False).iloc[0:50, :]
+    print(selected[['Residue', 'Residue ID', 'Residue Chain', 'Binding Site ID', 'Residence Time']])
+
+
+def test(residue):
+    print(residue[['System', 'Residue', 'Residue ID', 'Residue Chain TypePos']])
+
+datasets.apply(test, axis=1)
+
+#datasets['Durations Mean'] = datasets['Durations All'].apply(lambda durations: statistics.mean(durations))
+#print(datasets[['Duration', 'Durations Mean']])
