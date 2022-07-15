@@ -19,43 +19,9 @@ datasets['Durations Sys3'] = datasets['Durations Sys3'].apply(lambda values: ast
 datasets['Durations Sys4'] = datasets['Durations Sys4'].apply(lambda values: ast.literal_eval(values))
 datasets['Durations All'] = datasets['Durations All'].apply(lambda values: ast.literal_eval(values))
 
-
 datasets.to_csv('all_dataset.csv')
-
 # print(datasets)
-# print(datasets[datasets['Occupancy'] > 15])
 
-
-def res_plot_system(data):
-
-    sns.set_style()
-    sns.set_context("talk")
-    g = sns.relplot(
-        data=datasets[datasets['Occupancy'] > 0],
-        x='Residue Num', y='Occupancy', hue='Residue Chain TypePos',
-        row='Residue Chain Type',
-        col='Lipid',
-        # palette=sns.xkcd_palette(["pale red", 'windows blue']),
-        # height=4, aspect=2,
-        # common_norm=False,
-        # facet_kws={'sharey':False},
-        col_order=['POPC', 'DPSM', 'DPGS', 'PUPE', 'PAPS', 'PUPI', 'POP2', 'CHOL'],
-        # hue_order=['gaba', 'bicuculline', 'flumazenil', 'phenobarbital', 'etomidate', 'propofol', 'diazepam', 'zolpidem']
-    )
-
-    g.set_titles("{row_name} | {col_name}")
-    # g.set(xlim=(-1.5, 13), xlabel=r'distance to nearest lipid atom [$\AA$]', yticklabels=[], ylabel=None, yticks=[])
-    # g.fig.suptitle(title)
-    # g.fig.subplots_adjust(top=0.8)
-    # g.despine(trim=False, left=True)
-    # g.set_axis_labels("", "")
-    # g.legend.set_title("")
-
-    # plt.savefig('lipid_distances_sns_{}.png'.format(file), dpi=300)
-    plt.savefig('lipid_occupancy.png', dpi=300)
-    plt.show()
-
-#res_plot_system(datasets)
 
 def res_plot_lipid(data, lipid, systems, parameter):
 
@@ -92,8 +58,58 @@ def res_plot_lipid(data, lipid, systems, parameter):
     # plt.show()
 
 
+def event_times(system, lipid, time_tresh, n_tresh):
+    """
+    checks lipid interaction on the basis of raw event binding times and assigns results as beta parameter
+    :param system: pdb code for pylipid dataset and pdb file name and directory
+    :param lipid: CG residue name
+    :param time_tresh: minimum interaction time
+    :param n_tresh: minimum number of events of given time
+    :return:
+    """
+
+    def scan_times(residue):
+        # if ((max(residue['Durations Sys1']) > 2) & (max(residue['Durations Sys2']) > 2) & (max(residue['Durations Sys3']) > 2) & (max(residue['Durations Sys4']) > 2)):
+        filter_times = [t for t in residue['Durations All'] if t > time_tresh]
+        if len(filter_times) > n_tresh:
+            residue_ids.append(residue['Residue ID'])
+
+    residue_ids = []
+    datasets[(datasets['Lipid'] == lipid) & (datasets['System'] == system)].apply(scan_times, axis=1)
+    selected_byevents = datasets[
+        (datasets['Lipid'] == lipid) & (datasets['System'] == system) & (datasets['Residue ID'].isin(residue_ids))]
+
+    print(selected_byevents)
+
+    pdb = open('{}_CG_b3/{}_CG_b3.pdb'.format(system, system), 'r')
+    pdb_lines = pdb.readlines()
+    new_pdb_lines = []
+
+    for line in pdb_lines:
+        if 'PRO' in line:
+            atom = line.strip().split()
+            resname = atom[3]
+            resid = int(atom[5])
+            segname = atom[11]
+            detected = selected_byevents[
+                (selected_byevents['Residue Name'] == resname) & (selected_byevents['Residue Num'] == resid) & (
+                            selected_byevents['Residue Chain'] == segname)]
+            if len(detected) > 0:
+                new_line = line.strip()[0:62] + '1.00' + line.strip()[66:] + '\n'
+                new_pdb_lines.append(new_line)
+            else:
+                new_pdb_lines.append(line)
+        else:
+            new_pdb_lines.append(line)
+
+    new_pdb = open('{}_event_times.pdb'.format(system), 'w')
+    new_pdb.writelines(new_pdb_lines)
+    new_pdb.close()
+
+
 make_plots = False
 print_tops = False
+map_times = True
 
 if make_plots:
     #lipids = ['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
@@ -110,11 +126,5 @@ if print_tops:
     selected = selected.sort_values(by='Residence Time', ascending=False).iloc[0:50, :]
     print(selected[['Residue', 'Residue ID', 'Residue Chain', 'Binding Site ID', 'Residence Time']])
 
-
-def test(residue):
-    print(residue[['System', 'Residue', 'Residue ID', 'Residue Chain TypePos']])
-
-datasets.apply(test, axis=1)
-
-#datasets['Durations Mean'] = datasets['Durations All'].apply(lambda durations: statistics.mean(durations))
-#print(datasets[['Duration', 'Durations Mean']])
+if map_times:
+    event_times('6x3z', 'CHOL', 2, 4)
