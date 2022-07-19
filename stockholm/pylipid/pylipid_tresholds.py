@@ -3,6 +3,8 @@ import mdtraj as md
 import matplotlib.pyplot as plt
 from pylipid.util import get_traj_info, check_dir
 import numpy as np
+import matplotlib.ticker as ticker
+
 
 def plot_minimum_distances(distances, times, title, fn):
     fig, ax = plt.subplots(1, 1, figsize=(3, 2.5))
@@ -38,9 +40,21 @@ def compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=None,
 
     return DIST_CONTACT_ALL
 
+def plot_PDF(distance_set, num_of_bins, fn):
+    fig, ax = plt.subplots(1,1)
+    ax.hist(distance_set, bins=num_of_bins, density=True)
+    ax.set_xlim(0, 1.0)
+    ax.set_xlabel("Minimum distance (nm)")
+    ax.set_ylabel("Probablity Density")
+    ax.set_title(lipid)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+    plt.tight_layout()
+    plt.savefig(fn, dpi=200)
+    return
 
-trajfile = "step7_production.parts1to8.xtc"
-topfile = "../step5_charmm2gmx.pdb"
+trajfile = "7qn7_CG_b3_MD1.xtc"
+topfile = "../7qn7_CG_b3.pdb"
 lipid = "CHOL"
 lipid_atoms = None # all lipid atom/bead will be considered
 nprot = 1
@@ -52,3 +66,10 @@ distance_threshold = 0.65
 traj = md.load(trajfile, top=topfile, stride=10)
 minimum_distance_set = compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=lipid_atoms,
                                                contact_frames=10, distance_threshold=0.65)
+
+
+
+distance_set = np.concatenate(minimum_distance_set)
+num_of_bins = 1000
+fig_fn = "{}/dist_distribut_{}.png".format(save_dir, lipid)
+plot_PDF(distance_set, num_of_bins, fig_fn)

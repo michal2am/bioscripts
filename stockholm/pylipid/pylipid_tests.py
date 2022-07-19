@@ -24,7 +24,7 @@ stride = 15             # timestep 20 fs, xtc freq 200 000 => 0.004 us/frame, st
 
 lipid = args.lipid      # residue name in the topology.
 lipid_atoms = None      # means all
-cutoffs = [0.6, 0.8]    # dual-cutoff scheme for coarse-grained simulations
+cutoffs = [0.5, 0.7]    # dual-cutoff scheme for coarse-grained simulations
 pdb_file_to_map = args.aapdb  # need to generate pdb? or maybe charmm-gui provides?
 
 

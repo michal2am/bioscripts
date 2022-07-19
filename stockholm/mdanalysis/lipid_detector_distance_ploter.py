@@ -23,7 +23,7 @@ for df in data_file:
 
 #lipid_data['ligand_typ'] = lipid_data['ligand_type'].astype('category')
 print(lipid_data)
-lipid_data = lipid_data[lipid_data.frame > 1600]
+lipid_data = lipid_data[lipid_data.frame < 4000]
 
 #lipid_data.ligand_type = pd.Categorical(lipid_data.ligand_type, categories=['bicuculline', 'gaba', 'etomidate', 'propofol', 'zolpidem', 'diazepam', 'phenobarbital'])
 #lipid_data = lipid_data.sort_values('ligand_type')
