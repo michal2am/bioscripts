@@ -53,9 +53,14 @@ def plot_PDF(distance_set, num_of_bins, fn):
     plt.savefig(fn, dpi=200)
     return
 
+
+# quick and dirty code to plot histogram of contact distances
+# works for single xtc, files hardcoded below
+
 trajfile = "7qn7_CG_b3_MD1.xtc"
 topfile = "../7qn7_CG_b3.pdb"
 lipid = "CHOL"
+
 lipid_atoms = None # all lipid atom/bead will be considered
 nprot = 1
 save_dir = "test_minimum_dist_{}".format(lipid)
@@ -66,8 +71,6 @@ distance_threshold = 0.65
 traj = md.load(trajfile, top=topfile, stride=10)
 minimum_distance_set = compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=lipid_atoms,
                                                contact_frames=10, distance_threshold=0.65)
-
-
 
 distance_set = np.concatenate(minimum_distance_set)
 num_of_bins = 1000

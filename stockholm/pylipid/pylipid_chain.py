@@ -39,7 +39,6 @@ with open(pdb_cg) as f:
                 residueId += 1
 
 
-
 resid_data = pd.DataFrame(list(zip(residues, residueIds, residueChains)), columns=['Residue', 'Residue ID', 'Residue Chain'])
 resid_data['Lipid'] = args.lipid
 resid_data['Residue Num'] = resid_data['Residue'].apply(lambda num: int(num[0:-3]))
@@ -49,6 +48,8 @@ resid_data['Residue Chain Type'] = resid_data['Residue Chain'].apply(lambda chai
 resid_data['Residue Chain TypePos'] = resid_data['Residue Chain'].apply(lambda chain: chains_typepos[chain])
 
 # dataset.drop(['Residue'], axis=1, inplace=True)             # in case of pdb input for pylipid messed up numbering
+print(resid_data)
+print(dataset)
 new_dataset = resid_data.merge(dataset, on=['Residue','Residue ID', 'Residue Name'])
 
 
