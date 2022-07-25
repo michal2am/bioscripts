@@ -202,9 +202,9 @@ sns.set_style()
 sns.set_context("talk")
 sns.set_palette('muted')
 
-parse_event_times = False
-map_times = False
-map_states = False
+parse_event_times = True
+map_times = True
+map_states = True
 
 print_tops = False
 make_plots_basic = False
@@ -225,7 +225,7 @@ if parse_event_times:
 if map_times:
     for lipid in lipids:
         for system in systems:
-            event_times(datasets, system, lipid, 3, 2)
+            event_times(datasets, system, lipid, time_thresh=3, n_thresh=2)
 
 if map_states:
     states = {'6x3z': 'open/desensitized', '6x3s': 'closed', '7qn7': 'open/desensitized', '7qn9': 'closed',

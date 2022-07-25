@@ -49,6 +49,7 @@ def plot_each_project_single_wt(wt):
         plot.write_html('project_' + project + '_wt_' + WT_project  + '_co.html')
         plot.write_image('project_' + project + '_wt_' + WT_project  + '.png', width=400, height=400, scale=1)
 
+
 def plot_each_project_single_wt_seaborn(wt):
     WT_project = wt
 

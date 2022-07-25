@@ -24,11 +24,8 @@ def compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=None,
     DIST_CONTACT_ALL = []
     traj_info, _, _ = get_traj_info(traj, lipid, lipid_atoms=lipid_atoms)
     for protein_idx in np.arange(nprot, dtype=int):
-        for residue_idx, residue_atom_indices in enumerate(
-            traj_info["protein_residue_atomid_list"][protein_idx]):
-            dist_matrix = np.array([np.min(
-                            md.compute_distances(traj, np.array(list(product(residue_atom_indices, lipid_atom_indices)))),
-                            axis=1) for lipid_atom_indices in traj_info["lipid_residue_atomid_list"]])
+        for residue_idx, residue_atom_indices in enumerate(traj_info["protein_residue_atomid_list"][protein_idx]):
+            dist_matrix = np.array([np.min(md.compute_distances(traj, np.array(list(product(residue_atom_indices, lipid_atom_indices)))), axis=1) for lipid_atom_indices in traj_info["lipid_residue_atomid_list"]])
             # plot distances
             for lipid_idx in np.arange(len(dist_matrix)):
                 if sum(dist_matrix[lipid_idx] < distance_threshold) >= contact_frames:
@@ -39,6 +36,7 @@ def compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=None,
                                                                         lipid, lipid_idx))
 
     return DIST_CONTACT_ALL
+
 
 def plot_PDF(distance_set, num_of_bins, fn):
     fig, ax = plt.subplots(1,1)
@@ -69,8 +67,8 @@ contact_frames = 5  # will only plot data if the contact was formed over ${conta
 distance_threshold = 0.65
 
 traj = md.load(trajfile, top=topfile, stride=10)
-minimum_distance_set = compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=lipid_atoms,
-                                               contact_frames=10, distance_threshold=0.65)
+minimum_distance_set = compute_minimum_distance(traj, lipid, fig_dir, lipid_atoms=lipid_atoms, contact_frames=10,
+                                                distance_threshold=0.65)
 
 distance_set = np.concatenate(minimum_distance_set)
 num_of_bins = 1000
