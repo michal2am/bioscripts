@@ -7,19 +7,25 @@ import ast
 import time
 
 
-def res_plot_lipid(selected_lipid_system, lipid, systems, parameter):
+def res_plot_lipid(datasets, lipid, systems, parameter):
+    """
 
-    selected_lipid_system = selected_lipid_system[(selected_lipid_system['Lipid'] == lipid) & (selected_lipid_system['System'].isin(systems))]
-    # print(data)
+    :param datasets:
+    :param lipid:
+    :param systems:
+    :param parameter:
+    :return:
+    """
 
-    if parameter == 'Residence Time':
-        for system in selected_lipid_system['System'].unique():
-            data_subunit = selected_lipid_system[selected_lipid_system['System'] == system]
-            print('\nTop residues by residence time for {} lipid in {} system:\n'.format(lipid, system))
-            print(data_subunit.sort_values(parameter, ascending=False)[['Residue', 'Residue ID', 'Residue Chain Type','Residue Chain TypePos', 'System', 'Event Threshold', 'Durations All', parameter]].iloc[0:25, :])
+    selected_dataset = datasets[(datasets['Lipid'] == lipid) & (datasets['System'].isin(systems))]
+
+    for system in systems:
+        data_system = selected_dataset[selected_dataset['System'] == system]
+        print('\nTop residues by {} for {} lipid in {} system:\n'.format(parameter, lipid, system))
+        print(data_system.sort_values(parameter, ascending=False)[['Residue', 'Residue ID', 'Residue Chain Type','Residue Chain TypePos', 'System', 'Event Threshold', parameter]].iloc[0:25, :])
 
     g = sns.relplot(
-        data=selected_lipid_system[selected_lipid_system[parameter] > 0],
+        data=selected_dataset[selected_dataset[parameter] > 0],
         x='Residue Num', y=parameter, hue='Residue Chain TypePos',
         row='Residue Chain Type',
         col='System',
@@ -100,9 +106,9 @@ def event_times(datasets, system, lipid, time_thresh, n_thresh):
     map_pdb()
 
 
-def threshold_plot(datasets, lipids):
+def cumulative_threshold_plot(datasets, lipids):
     """
-    prints results of threshold analysis, event_times needs to be called first if boolean threshold not already in the dataset
+    prints results of threshold analysis
     :param datasets: universal df with data
     :param lipids: plots and prints done only for selected
     :return:
@@ -134,7 +140,6 @@ def threshold_plot(datasets, lipids):
     # manual mean calculation
     cumulative_subunit = datasets.groupby(['Residue Chain TypePos','Residue Chain Type', 'System', 'State', 'Lipid'], as_index=False)['Event Threshold'].sum()
     cumulative_subunit = cumulative_subunit.groupby(['Residue Chain Type', 'State', 'Lipid'], as_index=False)['Event Threshold'].mean()
-    print(cumulative_subunit)
 
     # manual n of subunits calculation
     subunits_no = datasets.groupby(['Residue Chain TypePos', 'Residue Chain Type', 'State', 'System'], as_index=False)['Event Threshold'].count()
@@ -188,33 +193,37 @@ def threshold_plot(datasets, lipids):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--parse', action=argparse.BooleanOptionalAction)
+parser.add_argument('--parse_datasets', action=argparse.BooleanOptionalAction)
 parser.add_argument('-d', '--datasets', nargs='+')
+parser.add_argument('--map_thresholds', action=argparse.BooleanOptionalAction)
+
+parser.add_argument('-systems', nargs='+', default=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb'])
+parser.add_argument('-lipids', nargs='+', default=['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS'])
 args = parser.parse_args()
 
-if args.parse:
+
+if args.parse_datasets:
+    # works on each csv, not dependent on systems/lipids parameters
+    # read all datafiles from pylipid
     datasets = pd.concat([pd.read_csv(dataset) for dataset in args.datasets])
     datasets.reset_index(inplace=True, drop=True)
+
+    # adds some general data
+    states = {'6x3z': 'open/desensitized', '6x3s': 'closed', '7qn7': 'open/desensitized', '7qn9': 'closed',
+              '7qn8': 'open/desensitized', '7qna': 'closed', '7qnb': 'closed'}
+    datasets['State'] = datasets['System'].apply(lambda sys: states[sys])
+    datasets['Chain TypePosSys'] = datasets['Residue Chain TypePos'] + datasets['System']
+
+    assemblies = {'6x3z': 'b2a1b2a1g2', '6x3s': 'b2a1b2a1g2', '7qn7': 'a4b3b3b3d', '7qn9': 'a4b3b3b3d',
+                  '7qn8': 'b3b3b3b3d', '7qna': 'a4b3g2b3b3', '7qnb': 'g2b3g2b3b3'}
+    datasets['Assembly'] = datasets['System'].apply(lambda sys: assemblies[sys])
+
+    datasets.to_csv('all_dataset.csv', index=False)
 else:
     datasets = pd.read_csv('all_dataset.csv')
 
-sns.set_style()
-sns.set_context("talk")
-sns.set_palette('muted')
-
-parse_event_times = True
-map_times = True
-map_states = True
-
-print_tops = False
-make_plots_basic = False
-make_plots_thresh = True
-
-#lipids = ['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS']
-lipids = ['CHOL', 'DPGS', 'PUPE']
-systems = ['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb']
-
-if parse_event_times:
+if args.map_thresholds:
+    # works only on selected systems/lipids
     # those are to fix dictionaries read from pickles
     datasets['Durations Sys1'] = datasets['Durations Sys1'].apply(lambda values: ast.literal_eval(values))
     datasets['Durations Sys2'] = datasets['Durations Sys2'].apply(lambda values: ast.literal_eval(values))
@@ -222,37 +231,38 @@ if parse_event_times:
     datasets['Durations Sys4'] = datasets['Durations Sys4'].apply(lambda values: ast.literal_eval(values))
     datasets['Durations All'] = datasets['Durations All'].apply(lambda values: ast.literal_eval(values))
 
-if map_times:
-    for lipid in lipids:
-        for system in systems:
+    # adds Event Threshold metric and maps pdbs betas
+    for lipid in args.lipids:
+        for system in args.systems:
             event_times(datasets, system, lipid, time_thresh=3, n_thresh=2)
 
-if map_states:
-    states = {'6x3z': 'open/desensitized', '6x3s': 'closed', '7qn7': 'open/desensitized', '7qn9': 'closed',
-              '7qn8': 'open/desensitized', '7qna': 'closed', '7qnb': 'closed'}
-    datasets['State'] = datasets['System'].apply(lambda sys: states[sys])
-    datasets['Chain TypePosSys'] = datasets['Residue Chain TypePos'] + datasets['System']
-    #print(datasets['Chain TypePosSys'])
+    datasets.to_csv('all_dataset.csv', index=False)
+
+sns.set_style()
+sns.set_context("talk")
+sns.set_palette('muted')
+
+
+print_tops = True
 
 if print_tops:
-    selected = datasets[(datasets['Lipid'] == 'CHOL') & (datasets['System'] == '6x3z')]
-    #selected = selected[selected['Binding Site ID'].isin([9])]
-    selected = selected.sort_values(by='Residence Time', ascending=False).iloc[0:50, :]
-    print(selected[['Residue', 'Residue ID', 'Residue Chain', 'Binding Site ID', 'Residence Time']])
+    selected = datasets[(datasets['Lipid'] == 'CHOL') & (datasets['System'] == '6x3z') & (datasets['Residue Name'].isin(['ARG', 'LYS']))]
+    # selected = selected[selected['Binding Site ID'].isin([9])]
+    # selected = selected.sort_values(by='Residence Time', ascending=False).iloc[0:50, :]
+    selected = selected.sort_values(by='Occupancy', ascending=False).iloc[0:50, :]
+    print(selected[['Residue', 'Residue ID', 'Residue Chain Type', 'Residue Chain TypePos', 'System', 'Occupancy', 'Residence Time', 'Event Threshold']])
 
-if make_plots_basic:
-    parameters = ['Occupancy', 'Residence Time']
-    for parameter in parameters:
-        for lipid in lipids:
-            res_plot_lipid(datasets, lipid, ['6x3z', '6x3s'], parameter)
-            res_plot_lipid(datasets, lipid, ['7qn7', '7qn9'], parameter)
-            res_plot_lipid(datasets, lipid, ['7qn8'], parameter)
-            res_plot_lipid(datasets, lipid, ['7qna'], parameter)
-            res_plot_lipid(datasets, lipid, ['7qnb'], parameter)
+# works on selected lipids and systems
+parameters = ['Occupancy', 'Residence Time']
+for parameter in parameters:
+    for lipid in args.lipids:
+        # some magic to group system by assemblies in correct order
+        for assembly in datasets.loc[datasets['System'].isin(args.systems), 'Assembly'].unique():
+            same_assembly_systems = datasets.loc[(datasets['System'].isin(args.systems)) &
+                                                 (datasets['Assembly'] == assembly), 'System'].unique()
+            ordered_systems = [sys for sys in args.systems if sys in same_assembly_systems]
+            res_plot_lipid(datasets, lipid, ordered_systems, parameter)
 
-if make_plots_thresh:
-    threshold_plot(datasets, lipids)
+# works on selected lipids, all systems
+cumulative_threshold_plot(datasets, args.lipids)
 
-
-# print(datasets)
-datasets.to_csv('all_dataset.csv', index=False)
