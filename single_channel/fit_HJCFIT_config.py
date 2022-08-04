@@ -39,24 +39,26 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
 
 # Bambi's meta file with all the data
 meta = pd.read_csv('moje_meta_raw.csv', header=[0, 1])
-meta.to_csv('moje_meta_merged_raw.csv')
+print(meta)
 
 
-prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_2022.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2022.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'E153', 'WT(E153)', 'hjcfit_config_e153_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'E153', 'WT(E153)', 'hjcfit_config_e153_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'F64', 'WT(F64)', 'hjcfit_config_f64_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'P273', 'WT(F45)', 'hjcfit_config_p273_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'L296', 'WT(E153)', 'hjcfit_config_l296_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'E270', 'WT(E153)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'H267', 'WT(F14/F31)', 'hjcfit_config_h267_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'L300', 'WT(F14/F31)', 'hjcfit_config_l300_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F64', 'WT(F64)', 'hjcfit_config_f64_2022.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_2022.csv', 'CO', 'final_tcrit')
+
+#prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'H55', 'WT(H55)', 'hjcfit_config_h55_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'P277', 'WT(P277)', 'hjcfit_config_p277_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'P273', 'WT(F45)', 'hjcfit_config_p273_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+
+#prepare_hjcfit_config(meta, 'L296', 'WT(E153)', 'hjcfit_config_l296_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'E270', 'WT(E153)', 'hjcfit_config_e270_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'H267', 'WT(F14/F31)', 'hjcfit_config_h267_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'L300', 'WT(F14/F31)', 'hjcfit_config_l300_MetaBambiCOfina.csv', 'CO', 'final_tcrit')
