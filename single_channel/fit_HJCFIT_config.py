@@ -61,3 +61,4 @@ prepare_hjcfit_config(meta, 'H267', 'WT(E153)', 'hjcfit_config_h267_2022.csv', '
 
 prepare_hjcfit_config(meta, 'L300', 'WT(E153)', 'hjcfit_config_l300_2022.csv', 'CO', 'final_tcrit')
 prepare_hjcfit_config(meta, 'L296', 'WT(E153)', 'hjcfit_config_l296_2022.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'G258', 'WT(G258)', 'hjcfit_config_g258_2022.csv', 'CO', 'final_tcrit')

@@ -69,6 +69,7 @@ def plot_each_project_single_wt_seaborn(wt):
 
         sns.set_style()
         sns.set_context("talk")
+
         g = sns.lmplot(
             data=new_set,
             x='new_equilibrium', y='new_forward',
@@ -80,7 +81,7 @@ def plot_each_project_single_wt_seaborn(wt):
 
         g.map(sns.scatterplot, data=new_set, x='new_equilibrium', y='new_forward', hue='type')
         g.add_legend()
-        g.set(xlabel='log(equilibrium rate)',
+        g.set(xlabel='log(equilibrium constant)',
               ylabel='log(forward rate)')
         g.fig.suptitle("{}: {:.2f}".format(project.upper(), slope))
         g.fig.subplots_adjust(top=0.8)
@@ -88,7 +89,7 @@ def plot_each_project_single_wt_seaborn(wt):
         #g.legend.set_title("")
 
         plt.savefig('project_' + project + '_wt_' + WT_project  + '_sns.png', dpi=300)
-        plt.show()
+        #plt.show()
 
 
 
