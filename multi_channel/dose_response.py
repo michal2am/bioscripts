@@ -16,7 +16,7 @@ def ll4(x, b, c, d, e):
     return c + (d - c)/(1 + np.exp(b * (np.log(x) - np.log(e))))
 
 
-dr_data = pd.read_csv('e155_doseresponse.csv')
+dr_data = pd.read_csv('dose_response_WT_python.csv')
 print(dr_data)
 
 compoundData = dr_data.groupby(['type'])

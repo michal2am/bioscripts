@@ -59,7 +59,7 @@ if order == 'ABCDE':
                          ['2nd_beta/alpha', ['segid C and name SD and resid 286 and protein', 'segid D and name CG and resid 232 and protein']],
                          ]
 if order == 'ACBDE':
-# just for others A-C-B-D-E notation
+    # just for others A-C-B-D-E notation
     interface_configs = [['1st_beta/alpha', ['segid A and name SD and resid 286 and protein', 'segid C and name CG and resid 232 and protein']],
                          ['2nd_beta/alpha', ['segid B and name SD and resid 286 and protein', 'segid D and name CG and resid 232 and protein']],
                          ]
