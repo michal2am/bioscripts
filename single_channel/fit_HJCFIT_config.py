@@ -1,6 +1,5 @@
 import pandas as pd
-
-
+import  argparse
 def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
     '''
     parses meta-file with Bambi analysis for input into python-hjcfit
@@ -25,9 +24,23 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
     print(selected[selected[tcrit] == 0])
     selected.drop(selected[selected[tcrit] == 0].index, inplace=True)
 
-    selected['beta'] = 5000
-    selected['alpha'] = 5000
     selected['model'] = model
+
+    if model == 'CO':
+        selected['beta'] = 5000
+        selected['alpha'] = 5000
+
+    if model == 'CFOODD':
+        selected['beta'] = 5000
+        selected['betap'] = 5000
+        selected['alpha'] = 5000
+        selected['alphap'] = 5000
+        selected['delta'] = 5000
+        selected['gamma'] = 5000
+        selected['d'] = 5000
+        selected['dp'] = 5000
+        selected['r'] = 5000
+        selected['rp'] = 5000
 
     selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', tcrit: 'tcrit'}, inplace=True)
 
@@ -36,29 +49,33 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
 
     selected.to_csv(file_name)
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--meta_file')
+args = parser.parse_args()
 
 # Bambi's meta file with all the data
-meta = pd.read_csv('moje_meta_raw.csv', header=[0, 1])
+meta = pd.read_csv(args.meta_file, header=[0, 1])
 print(meta)
 
+prepare_hjcfit_config(meta, 'V53', 'no_WT', 'hjcfit_config_v53_fullModels.csv', 'CFOODD', 'inf_tcrit')
 
-prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'E153', 'WT(E153)', 'hjcfit_config_e153_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'E153', 'WT(E153)', 'hjcfit_config_e153_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'F64', 'WT(F64)', 'hjcfit_config_f64_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F64', 'WT(F64)', 'hjcfit_config_f64_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'H55', 'WT(H55)', 'hjcfit_config_h55_2022a.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'P277', 'WT(P277)', 'hjcfit_config_p277_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'P273', 'WT(F45)', 'hjcfit_config_p273_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'H55', 'WT(H55)', 'hjcfit_config_h55_2022a.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'P277', 'WT(P277)', 'hjcfit_config_p277_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'P273', 'WT(F45)', 'hjcfit_config_p273_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'E270', 'WT(E153)', 'hjcfit_config_e270_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'H267', 'WT(E153)', 'hjcfit_config_h267_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'E270', 'WT(E153)', 'hjcfit_config_e270_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'H267', 'WT(E153)', 'hjcfit_config_h267_2022.csv', 'CO', 'final_tcrit')
 
-prepare_hjcfit_config(meta, 'L300', 'WT(E153)', 'hjcfit_config_l300_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'L296', 'WT(E153)', 'hjcfit_config_l296_2022.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'G258', 'WT(G258)', 'hjcfit_config_g258_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'L300', 'WT(E153)', 'hjcfit_config_l300_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'L296', 'WT(E153)', 'hjcfit_config_l296_2022.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'G258', 'WT(G258)', 'hjcfit_config_g258_2022.csv', 'CO', 'final_tcrit')

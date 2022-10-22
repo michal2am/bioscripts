@@ -62,6 +62,33 @@ def mechanism_RFO(rates):
 
     return complete_mechanism
 
+def mechanism_CFOODD(rates):
+
+    c = mechanism.State('B', 'A2R', 0.0)
+    f = mechanism.State('B', 'A2F', 0.0)
+    o = mechanism.State('A', 'A2O', 50e-12)
+    op = mechanism.State('A', 'A2Op', 50e-12)
+    d = mechanism.State('C', 'A2D', 0.0)
+    dp = mechanism.State('C', 'A2Dp', 0.0)
+
+    rate_list = [
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[5], f, c, name='gamma', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[6], f, d, name='d', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[7], f, dp, name='dp', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[8], d, f, name='r', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[9], dp, f, name='rp', limits=[1e0, 1.5e4])
+    ]
+
+    complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    # complete_mechanism.set_eff('c', 100e-9)
+
+    return complete_mechanism
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--config')
 args = parser.parse_args()
@@ -118,6 +145,13 @@ for file_name in config.file.unique():
     elif sc_model == 'CFO':
         mec = mechanism_RFO([single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
                              single_cell.at[0, 'beta'], single_cell.at[0, 'alpha']])
+
+    elif sc_model == 'CFOODD':
+        mec = mechanism_CFOODD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
+                          single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
+                          single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
+                          single_cell.at[0, 'd'], single_cell.at[0, 'dp'],
+                          single_cell.at[0, 'r'], single_cell.at[0, 'rp']])
 
     mec.update_mr()
     mec.printout(sys.stdout)
