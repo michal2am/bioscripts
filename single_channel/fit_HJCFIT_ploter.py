@@ -80,6 +80,8 @@ class REFERPloter:
             rates_list = ['alpha', 'beta', 'gamma', 'delta']
         if self.model == 'CO':
             rates_list = ['alpha', 'beta']
+        if self.model == 'CFOODD':
+            rates_list = ['beta', 'betap', 'alpha', 'alphap', 'delta', 'gamma', 'd', 'dp', 'r', 'rp']
 
         print('Detecting outliers ...')
         self.outliers_iqrsckit(rates_list)
@@ -229,6 +231,6 @@ project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 ratesFile = 'hjcfit_rates_' + project + '.csv'
 
 ploter = REFERPloter(ratesFile, project, args.config)
-ploter.REFER_plot_co()
+#ploter.REFER_plot_co()
 # ploter.REFER_plot_Auerbach()
 # ploter.update_config()

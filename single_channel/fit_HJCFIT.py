@@ -5,7 +5,7 @@ import pandas as pd
 import argparse
 import re
 import os
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 from scipy.optimize import minimize
 from dcpyps import dataset
@@ -89,6 +89,51 @@ def mechanism_CFOODD(rates):
 
     return complete_mechanism
 
+def mechanism_CFOOD(rates):
+
+    c = mechanism.State('B', 'A2R', 0.0)
+    f = mechanism.State('B', 'A2F', 0.0)
+    o = mechanism.State('A', 'A2O', 50e-12)
+    op = mechanism.State('A', 'A2Op', 50e-12)
+    d = mechanism.State('C', 'A2D', 0.0)
+
+    rate_list = [
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[5], f, c, name='gamma', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[6], f, d, name='d', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[7], d, f, name='r', limits=[1e0, 1.5e4]),
+    ]
+
+    complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    # complete_mechanism.set_eff('c', 100e-9)
+
+    return complete_mechanism
+
+def mechanism_CFOO(rates):
+
+    c = mechanism.State('B', 'A2R', 0.0)
+    f = mechanism.State('B', 'A2F', 0.0)
+    o = mechanism.State('A', 'A2O', 50e-12)
+    op = mechanism.State('A', 'A2Op', 50e-12)
+
+    rate_list = [
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[5], f, c, name='gamma', limits=[1e0, 1.5e4]),
+    ]
+
+    complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    # complete_mechanism.set_eff('c', 100e-9)
+
+    return complete_mechanism
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--config')
 args = parser.parse_args()
@@ -145,7 +190,16 @@ for file_name in config.file.unique():
     elif sc_model == 'CFO':
         mec = mechanism_RFO([single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
                              single_cell.at[0, 'beta'], single_cell.at[0, 'alpha']])
-
+    elif sc_model == 'CFOO':
+        mec = mechanism_CFOO([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
+                          single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
+                          single_cell.at[0, 'delta'], single_cell.at[0, 'gamma']])
+    elif sc_model == 'CFOOD':
+        mec = mechanism_CFOOD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
+                          single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
+                          single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
+                          single_cell.at[0, 'd'],
+                          single_cell.at[0, 'r']])
     elif sc_model == 'CFOODD':
         mec = mechanism_CFOODD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
                           single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
@@ -199,6 +253,37 @@ for file_name in config.file.unique():
         #plt.show()
 
 
+    # plot and events times for openings and shuts, works only for complex models
+    if sc_model in ['CFOODD', 'CFOOD', 'CFOO']:
+
+        event_times_data = scl.printout_distributions(mec, sc_tres)
+        print(event_times_data)
+
+        event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
+        n = event_times_log.write(event_times_data)
+        event_times_log.close()
+
+        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        plt.ylabel('fshut(t)')
+        plt.xlabel('Shut time, ms')
+        plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) )#+ '\n' + shuts_format)
+        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
+        plt.close()
+        #plt.show()
+
+        t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
+        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        plt.ylabel('fopen(t)')
+        plt.xlabel('Open time, ms')
+        plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str(
+            sc_tcrit * 1000))  # + '\n' + shuts_format)
+        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
+        plt.close()
+        # plt.show()
+
     if sc_model == 'CO':
 
         alpha = mec.Rates[0].rateconstants[0]
@@ -221,6 +306,50 @@ for file_name in config.file.unique():
                         't1_mod': t1_mod, 'p1_mod': p1_mod, 't2_mod': t2_mod, 'p2_mod': p2_mod,
                         't1_exp': sc_t1_exp, 'p1_exp': sc_p1_exp, 't2_exp': sc_t2_exp, 'p2_exp': sc_p2_exp
                         }
+
+    elif sc_model == 'CFOO':
+
+        beta = mec.Rates[0].rateconstants[0]
+        betap = mec.Rates[1].rateconstants[0]
+        alpha = mec.Rates[2].rateconstants[0]
+        alphap = mec.Rates[3].rateconstants[0]
+        delta = mec.Rates[4].rateconstants[0]
+        gamma = mec.Rates[5].rateconstants[0]
+
+        refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'beta': beta, 'betap': betap, 'alpha': alpha, 'alphap': alphap, 'gamma': gamma}
+
+    elif sc_model == 'CFOOD':
+
+        beta = mec.Rates[0].rateconstants[0]
+        betap = mec.Rates[1].rateconstants[0]
+        alpha = mec.Rates[2].rateconstants[0]
+        alphap = mec.Rates[3].rateconstants[0]
+        delta = mec.Rates[4].rateconstants[0]
+        gamma = mec.Rates[5].rateconstants[0]
+        d = mec.Rates[6].rateconstants[0]
+        r = mec.Rates[7].rateconstants[0]
+
+        refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'beta': beta, 'betap': betap, 'alpha': alpha, 'alphap': alphap,
+                        'gamma': gamma, 'delta': delta, 'd': d, 'r': r}
+
+    elif sc_model == 'CFOODD':
+
+        beta = mec.Rates[0].rateconstants[0]
+        betap = mec.Rates[1].rateconstants[0]
+        alpha = mec.Rates[2].rateconstants[0]
+        alphap = mec.Rates[3].rateconstants[0]
+        delta = mec.Rates[4].rateconstants[0]
+        gamma = mec.Rates[5].rateconstants[0]
+        d = mec.Rates[6].rateconstants[0]
+        dp = mec.Rates[7].rateconstants[0]
+        r = mec.Rates[8].rateconstants[0]
+        rp = mec.Rates[9].rateconstants[0]
+
+        refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'beta': beta, 'betap': betap, 'alpha': alpha, 'alphap': alphap,
+                        'gamma': gamma, 'delta': delta, 'd': d, 'dp': dp, 'r': r, 'rp': rp}
 
     results.append(refer_result)
 
