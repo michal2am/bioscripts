@@ -164,14 +164,16 @@ class Model:
 
 class ModelsBuilder:
 
-    def __init__(self, s_rates, topo, annotation):
+    def __init__(self, s_rates, e_rates, topo, annotation):
         """
         builds multiple SCALCS models and performs basic analysis/simulations
         dict:param s_rates: starting rates
+        list:param e_rates: rates to exlude from mutli value simulations
         str:param topo: model topology
         """
         self.topology = topo
         self.start_rates = s_rates
+        self.exclude_rates = e_rates
         self.annotation = annotation
 
     @property
@@ -331,9 +333,11 @@ class ModelsBuilder:
 
         for variable_rate in self.start_rates.keys():
 
-            # steps = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
-            steps = [0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.5, 2.0, 5.0]
-            # steps = [0.5, 1.0, 5]
+            if variable_rate in self.exclude_rates:
+                steps = [1]
+            else:
+                steps = [0.25, 0.5, 0.75, 1, 1.3, 1.5, 2, 4]
+                #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
 
             single_var_trace_atf = pd.DataFrame()
 
@@ -420,6 +424,7 @@ class ModelsBuilder:
                           facet_col_wrap=4,
                           height=1000,
                           template='simple_white',
+                          color_discrete_sequence=px.colors.qualitative.D3,
                           hover_data=['Rate_value']
                           )
 
@@ -434,7 +439,7 @@ class ModelsBuilder:
                       facet_col_wrap=4,
                       height=125 * len(self.start_rates.keys()),
                       template='simple_white',
-                      color_discrete_sequence=px.colors.diverging.RdYlBu,
+                      color_discrete_sequence=px.colors.diverging.balance,
                       hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
 
         fig.update_layout(font=dict(family="Courier New, monospace", size=18))
@@ -445,6 +450,7 @@ class ModelsBuilder:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-sr", "--start_rates", type=str)
+parser.add_argument("-er", "--exclude_rates", nargs='+')
 parser.add_argument("-tp", "--topology", type=str)
 parser.add_argument("-an", "--annotation", type=str)
 
@@ -453,7 +459,7 @@ args = parser.parse_args()
 start_rates = pd.read_csv(args.start_rates, header=None)
 start_rates = dict(zip(start_rates[0], start_rates[1]))
 
-builder = ModelsBuilder(start_rates, args.topology, args.annotation)
+builder = ModelsBuilder(start_rates, args.exclude_rates, args.topology, args.annotation)
 builder.build_models_multi()
 
 
