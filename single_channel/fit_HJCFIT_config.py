@@ -1,5 +1,6 @@
 import pandas as pd
 import  argparse
+
 def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
     '''
     parses meta-file with Bambi analysis for input into python-hjcfit
@@ -57,7 +58,7 @@ args = parser.parse_args()
 meta = pd.read_csv(args.meta_file, header=[0, 1])
 print(meta)
 
-prepare_hjcfit_config(meta, 'V53', 'no_WT', 'hjcfit_config_v53_fullModels.csv', 'CFOODD', 'inf_tcrit')
+prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_fullModels.csv', 'CFOODD', 'inf_tcrit')
 
 #prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_2022.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2022.csv', 'CO', 'final_tcrit')

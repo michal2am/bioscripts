@@ -113,6 +113,27 @@ def mechanism_CFOOD(rates):
 
     return complete_mechanism
 
+def mechanism_CFOD(rates):
+
+    c = mechanism.State('B', 'A2R', 0.0)
+    f = mechanism.State('B', 'A2F', 0.0)
+    o = mechanism.State('A', 'A2O', 50e-12)
+    d = mechanism.State('C', 'A2D', 0.0)
+
+    rate_list = [
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], o, f, name='alpha', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[2], c, f, name='delta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[3], f, c, name='gamma', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[4], f, d, name='d', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[5], d, f, name='r', limits=[1e0, 1.5e4]),
+    ]
+
+    complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    # complete_mechanism.set_eff('c', 100e-9)
+
+    return complete_mechanism
+
 def mechanism_CFOO(rates):
 
     c = mechanism.State('B', 'A2R', 0.0)
@@ -147,15 +168,12 @@ for file_name in config.file.unique():
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
     single_cell.reset_index(inplace=True)
 
-    # TODO: function for tcritscaling
-    tcrit_scale = 1
-    tres_scale = 1
-
     sc_model = single_cell.at[0, 'model']
     sc_type = single_cell.at[0, 'type']
-    sc_tres = (single_cell.at[0, 'tres']/1000000)*tres_scale
-    sc_tcrit = (single_cell.at[0, 'tcrit']/1000)*tcrit_scale
+    sc_tres = (single_cell.at[0, 'tres']/1000000)
+    sc_tcrit = (single_cell.at[0, 'tcrit']/1000)
 
+    # TODO: some integration with real data validation
     # experimental event times, for further analysis, works only for CFO
     # needs to be in a config file, not supported by fit_HJCFIT_config.py
     if sc_model == 'CFO':
@@ -163,7 +181,7 @@ for file_name in config.file.unique():
         sc_t2_exp = single_cell.at[0, 't2_exp']
         sc_p1_exp = single_cell.at[0, 'p1_exp']
         sc_p2_exp = single_cell.at[0, 'p2_exp']
-
+    # end
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
@@ -197,6 +215,12 @@ for file_name in config.file.unique():
     elif sc_model == 'CFOOD':
         mec = mechanism_CFOOD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
                           single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
+                          single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
+                          single_cell.at[0, 'd'],
+                          single_cell.at[0, 'r']])
+    elif sc_model == 'CFOD':
+        mec = mechanism_CFOOD([single_cell.at[0, 'beta'],
+                          single_cell.at[0, 'alpha'],
                           single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
                           single_cell.at[0, 'd'],
                           single_cell.at[0, 'r']])
@@ -284,6 +308,8 @@ for file_name in config.file.unique():
         plt.close()
         # plt.show()
 
+    # results saving below:
+
     if sc_model == 'CO':
 
         alpha = mec.Rates[0].rateconstants[0]
@@ -332,6 +358,19 @@ for file_name in config.file.unique():
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
                         'beta': beta, 'betap': betap, 'alpha': alpha, 'alphap': alphap,
+                        'gamma': gamma, 'delta': delta, 'd': d, 'r': r}
+
+    elif sc_model == 'CFOD':
+
+        beta = mec.Rates[0].rateconstants[0]
+        alpha = mec.Rates[1].rateconstants[0]
+        delta = mec.Rates[2].rateconstants[0]
+        gamma = mec.Rates[3].rateconstants[0]
+        d = mec.Rates[4].rateconstants[0]
+        r = mec.Rates[5].rateconstants[0]
+
+        refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'beta': beta, 'alpha': alpha,
                         'gamma': gamma, 'delta': delta, 'd': d, 'r': r}
 
     elif sc_model == 'CFOODD':
