@@ -38,7 +38,7 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
 
 
 # Bambi's meta file with all the data
-meta = pd.read_csv('moje_meta_raw.csv', header=[0, 1])
+meta = pd.read_csv('moje_meta_raw_2022Monika.csv', header=[0, 1])
 print(meta)
 
 
