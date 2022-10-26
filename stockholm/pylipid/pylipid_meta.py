@@ -127,7 +127,7 @@ def cumulative_threshold_plot(datasets, lipids):
         kind='bar',
         col='State',
         height=4, aspect=1,
-        hue_order=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb']
+        hue_order=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb', '6a96']
     )
 
     g.set_titles("{col_name}")
@@ -182,7 +182,7 @@ def cumulative_threshold_plot(datasets, lipids):
         row='State',
         col='Lipid',
         height=4, aspect=1,
-        hue_order=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb']
+        hue_order=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb', '6a96']
     )
 
     g.set_titles("{row_name} | {col_name}")
@@ -193,11 +193,11 @@ def cumulative_threshold_plot(datasets, lipids):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--parse_datasets', action=argparse.BooleanOptionalAction)
+parser.add_argument('--parse_datasets')#, action=argparse.BooleanOptionalAction)
 parser.add_argument('-d', '--datasets', nargs='+')
-parser.add_argument('--map_thresholds', action=argparse.BooleanOptionalAction)
+parser.add_argument('--map_thresholds')#, action=argparse.BooleanOptionalAction)
 
-parser.add_argument('-systems', nargs='+', default=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb'])
+parser.add_argument('-systems', nargs='+', default=['6x3z', '6x3s', '7qn7', '7qn9', '7qn8', '7qna', '7qnb', '6a96'])
 parser.add_argument('-lipids', nargs='+', default=['POPC', 'PUPE', 'CHOL', 'PAPS', 'PUPI', 'POP2', 'DPSM', 'DPGS'])
 args = parser.parse_args()
 
@@ -209,13 +209,13 @@ if args.parse_datasets:
     datasets.reset_index(inplace=True, drop=True)
 
     # adds some general data
-    states = {'6x3z': 'open/desensitized', '6x3s': 'closed', '7qn7': 'open/desensitized', '7qn9': 'closed',
-              '7qn8': 'open/desensitized', '7qna': 'closed', '7qnb': 'closed'}
+    states = {'6x3z': 'desensitized', '6x3s': 'closed', '7qn7': 'desensitized', '7qn9': 'closed',
+              '7qn8': 'desensitized', '7qna': 'closed', '7qnb': 'closed', '6a96': 'open'}
     datasets['State'] = datasets['System'].apply(lambda sys: states[sys])
     datasets['Chain TypePosSys'] = datasets['Residue Chain TypePos'] + datasets['System']
 
     assemblies = {'6x3z': 'b2a1b2a1g2', '6x3s': 'b2a1b2a1g2', '7qn7': 'a4b3b3b3d', '7qn9': 'a4b3b3b3d',
-                  '7qn8': 'b3b3b3b3d', '7qna': 'a4b3g2b3b3', '7qnb': 'g2b3g2b3b3'}
+                  '7qn8': 'b3b3b3b3d', '7qna': 'a4b3g2b3b3', '7qnb': 'g2b3g2b3b3', '6a96': 'a5b3b3b3b3'}
     datasets['Assembly'] = datasets['System'].apply(lambda sys: assemblies[sys])
 
     datasets.to_csv('all_dataset.csv', index=False)

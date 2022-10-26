@@ -81,10 +81,10 @@ else:
             pose_traj[bs_id].save("{}/Bound_Poses_{}/Pose_traj_BSid{}.{}".format(li.save_dir, li.lipid, bs_id,
                                                                           save_pose_traj_format))
     del pose_traj  # save memory space
-    surface_area_data = li.compute_surface_area(binding_site_id=None, radii=radii, fig_format=fig_format)
+    # surface_area_data = li.compute_surface_area(binding_site_id=None, radii=radii, fig_format=fig_format)
     data_dir = check_dir(li.save_dir, "Dataset_{}".format(li.lipid))
     pose_rmsd_data.to_csv("{}/Pose_RMSD_data.csv".format(data_dir), index=False, header=True)
-    surface_area_data.to_csv("{}/Surface_Area_data.csv".format(data_dir), index=True, header=True)
+    # surface_area_data.to_csv("{}/Surface_Area_data.csv".format(data_dir), index=True, header=True)
     li.write_site_info(sort_residue="Residence Time")
 
 if pdb_file_to_map is not None:
@@ -151,6 +151,7 @@ if len(li.node_list) > 0:
         plt.close()
 
         # plot No. 3
+        '''
         surface_area_averages = np.array(
                        [surface_area_data["Binding Site {}".format(bs_id)].dropna(inplace=False).mean()
                         for bs_id in binding_site_IDs])
@@ -166,7 +167,7 @@ if len(li.node_list) > 0:
         plt.tight_layout()
         plt.savefig("{}/{}_surface_area_v_binding_site.{}".format(li.save_dir, li.lipid, fig_format), dpi=200)
         plt.close()
-
+        '''
         # plot No. 4
         res_time_BS = np.array(
                   [li.dataset[li.dataset["Binding Site ID"]==bs_id]["Binding Site Residence Time"].unique()[0]
@@ -180,7 +181,7 @@ if len(li.node_list) > 0:
         plt.tight_layout()
         plt.savefig("{}/{}_Residence_Time_v_RMSD.{}".format(li.save_dir, li.lipid, fig_format), dpi=200)
         plt.close()
-
+        '''
         # plot No. 5
         res_time_BS = np.array(
                   [li.dataset[li.dataset["Binding Site ID"]==bs_id]["Binding Site Residence Time"].unique()[0]
@@ -194,3 +195,4 @@ if len(li.node_list) > 0:
         plt.tight_layout()
         plt.savefig("{}/{}_Residence_Time_v_surface_area.{}".format(li.save_dir, li.lipid, fig_format), dpi=200)
         plt.close()
+        '''
