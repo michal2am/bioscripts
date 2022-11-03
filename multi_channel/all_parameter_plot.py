@@ -8,11 +8,11 @@ from scipy.stats import ttest_ind
 import seaborn as sns
 
 
-selected_types = ['WT', 'L300V', 'L296V', 'G258V', 'WT_LC', 'G254V']
-selected_who = ['II', 'AB', 'AD', 'AB']
+selected_types = ['V53H', 'V53A', 'V53E']
+selected_who = ['AD', 'AB', 'II']
 selected_pulse = [500]
 
-data = pd.read_csv('smarts_update_statistics_values_mm.csv', sep=';')
+data = pd.read_csv('v53_statistics.csv', sep=';')
 print(data)
 
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
@@ -80,20 +80,31 @@ def des_joint_plot():
 def interval_plot(param):
 
     g = sns.catplot(
-        data=data, kind="point",
-        x="type", y=param, hue='type',
-        join=False, estimator=np.mean, ci=95,
+        data=data, kind="box",
+        x="type", y=param, #hue='type',
+        #join=False, #for point
+        #estimator=np.mean, ci=68,
         order=selected_types,
         hue_order=selected_types,
         height=4, aspect=1.75,
         palette=sns.color_palette('deep'),
+
+        # black edges of boxplot
+        boxprops={'edgecolor': 'black'},
+        medianprops={'color': 'black'},
+        whiskerprops={'color': 'black'},
+        capprops={'color': 'black'}
     )
 
     g.map(sns.swarmplot, "type", param, 'type',
           order=selected_types,
           hue_order=selected_types,
+          #color='grey',
           palette=sns.color_palette('deep'),
-          alpha=0.5, marker='h')
+          edgecolor='black',
+          size=6,
+          linewidth=1,
+          alpha=0.8)
 
     # g.axes[0, 0].axes.set_yticks(ticks=[0.5, 1, 2, 3])
     g.axes[0, 0].yaxis.set_major_locator(plt.MaxNLocator(5))
@@ -110,7 +121,7 @@ def fr_plot():
     g = sns.catplot(
         data=data_long[data_long['variable'].isin(['FR10', 'FR300', 'FR500'])], kind='point',
         x="variable", y="value", hue='type',
-        join=True, dodge=False, estimator=np.mean, ci=95,
+        join=True, dodge=False, estimator=np.mean, ci=68,
         order=['FR10', 'FR300', 'FR500'],
         hue_order=selected_types,
         height=4, aspect=1.75,
@@ -139,7 +150,7 @@ def des_a_plot():
     g = sns.catplot(
         data=data_long[data_long['variable'].isin(['des_Af', 'des_As', 'des_AC'])], kind='point',
         x="variable", y="value", hue='type',
-        join=True, dodge=False, estimator=np.mean, ci=95,
+        join=True, dodge=False, estimator=np.mean, ci=68,
         order=['des_Af', 'des_As', 'des_AC'],
         hue_order=selected_types,
         height=4, aspect=1.75,
@@ -163,19 +174,19 @@ def des_a_plot():
     plt.show()
 
 
-summary()
+#summary()
 
-plots = False
+plots = True
 
 if plots:
 
     interval_plot('rt_1090')
-    interval_plot('dea_tm')
-    interval_plot('des_tf')
-    interval_plot('des_ts')
+    #interval_plot('dea_tm')
+    #interval_plot('des_tf')
+    #interval_plot('des_ts')
 
-    fr_plot()
+    #fr_plot()
 
-    des_joint_plot()
-    des_a_plot()
+    #des_joint_plot()
+    #des_a_plot()
 
