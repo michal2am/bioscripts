@@ -336,7 +336,7 @@ class ModelsBuilder:
             if self.exclude_rates and variable_rate in self.exclude_rates:
                 steps = [1]
             else:
-                steps = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
+                steps = [0.10, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
                 #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
 
             single_var_trace_atf = pd.DataFrame()
