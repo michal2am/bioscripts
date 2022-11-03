@@ -79,21 +79,23 @@ def des_joint_plot():
 
 def interval_plot(param):
 
+    # change to kind plot?
+
     g = sns.catplot(
-        data=data, kind="box",
+        data=data, kind="point",
         x="type", y=param, #hue='type',
         #join=False, #for point
-        #estimator=np.mean, ci=68,
+        estimator=np.mean, ci=68,
         order=selected_types,
         hue_order=selected_types,
-        height=4, aspect=1.75,
+        height=5, aspect=0.7,
         palette=sns.color_palette('deep'),
 
         # black edges of boxplot
-        boxprops={'edgecolor': 'black'},
-        medianprops={'color': 'black'},
-        whiskerprops={'color': 'black'},
-        capprops={'color': 'black'}
+        #boxprops={'edgecolor': 'black'},
+        #medianprops={'color': 'black'},
+        #whiskerprops={'color': 'black'},
+        #capprops={'color': 'black'}
     )
 
     g.map(sns.swarmplot, "type", param, 'type',
@@ -104,10 +106,10 @@ def interval_plot(param):
           edgecolor='black',
           size=6,
           linewidth=1,
-          alpha=0.8)
+          alpha=0.7)
 
-    # g.axes[0, 0].axes.set_yticks(ticks=[0.5, 1, 2, 3])
-    g.axes[0, 0].yaxis.set_major_locator(plt.MaxNLocator(5))
+    g.axes[0, 0].axes.set_yticks(ticks=[0, 0.5, 1, 1.5, 2, 3,])
+    #g.axes[0, 0].yaxis.set_major_locator(plt.MaxNLocator(5))
 
     g.despine(trim=True)
     g.set_axis_labels("", param)
@@ -181,9 +183,13 @@ plots = True
 if plots:
 
     interval_plot('rt_1090')
-    #interval_plot('dea_tm')
-    #interval_plot('des_tf')
-    #interval_plot('des_ts')
+    interval_plot('des_Af')
+    interval_plot('des_As')
+    interval_plot('des_AC')
+    interval_plot('des_tf')
+    interval_plot('des_ts')
+    interval_plot('dea_tm')
+
 
     #fr_plot()
 
