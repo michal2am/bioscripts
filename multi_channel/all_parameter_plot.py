@@ -12,7 +12,7 @@ selected_types = ['V53H', 'V53A', 'V53E']
 selected_who = ['AD', 'AB', 'II']
 selected_pulse = [500]
 
-data = pd.read_csv('v53_statistics.csv', sep=';')
+data = pd.read_csv('v53_statistics_new.csv', sep=';')
 print(data)
 
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
@@ -77,7 +77,7 @@ def des_joint_plot():
         plt.show()
 
 
-def interval_plot(param):
+def interval_plot(param, ticks):
 
     # change to kind plot?
 
@@ -108,7 +108,7 @@ def interval_plot(param):
           linewidth=1,
           alpha=0.7)
 
-    g.axes[0, 0].axes.set_yticks(ticks=[0, 0.5, 1, 1.5, 2, 3,])
+    g.axes[0, 0].axes.set_yticks(ticks=ticks)
     #g.axes[0, 0].yaxis.set_major_locator(plt.MaxNLocator(5))
 
     g.despine(trim=True)
@@ -182,13 +182,13 @@ plots = True
 
 if plots:
 
-    interval_plot('rt_1090')
-    interval_plot('des_Af')
-    interval_plot('des_As')
-    interval_plot('des_AC')
-    interval_plot('des_tf')
-    interval_plot('des_ts')
-    interval_plot('dea_tm')
+    #interval_plot('rt_1090', [0, 1, 2, 3, 4])
+    #interval_plot('des_Af', [0, 0.5, 1, 1.5])
+    #interval_plot('des_As', [0, 0.5, 1, 1.5])
+    #interval_plot('des_AC', [0, 0.5, 1, 1.5, 2])
+    #interval_plot('des_tf', [0, 10, 20, 30])
+    #interval_plot('des_ts', [0, 10, 20, 30])
+    interval_plot('dea_tm', [0, .25, .5, .75, 1, 1.25])
 
 
     #fr_plot()
