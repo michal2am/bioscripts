@@ -8,11 +8,11 @@ from scipy.stats import ttest_ind
 import seaborn as sns
 
 
-selected_types = ['V53H', 'V53A', 'V53E']
-selected_who = ['AD', 'AB', 'II']
+selected_types = ['V53H', 'V53A', 'V53E', 'V53K']
+selected_who = ['AD', 'AB', 'II', 'DM']
 selected_pulse = [500]
 
-data = pd.read_csv('v53_statistics_new.csv', sep=';')
+data = pd.read_csv('v53_statistics_ampl.csv', sep=';')
 print(data)
 
 data = data[data.loc[:, 'kto'].isin(selected_who) & data.loc[:, 'type'].isin(selected_types)]
@@ -88,7 +88,8 @@ def interval_plot(param, ticks):
         estimator=np.mean, ci=68,
         order=selected_types,
         hue_order=selected_types,
-        height=5, aspect=0.7,
+        #wo V53K aspect was 0.7
+        height=5, aspect=0.8,
         palette=sns.color_palette('deep'),
 
         # black edges of boxplot
@@ -188,7 +189,11 @@ if plots:
     #interval_plot('des_AC', [0, 0.5, 1, 1.5, 2])
     #interval_plot('des_tf', [0, 10, 20, 30])
     #interval_plot('des_ts', [0, 10, 20, 30])
-    interval_plot('dea_tm', [0, .25, .5, .75, 1, 1.25])
+    #interval_plot('dea_tm', [0, .25, .5, .75, 1, 1.25])
+    #interval_plot('Amp', [0.0, 0.5, 1.0, 1.5, 2.0])
+    interval_plot('Amp', [0.0, 1.0, 2, 3.0, 4.0])
+
+
 
 
     #fr_plot()

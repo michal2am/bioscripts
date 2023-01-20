@@ -10,7 +10,7 @@ mini_prefix=step6.0_minimization
 equi_prefix=step6.%d_equilibration
 
 gmx grompp -f ../mdp/${mini_prefix}.mdp -o ${mini_prefix}.tpr -c ../${init}.gro -r ../${rest_prefix}.gro -p ../topol.top -n ../index.ndx
-gmx mdrun -v -deffnm ${mini_prefix} -pin on -pinstride 1 -nt 8 -pinoffset 0 -gpu_id 0
+gmx mdrun -v -deffnm ${mini_prefix} -pin on -pinstride 1 -nt 16 -pinoffset 0 -gpu_id 0
 
 cnt=1
 cntmax=6
@@ -28,7 +28,7 @@ do
         fi
 
         gmx grompp -f ../mdp/${istep}.mdp -o ${istep}.tpr -c ${pstep}.gro -r ../${rest_prefix}.gro -p ../topol.top -n ../index.ndx -maxwarn 2
-        gmx mdrun -v -deffnm ${istep} -nb gpu -pme gpu -update gpu -bonded gpu -pin on -pinstride 1 -ntmpi 1 -ntomp 8 -gpu_id 0 -pinoffset 0
+        gmx mdrun -v -deffnm ${istep} -nb gpu -pme gpu -update gpu -bonded gpu -pin on -pinstride 1 -ntmpi 1 -ntomp 16 -gpu_id 0 -pinoffset 0
 
         cnt=$((cnt+1))
 
