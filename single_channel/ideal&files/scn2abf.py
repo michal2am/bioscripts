@@ -23,10 +23,29 @@ scan = pd.DataFrame({'period_scan': scan[0], 'scan_amp': scan[1], 'scan_cat': sc
 # ???
 #scan.loc[:, 'time_scan'] += 0.0895
 
+# don't know where does 2.1 comes from, was in old script
+scan.loc[:, 'scan_amp_n'] = ((scan.loc[:, 'scan_amp'] - min(scan.loc[:, 'scan_amp']))/min(scan.loc[:, 'scan_amp'])) + 2.1
+# just binary 0 or 1 amplitudes
+scan.loc[scan['scan_amp'] != 0, 'scan_amp_b'] = 1
+scan.loc[scan['scan_amp'] == 0, 'scan_amp_b'] = 0
 
-scan.loc[:, 'scan_amp_n'] = ((scan.loc[:, 'scan_amp'] - min(scan.loc[:, 'scan_amp']))/min(scan.loc[:, 'scan_amp'])) +2.1
-
+scan_shifted = scan['scan_amp_b'].shift()
+print(scan_shifted[0])
 #scan.loc[:, 'scan_cat_w'] = np.NaN
 #scan.loc[:, 'scan_cat_w'][scan.loc[:, 'scan_cat'] > 0] = 2
 
+scan['scan_amp_b_prev'] = scan_shifted
+
+
+start_event_no = 0
+def event_no(row):
+    global start_event_no
+    if row['scan_amp_b'] != row['scan_amp_b_prev']:
+        start_event_no += 1
+        return start_event_no
+    else:
+        return start_event_no
+
+
+scan['event_no'] = scan.apply(lambda x: event_no(x), axis=1)
 print(scan)
