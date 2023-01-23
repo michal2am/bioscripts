@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from dcpyps import dcio
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 scn_file_name = '89145K1.SCN'
 
@@ -18,26 +20,17 @@ scan = pd.DataFrame({'period_scan': scan[0], 'scan_amp': scan[1], 'scan_cat': sc
 
 # print(scan[scan['scan_cat'] == 8])
 
-# this transfers dwell times to absolute time,
-#scan.loc[:, 'time_scan'] = scan.loc[:, 'period_scan'].cumsum()
-# ???
-#scan.loc[:, 'time_scan'] += 0.0895
-
-# don't know where does 2.1 comes from, was in old script
-scan.loc[:, 'scan_amp_n'] = ((scan.loc[:, 'scan_amp'] - min(scan.loc[:, 'scan_amp']))/min(scan.loc[:, 'scan_amp'])) + 2.1
+# normalized amplitude
+scan.loc[:, 'scan_amp_n'] = ((scan.loc[:, 'scan_amp'] - min(scan.loc[:, 'scan_amp']))/min(scan.loc[:, 'scan_amp']))
 # just binary 0 or 1 amplitudes
 scan.loc[scan['scan_amp'] != 0, 'scan_amp_b'] = 1
 scan.loc[scan['scan_amp'] == 0, 'scan_amp_b'] = 0
 
+# adding up series of neighbouring shut or open dwell times
+start_event_no = 0
 scan_shifted = scan['scan_amp_b'].shift()
-print(scan_shifted[0])
-#scan.loc[:, 'scan_cat_w'] = np.NaN
-#scan.loc[:, 'scan_cat_w'][scan.loc[:, 'scan_cat'] > 0] = 2
-
 scan['scan_amp_b_prev'] = scan_shifted
 
-
-start_event_no = 0
 def event_no(row):
     global start_event_no
     if row['scan_amp_b'] != row['scan_amp_b_prev']:
@@ -46,6 +39,11 @@ def event_no(row):
     else:
         return start_event_no
 
-
 scan['event_no'] = scan.apply(lambda x: event_no(x), axis=1)
-print(scan)
+
+scan_dwell = scan.groupby('event_no').agg({'period_scan': 'sum', 'scan_amp_b': 'max'})
+scan_dwell['time_scan'] = scan_dwell['period_scan'].cumsum()
+
+print(scan_dwell)
+g = sns.relplot(kind='line', x="time_scan", y="scan_amp_b", data=scan_dwell, drawstyle='steps-pre', color='grey')
+plt.show()
