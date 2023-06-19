@@ -1,17 +1,22 @@
+# python ~/repos/bioscripts/single_channel/ideal\&files/scn2csv.py --scn_file WT_25_C1.SCN --out_file WT_25_C1.csv --abf_file WT_25_c1.abf --plot_abf_scn yes
+
 import pandas as pd
-import numpy as np
 from dcpyps import dcio
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pyabf
+import  argparse
 
-abf = pyabf.ABF("89142k1.abf")
-abf.setSweep(0)
-#plt.plot(abf.sweepX, abf.sweepY)
-#plt.show()
+parser = argparse.ArgumentParser()
+parser.add_argument('--scn_file')
+parser.add_argument('--out_file')
+# those are optional, only for scn. vs abf plot
+parser.add_argument('--abf_file')
+parser.add_argument('--plot_abf_scn')
 
+args = parser.parse_args()
 
-scn_file_name = '89142K1.SCN'
+scn_file_name = args.scn_file
 
 header = dcio.scn_read_header(scn_file_name)
 scan = dcio.scn_read_data(scn_file_name, header[3])     # header[3] seems to contain needed dict with the parameters
@@ -54,9 +59,21 @@ scan['event_no'] = scan.apply(lambda x: event_no(x), axis=1)
 
 scan_dwell = scan.groupby('event_no').agg({'period_scan': 'sum', 'scan_amp_b': 'max'})
 scan_dwell['time_scan'] = scan_dwell['period_scan'].cumsum()
-
 print(scan_dwell)
-# below some magic numbers to scale amplitude and shift time, this should be read from scn/prt
-g = sns.relplot(kind='line', x="time_scan", y="scan_amp_b", data=scan_dwell, drawstyle='steps-pre', color='grey')
-g.map(sns.lineplot, x=(abf.sweepX - 0.0617)*1000, y=(abf.sweepY -1)/2.5)
-plt.show()
+scan_dwell.to_csv(args.out_file, index=False)
+
+if args.plot_abf_scn:
+
+    abf_time_shift = 0.0626
+    abf_amplitude = 2.5
+    abf_amplitude_shift = 0
+
+    abf = pyabf.ABF(args.abf_file)
+    abf.setSweep(0)
+    #plt.plot(abf.sweepX, abf.sweepY)
+    #plt.show()
+
+    # below some magic numbers to scale amplitude and shift time, this should be read from scn/prt
+    g = sns.relplot(kind='line', x="time_scan", y="scan_amp_b", data=scan_dwell, drawstyle='steps-pre', color='grey')
+    g.map(sns.lineplot, x=(abf.sweepX - abf_time_shift)*1000, y=((abf.sweepY - abf_amplitude_shift )/abf_amplitude))
+    plt.show()
