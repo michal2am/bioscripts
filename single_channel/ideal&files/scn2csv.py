@@ -5,13 +5,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pyabf
 
-abf = pyabf.ABF("WT_25_c1.abf")
+abf = pyabf.ABF("89142k1.abf")
 abf.setSweep(0)
 #plt.plot(abf.sweepX, abf.sweepY)
 #plt.show()
 
 
-scn_file_name = 'WT_25_C1.SCN'
+scn_file_name = '89142K1.SCN'
 
 header = dcio.scn_read_header(scn_file_name)
 scan = dcio.scn_read_data(scn_file_name, header[3])     # header[3] seems to contain needed dict with the parameters
@@ -58,5 +58,5 @@ scan_dwell['time_scan'] = scan_dwell['period_scan'].cumsum()
 print(scan_dwell)
 # below some magic numbers to scale amplitude and shift time, this should be read from scn/prt
 g = sns.relplot(kind='line', x="time_scan", y="scan_amp_b", data=scan_dwell, drawstyle='steps-pre', color='grey')
-g.map(sns.lineplot, x=(abf.sweepX - 0.0625)*1000, y=(abf.sweepY -0.0)/2.5)
+g.map(sns.lineplot, x=(abf.sweepX - 0.0617)*1000, y=(abf.sweepY -1)/2.5)
 plt.show()
