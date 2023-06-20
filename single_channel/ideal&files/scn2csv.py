@@ -59,12 +59,16 @@ scan['event_no'] = scan.apply(lambda x: event_no(x), axis=1)
 
 scan_dwell = scan.groupby('event_no').agg({'period_scan': 'sum', 'scan_amp_b': 'max'})
 scan_dwell['time_scan'] = scan_dwell['period_scan'].cumsum()
+scan_dwell.loc[scan_dwell['period_scan'] < 0.05, 'under_res'] = -0.1
+scan_dwell.loc[scan_dwell['period_scan'] >= 0.05, 'under_res'] = -0.2
 print(scan_dwell)
 scan_dwell.to_csv(args.out_file, index=False)
 
 if args.plot_abf_scn:
 
-    abf_time_shift = 0.0626
+    # upward currents are openings
+
+    abf_time_shift = 0.05965
     abf_amplitude = 2.5
     abf_amplitude_shift = 0
 
@@ -76,4 +80,5 @@ if args.plot_abf_scn:
     # below some magic numbers to scale amplitude and shift time, this should be read from scn/prt
     g = sns.relplot(kind='line', x="time_scan", y="scan_amp_b", data=scan_dwell, drawstyle='steps-pre', color='grey')
     g.map(sns.lineplot, x=(abf.sweepX - abf_time_shift)*1000, y=((abf.sweepY - abf_amplitude_shift )/abf_amplitude))
+    g.map(sns.lineplot, x=scan_dwell.time_scan, y=scan_dwell.under_res, drawstyle='steps-pre', color='grey')
     plt.show()
