@@ -12,9 +12,13 @@ parser.add_argument('--scn_file')
 parser.add_argument('--out_file')
 # those are optional, only for scn. vs abf plot
 parser.add_argument('--abf_file')
+parser.add_argument('--clf_file', nargs='+')
 parser.add_argument('--plot_abf_scn')
 
+
 args = parser.parse_args()
+
+# SCN stuff:
 
 scn_file_name = args.scn_file
 
@@ -64,17 +68,11 @@ scan_dwell.loc[scan_dwell['period_scan'] >= 0.05, 'under_res'] = -0.2
 print(scan_dwell)
 scan_dwell.to_csv(args.out_file, index=False)
 
-clampfit_dwell_09 = pd.read_csv('WT_25_C1_Clampfit_09.csv')
-clampfit_dwell_07 = pd.read_csv('WT_25_C1_Clampfit_07.csv')
-clampfit_dwell_05 = pd.read_csv('WT_25_C1_Clampfit_05.csv')
+# Clampfit stuff:
 
-clampfit_dwell_095 = pd.read_csv('WT_25_C1_Clampfit_095.csv')
-clampfit_dwell_10 = pd.read_csv('WT_25_C1_Clampfit_10.csv')
-clampfit_dwell_105 = pd.read_csv('WT_25_C1_Clampfit_105.csv')
-clampfit_dwell_11 = pd.read_csv('WT_25_C1_Clampfit_11.csv')
-
-clampfit_dwell_10_20 = pd.read_csv('WT_25_C1_Clampfit_10_20p.csv')
-clampfit_dwell_11_20 = pd.read_csv('WT_25_C1_Clampfit_11_20p.csv')
+clmp_files = []
+for clmp_file in args.clf_file:
+    clmp_files.append(pd.read_csv(clmp_file))
 
 # TODO: 0.95 == 1.6492
 
@@ -99,16 +97,9 @@ if args.plot_abf_scn:
     # abf recording:
     g.map(sns.lineplot, x=(abf.sweepX - abf_time_shift)*1000, y=((abf.sweepY - abf_amplitude_shift )/abf_amplitude))
     # clampfit ideal:
-    # g.map(sns.lineplot, x=clampfit_dwell_05.Start - 59.7, y=(clampfit_dwell_05.Level/10) + 1.05, drawstyle='steps-post', color='red')
-    # g.map(sns.lineplot, x=clampfit_dwell_07.Start - 59.7, y=(clampfit_dwell_07.Level/10) + 1.16, drawstyle='steps-post', color='red')
-    # g.map(sns.lineplot, x=clampfit_dwell_09.Start - 59.7, y=(clampfit_dwell_09.Level/10) + 1.27, drawstyle='steps-post', color='red')
-
-    #g.map(sns.lineplot, x=clampfit_dwell_095.Start - 59.7, y=(clampfit_dwell_095.Level/10) + 1.38, drawstyle='steps-post', color='red')
-    g.map(sns.lineplot, x=clampfit_dwell_10.Start - 59.7, y=(clampfit_dwell_10.Level/10) + 1.49, drawstyle='steps-post', color='red')
-    g.map(sns.lineplot, x=clampfit_dwell_10_20.Start - 59.7, y=(clampfit_dwell_10_20.Level / 10) + 1.60,drawstyle='steps-post', color='red')
-    #g.map(sns.lineplot, x=clampfit_dwell_105.Start - 59.7, y=(clampfit_dwell_105.Level/10) + 1.60, drawstyle='steps-post', color='red')
-    g.map(sns.lineplot, x=clampfit_dwell_11.Start - 59.7, y=(clampfit_dwell_11.Level/10) + 1.71, drawstyle='steps-post', color='red')
-    g.map(sns.lineplot, x=clampfit_dwell_11_20.Start - 59.7, y=(clampfit_dwell_11_20.Level/10) + 1.82, drawstyle='steps-post', color='red')
-
+    shift = 1.05
+    for clmp_file in clmp_files:
+        g.map(sns.lineplot, x=clmp_file.Start - 59.7, y=(clmp_file.Level / 10) + shift, drawstyle='steps-post', color='red')
+        shift += 0.11
 
     plt.show()
