@@ -5,7 +5,7 @@ from dcpyps import dcio
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pyabf
-import  argparse
+import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--scn_file')
