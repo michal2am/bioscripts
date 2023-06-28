@@ -11,9 +11,14 @@ args = parser.parse_args()
 
 for clmpf in args.clmpf_files:
     clmpf_dwells = pd.read_excel(clmpf, header=None, names=['Trace', 'Serach', 'Level', 'State', 'Start', 'End', 'Amplitude', 'Amplitude_SD', 'Dwell_time', 'Peak_to_peak', 'Interevent'])
-    print()
-    print(clmpf_dwells)
-    dcio.scn_write(clmpf_dwells.Dwell_time.values.tolist(), clmpf_dwells.Level.values.tolist(), len(clmpf_dwells.Dwell_time.values.tolist())*[0], filename=clmpf.split('.')[0] + '_clmpf.SCN')
+    #print()
+    #print(clmpf_dwells)
+    #dcio.scn_write(clmpf_dwells.Dwell_time.values.tolist(), clmpf_dwells.Level.values.tolist(), len(clmpf_dwells.Dwell_time.values.tolist())*[0], filename=clmpf.split('.')[0] + '_clmpf.SCN')
+    dcio.scn_write(clmpf_dwells.Dwell_time.values.tolist(), clmpf_dwells.Amplitude.values.tolist(), len(clmpf_dwells.Dwell_time.values.tolist())*[0], filename=clmpf.split('.')[0] + '_cfA.SCN')
+
+
+    header = dcio.scn_read_header(clmpf.split('.')[0] + '_clmpf.SCN')
+    print(header)
 
 #clampfit_dwell_11 = pd.read_csv('WT_25_C1_Clampfit_11.csv')
 #g = sns.relplot(kind='line', x='Start' , y='Level', data=clampfit_dwell_11, drawstyle='steps-pre', color='grey')
