@@ -17,8 +17,8 @@ for clmpf in args.clmpf_files:
     dcio.scn_write(clmpf_dwells.Dwell_time.values.tolist(), clmpf_dwells.Amplitude.values.tolist(), len(clmpf_dwells.Dwell_time.values.tolist())*[0], filename=clmpf.split('.')[0] + '_cfA.SCN')
 
 
-    header = dcio.scn_read_header(clmpf.split('.')[0] + '_clmpf.SCN')
-    print(header)
+    #header = dcio.scn_read_header(clmpf.split('.')[0] + '_clmpf.SCN')
+    #print(header)
 
 #clampfit_dwell_11 = pd.read_csv('WT_25_C1_Clampfit_11.csv')
 #g = sns.relplot(kind='line', x='Start' , y='Level', data=clampfit_dwell_11, drawstyle='steps-pre', color='grey')
