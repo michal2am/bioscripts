@@ -1,4 +1,4 @@
-# python ~/repos/bioscripts/single_channel/ideal\&files/scn2csv.py --scn_file WT_25_C1.SCN --out_file WT_25_C1.csv --abf_file WT_25_c1.abf --plot_abf_scn yes
+# python ~/repos/bioscripts/single_channel/ideal\&files/scnVSabfVSclmpf_ploter.py --scn_file WT_25_C1.SCN --out_file WT_25_C1.csv --abf_file WT_25_c1.abf --plot_abf_scn yes
 
 import pandas as pd
 from dcpyps import dcio

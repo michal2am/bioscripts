@@ -14,9 +14,9 @@ args = parser.parse_args()
 start_event_no = 0
 
 
-def read_scn():
+def read_scn(filename):
 
-    scn_file_name = args.scn_file
+    scn_file_name = filename
 
     header = dcio.scn_read_header(scn_file_name)
     scan = dcio.scn_read_data(scn_file_name, header[3])     # header[3] seems to contain needed dict with the parameters
@@ -65,6 +65,9 @@ def read_scn():
 
     return scan, scan_dwell
 
+
+# cumu vs all is only about input data (scan vs scan dwell)
+
 def write_scn_cumu(data):
     dcio.scn_write(data.period_scan.values.tolist(), data.scan_amp_b.values.tolist(), len(data.period_scan.values.tolist())*[0], filename='18M141_test_cumu.SCN')
 
@@ -72,7 +75,7 @@ def write_scn_all(data):
     dcio.scn_write(data.period_scan.values.tolist(), data.scan_amp_b.values.tolist(), len(data.period_scan.values.tolist())*[0], filename='18M141_test_all.SCN')
 
 
-scan, scan_dwell = read_scn()
+scan, scan_dwell = read_scn(args.scn_file)
 
 #test, binary amplitudes
 # write_scn_cumu(scan_dwell)

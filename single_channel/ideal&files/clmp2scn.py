@@ -17,7 +17,7 @@ for clmpf in args.clmpf_files:
     print(clmpf_dwells.Dwell_time.values.tolist())
     print(clmpf_dwells.Amplitude.values.tolist())
     print(len(clmpf_dwells.Dwell_time.values.tolist())*[0])
-    # why this stopped to work????
+    # why this stopped to work???? probably did not work ever before
     dcio.scn_write(clmpf_dwells.Dwell_time.values.tolist(), clmpf_dwells.Amplitude.values.tolist(), len(clmpf_dwells.Dwell_time.values.tolist())*[0], filename=clmpf.split('.')[0] + '_cfA.SCN')
 
 
