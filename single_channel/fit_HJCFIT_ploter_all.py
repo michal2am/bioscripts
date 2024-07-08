@@ -51,35 +51,47 @@ def plot_each_project_single_wt(wt):
 
 
 def plot_each_project_single_wt_seaborn(wt):
+
     WT_project = wt
+
+    forward = 'new_forward'
+    equilibrium = 'new_equilibrium'
+
+    phis = []
+    projects = []
+    wts = []
 
     for project in datas_hjcfit['project'].unique():
         single_project = datas_hjcfit[(datas_hjcfit['project'] == project) & ~(datas_hjcfit['type'] == 'WT')]
         selected_WT = datas_hjcfit[(datas_hjcfit['project'] == WT_project) & (datas_hjcfit['type'] == 'WT')]
         new_set = pd.concat([selected_WT, single_project])
-
+        print(single_project)
+        print(selected_WT)
         new_wt_a = selected_WT.alpha.values[0]
         new_wt_b = selected_WT.beta.values[0]
         new_set['new_forward'] = new_set.apply(lambda row: np.log(row['beta']/new_wt_b), axis=1)
         new_set['new_equilibrium'] = new_set.apply(lambda row: np.log((row['beta']/new_wt_b)/(row['alpha']/new_wt_a)), axis=1)
 
-        slope, intercept, r_value, p_value, std_err = stats.linregress(new_set['new_equilibrium'], new_set['new_forward'])
+        slope, intercept, r_value, p_value, std_err = stats.linregress(new_set[equilibrium], new_set[forward])
         print(slope)
-        print(new_set)
+        phis.append(slope)
+        print(single_project)
+        projects.append(project)
+        wts.append(wt)
 
         sns.set_style()
         sns.set_context("talk")
 
         g = sns.lmplot(
             data=new_set,
-            x='new_equilibrium', y='new_forward',
+            x=equilibrium, y=forward,
             ci=68,
             scatter=False,
             # palette=sns.xkcd_palette(["pale red", 'windows blue']),
             height=4, aspect=1,
         )
 
-        g.map(sns.scatterplot, data=new_set, x='new_equilibrium', y='new_forward', hue='type')
+        g.map(sns.scatterplot, data=new_set, x=equilibrium, y=forward, hue='type')
         g.add_legend()
         g.set(xlabel='log(equilibrium constant)',
               ylabel='log(forward rate)')
@@ -91,6 +103,56 @@ def plot_each_project_single_wt_seaborn(wt):
         plt.savefig('project_' + project + '_wt_' + WT_project  + '_sns.png', dpi=300)
         #plt.show()
 
+    all_phis = pd.DataFrame({'project': projects, 'phi': phis, 'wt': wts})
+    print(all_phis)
+    all_phis.to_csv('phis_wt_' + wt + '.csv')
 
+def plot_each_project_no_wt_seaborn():
 
-plot_each_project_single_wt_seaborn('e153')
+    forward = 'forward_raw'
+    equilibrium = 'equilibrium_raw'
+    phis = []
+    projects = []
+    wts = []
+
+    for project in datas_hjcfit['project'].unique():
+        single_project = datas_hjcfit[(datas_hjcfit['project'] == project) & ~(datas_hjcfit['type'] == 'WT')]
+
+        slope, intercept, r_value, p_value, std_err = stats.linregress(single_project[equilibrium], single_project[forward])
+        print(slope)
+        phis.append(slope)
+        print(single_project)
+        projects.append(project)
+        wts.append('wt_no')
+
+        sns.set_style()
+        sns.set_context("talk")
+
+        g = sns.lmplot(
+            data=single_project,
+            x=equilibrium, y=forward,
+            ci=68,
+            scatter=False,
+            # palette=sns.xkcd_palette(["pale red", 'windows blue']),
+            height=4, aspect=1,
+        )
+
+        g.map(sns.scatterplot, data=single_project, x=equilibrium, y=forward, hue='type')
+        g.add_legend()
+        g.set(xlabel='log(equilibrium constant)',
+              ylabel='log(forward rate)')
+        g.fig.suptitle("{}: {:.2f}".format(project.upper(), slope))
+        g.fig.subplots_adjust(top=0.8)
+        g.despine(trim=False)
+        #g.legend.set_title("")
+
+        plt.savefig('project_' + project + '_wt_no' + '_sns.png', dpi=300)
+        #plt.show()
+
+    all_phis = pd.DataFrame({'project': projects, 'phi': phis, 'wt': wts})
+    print(all_phis)
+    all_phis.to_csv('phis_wt_no.csv')
+
+plot_each_project_single_wt_seaborn('v53')
+plot_each_project_single_wt_seaborn('f14')
+#plot_each_project_no_wt_seaborn()

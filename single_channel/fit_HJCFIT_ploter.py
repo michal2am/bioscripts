@@ -231,6 +231,6 @@ project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 ratesFile = 'hjcfit_rates_' + project + '.csv'
 
 ploter = REFERPloter(ratesFile, project, args.config)
-#ploter.REFER_plot_co()
+ploter.REFER_plot_co()
 # ploter.REFER_plot_Auerbach()
 # ploter.update_config()
