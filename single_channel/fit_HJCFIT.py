@@ -157,6 +157,7 @@ def mechanism_CFOO(rates):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config')
+parser.add_argument('--tcrit')
 args = parser.parse_args()
 
 config = pd.read_csv(args.config)
@@ -171,7 +172,7 @@ for file_name in config.file.unique():
     sc_model = single_cell.at[0, 'model']
     sc_type = single_cell.at[0, 'type']
     sc_tres = (single_cell.at[0, 'tres']/1000000)
-    sc_tcrit = (single_cell.at[0, 'tcrit']/1000)
+    sc_tcrit = (single_cell.at[0, args.tcrit]/1000)
 
     # TODO: some integration with real data validation
     # experimental event times, for further analysis, works only for CFO

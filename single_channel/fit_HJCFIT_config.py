@@ -1,5 +1,8 @@
 import pandas as pd
-import  argparse
+import numpy as np
+import argparse
+from scipy.optimize import fsolve
+
 
 def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
     '''
@@ -16,8 +19,8 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
 
     selected = meta[(meta[('meta', 'residue')] == mutant) | (meta[('meta', 'type')] == control)]
 
-    selected = selected.loc[:, ['meta', 't_crit']].droplevel(0, axis=1)
-    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', tcrit]]
+    selected = selected.loc[:, ['meta', 'shuts', 't_crit']].droplevel(0, axis=1)
+    selected = selected.loc[:, ['residue_mut', 'file', 'cluster_name', 'min_res', tcrit, 't2', 't3']]
 
     # careful here! missing data may be copied from the wrong cell, works fine only for copying info for subsequent scns from same cell
     selected.fillna(method='ffill', inplace=True)
@@ -46,9 +49,15 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model, tcrit):
     selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres', tcrit: 'tcrit'}, inplace=True)
 
     selected.replace({'brak': 'WT'}, inplace=True)
+    selected['tcrit_m'] = selected.apply(calculate_tcrit, axis=1)
     print(selected)
-
     selected.to_csv(file_name)
+
+def calculate_tcrit(config_row):
+    tcrit_guess = (config_row['t2'] + config_row['t3'])/2
+    func_tcrit_DC = lambda tcrit_DC : 1 - np.exp(-tcrit_DC/config_row['t3']) - np.exp(-tcrit_DC/config_row['t2'])
+    tcrit_DC_solution = fsolve(func_tcrit_DC, tcrit_guess)
+    return tcrit_DC_solution[0]
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--meta_file')
@@ -58,7 +67,12 @@ args = parser.parse_args()
 meta = pd.read_csv(args.meta_file, header=[0, 1])
 print(meta)
 
-prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_fullModels.csv', 'CFOODD', 'inf_tcrit')
+#prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_2024_tcritm.csv', 'CO', 'final_tcrit')
+#prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2024_tcritm.csv', 'CO', 'final_tcrit')
+prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2024_tcritm.csv', 'CO', 'final_tcrit')
+
+
+#prepare_hjcfit_config(meta, 'V53', 'WT(V53)', 'hjcfit_config_v53_fullModels.csv', 'CFOODD', 'inf_tcrit')
 
 #prepare_hjcfit_config(meta, 'F14', 'WT(F14/F31)', 'hjcfit_config_f14_2022.csv', 'CO', 'final_tcrit')
 #prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2022.csv', 'CO', 'final_tcrit')
