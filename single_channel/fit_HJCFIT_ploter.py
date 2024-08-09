@@ -67,9 +67,11 @@ class REFERPloter:
                           format(rate, mut, outliers_cel, outliers_val, rates))
                     self.table_results.loc[self.table_results['file'].isin(outliers_cel), rate] = np.NAN
 
-    def __init__(self, rates_table, project, config):
+    def __init__(self, rates_table, project):
 
-        self.config = config
+        # self.config = config
+        # config removed because of call argument change (rates file instead of config, would be needed back
+        # if method update config is back
         self.project = project
 
         self.table_results = pd.read_csv(rates_table)
@@ -224,13 +226,13 @@ class REFERPloter:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--config", type=str)
+parser.add_argument("-r", "--rates", type=str)
 args = parser.parse_args()
 
-project = '_'.join(re.split('[_,.]', args.config)[2:-1])
+project = '_'.join(re.split('[_,.]', args.rates)[2:-1])
 ratesFile = 'hjcfit_rates_' + project + '.csv'
 
-ploter = REFERPloter(ratesFile, project, args.config)
+ploter = REFERPloter(ratesFile, project)
 ploter.REFER_plot_co()
 # ploter.REFER_plot_Auerbach()
 # ploter.update_config()

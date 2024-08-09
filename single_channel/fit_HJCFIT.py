@@ -158,10 +158,12 @@ def mechanism_CFOO(rates):
 parser = argparse.ArgumentParser()
 parser.add_argument('--config')
 parser.add_argument('--tcrit')
+parser.add_argument('--project')
 args = parser.parse_args()
 
 config = pd.read_csv(args.config)
-project = '_'.join(re.split('[_,.]', args.config)[2:-1])
+#project = '_'.join(re.split('[_,.]', args.config)[2:-1])
+project = args.project
 results = []
 
 for file_name in config.file.unique():

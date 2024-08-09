@@ -79,14 +79,22 @@ def calculate_tcrit_J(config_row):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--meta_file')
+
+parser.add_argument('--mutant')
+parser.add_argument('--control')
+parser.add_argument('--file_name')
+parser.add_argument('--model')
+
 args = parser.parse_args()
 
 # Bambi's meta file with all the data
 meta = pd.read_csv(args.meta_file, header=[0, 1])
 print(meta)
 
+prepare_hjcfit_config(meta, args.mutant, args.control, args.file_name, args.model)
+
 #prepare_hjcfit_config(meta, 'F45', 'WT(F45)', 'hjcfit_config_f45_2024_tcritm.csv', 'CO', 'final_tcrit')
-prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2024_4tcrits.csv', 'CO')
+#prepare_hjcfit_config(meta, 'F200', 'WT(F200)', 'hjcfit_config_f200_2024_4tcrits.csv', 'CO')
 #prepare_hjcfit_config(meta, 'F31', 'WT(F14/F31)', 'hjcfit_config_f31_2024_tcritm.csv', 'CO', 'final_tcrit')
 
 

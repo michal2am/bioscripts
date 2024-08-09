@@ -11,11 +11,13 @@ from scipy import stats
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-dfs", "--data_files", nargs='+')
+parser.add_argument("--control")
 args = parser.parse_args()
 
 datas_hjcfit= pd.concat([pd.read_csv(df, index_col=0) for df in args.data_files])
 print(datas_hjcfit)
-datas_hjcfit['project'] = datas_hjcfit.apply(lambda cell: cell['project'].split('_')[0], axis=1)
+# below may be used to truncate project name to residue id only:
+# datas_hjcfit['project'] = datas_hjcfit.apply(lambda cell: cell['project'].split('_')[0], axis=1)
 
 print(datas_hjcfit[datas_hjcfit['type'] == 'WT'][['project', 'type', 'model', 'alpha', 'beta']])
 
@@ -153,6 +155,6 @@ def plot_each_project_no_wt_seaborn():
     print(all_phis)
     all_phis.to_csv('phis_wt_no.csv')
 
-plot_each_project_single_wt_seaborn('v53')
-plot_each_project_single_wt_seaborn('f14')
-#plot_each_project_no_wt_seaborn()
+plot_each_project_single_wt_seaborn(args.control)
+#plot_each_project_single_wt_seaborn('f14')
+plot_each_project_no_wt_seaborn()
