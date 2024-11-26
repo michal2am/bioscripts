@@ -139,7 +139,6 @@ class Model:
         R    = mechanism.State('C', 'R', 0.0)
 
         RateList = [
-
              mechanism.Rate(rates['res'], A2D, A2F, name='res', limits=[1e-15, 1e+7]),
              mechanism.Rate(rates['des'], A2F, A2D, name='des', limits=[1e-15, 1e+7]),
              mechanism.Rate(rates['res_p'], A2Dp, A2F, name='res_p', limits=[1e-15, 1e+7]),
@@ -349,8 +348,10 @@ class ModelsBuilder:
                 current_rates[variable_rate] = variable_rate_val
                 sample_model = Model(self.topology, current_rates)
 
+                # concentration here?
+                # problem with lower than 1e-4
                 t, c, p_open, p = cjumps.solve_jump(sample_model.model_mechanism, record_length, step_size,
-                                                    cjumps.pulse_square, (1e-2, 0.0, 100e-3, 500e-3))
+                                                    cjumps.pulse_square, (1e-3, 0.0, 100e-3, 500e-3))
 
                 model_trace = pd.DataFrame()
 
