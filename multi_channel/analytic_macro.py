@@ -337,6 +337,7 @@ class ModelsBuilder:
             else:
                 steps = [0.10, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
                 #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
+                #steps = [1]
 
             single_var_trace_atf = pd.DataFrame()
 
@@ -351,7 +352,7 @@ class ModelsBuilder:
                 # concentration here?
                 # problem with lower than 1e-4
                 t, c, p_open, p = cjumps.solve_jump(sample_model.model_mechanism, record_length, step_size,
-                                                    cjumps.pulse_square, (1e-3, 0.0, 100e-3, 500e-3))
+                                                    cjumps.pulse_square, (1e-5, 0.0, 100e-3, 500e-3))
 
                 model_trace = pd.DataFrame()
 
@@ -381,19 +382,23 @@ class ModelsBuilder:
                 model_trace['rt'] = float(param_rt)
 
                 if self.topology == 'RAAFOD':
-                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
-                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
-                    params_des = self.fit_des_single(trace_des)
+                    # conc
+                    pass
+                    #trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
+                    #trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    #params_des = self.fit_des_single(trace_des)
                 else:
-                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500].copy()
-                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
-                    params_des = self.fit_des(trace_des)
+                    pass
+                    #trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500].copy()
+                    #trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    #params_des = self.fit_des(trace_des)
 
-                model_trace['d_a1'] = float(params_des[0])
-                model_trace['d_t1'] = float(params_des[1])
-                model_trace['d_a2'] = float(params_des[2])
-                model_trace['d_t2'] = float(params_des[3])
-                model_trace['d_a3'] = float(params_des[4])
+                # conc
+                #model_trace['d_a1'] = float(params_des[0])
+                #model_trace['d_t1'] = float(params_des[1])
+                #model_trace['d_a2'] = float(params_des[2])
+                #model_trace['d_t2'] = float(params_des[3])
+                #model_trace['d_a3'] = float(params_des[4])
 
                 trace_dea = model_trace.iloc[7500:].copy()
                 trace_dea.loc[:, 't'] -= 600
@@ -440,8 +445,9 @@ class ModelsBuilder:
                       facet_col_wrap=4,
                       height=125 * len(self.start_rates.keys()),
                       template='simple_white',
-                      color_discrete_sequence=px.colors.diverging.balance,
-                      hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
+                      color_discrete_sequence=px.colors.diverging.balance,)
+                      # conc
+                      # hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
 
         fig.update_layout(font=dict(family="Courier New, monospace", size=18))
 
