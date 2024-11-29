@@ -7,11 +7,11 @@ import seaborn as sns
 
 traces = pd.DataFrame()
 
-sim = pyabf.ATF('8_sim.atf')
+sim = pyabf.ATF('fit_trace.atf')
 sim_t = sim.sweepX
 sim_p = sim.sweepY/max(sim.sweepY)
 
-exp = pyabf.ATF('8_exp.atf')
+exp = pyabf.ATF('exp_trace.atf')
 exp_t = exp.sweepX
 
 exp_p = exp.sweepY

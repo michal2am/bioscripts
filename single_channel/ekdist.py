@@ -87,6 +87,12 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
     plt.savefig(plot_name, dpi=600)
     plt.show()
 
+
+fit_ekdist_shuts(['53WT3_K1.SCN'], 40e-6, [0.02e-3, 0.156e-3, 0.55e-3, 6.04e-3], [0.67, 0.25, 0.07, 0.006], '#0070c0', 'V53WT3_shuts.png', 1e-1)
+fit_ekdist_openings(['53WT3_K1.SCN'], 40e-6, [1.28e-3, 2.19e-3], [0.48, 0.52], '#ff0000', 'V53WT3_openings.png', 1e-1)
+
+
+
 #fit_ekdist_openings(scns, tres, taus_op, areas_op)
 #fit_ekdist_shuts(scns, tres, taus_sh, areas_sh)
 
@@ -114,7 +120,7 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
 #fit_ekdist_shuts(['53H3_K29.SCN', '53H3_K42.SCN', '53H3_K58.SCN', '53H3_K39.SCN'], 40e-6, [0.26e-3, 1.58e-3, 14.11e3], [0.61, 0.34, 0.05], '#4c72b0', 'V53H_shuts.png', 1e0)
 #fit_ekdist_openings(['53H3_K29.SCN', '53H3_K42.SCN', '53H3_K58.SCN', '53H3_K39.SCN'], 40e-6, [0.56e-3, 1.77e-3], [0.81, 0.19], '#4c72b0', 'V53H_openings.png', 1e-1)
 
-fit_ekdist_shuts(['53K3_K1.SCN'], 50e-6, [0.04e-3, 0.56e-3, 2.46e-3, 26.19e-3], [0.60, 0.20, 0.16, 0.04], '#c44e52', 'V53K_shuts.png', 1e0)
+#fit_ekdist_shuts(['53K3_K1.SCN'], 50e-6, [0.04e-3, 0.56e-3, 2.46e-3, 26.19e-3], [0.60, 0.20, 0.16, 0.04], '#c44e52', 'V53K_shuts.png', 1e0)
 #fit_ekdist_shuts(['53K3_K1.SCN'], 50e-6, [0.042e-3, 0.56e-3, 2.46e3, 26.19e3], [0.60, 0.20, 0.16, 0.04], '#c44e52', 'V53K_shuts.png', 1e0)
 
 

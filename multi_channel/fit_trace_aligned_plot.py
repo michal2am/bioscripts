@@ -13,7 +13,7 @@ import seaborn as sns
 #sim_fit_5_traces = sim_fit_5_traces.melt(id_vars='t', var_name='type', value_name='popen')
 #print(sim_fit_5_traces)
 
-sim_fit_30_traces = pd.read_csv('traces_30.csv', sep=',')
+sim_fit_30_traces = pd.read_csv('fitted10.csv', sep=',')
 sim_fit_30_traces = sim_fit_30_traces.melt(id_vars='t', var_name='type', value_name='popen')
 print(sim_fit_30_traces)
 
@@ -63,11 +63,11 @@ def plot_traces30(sim_fit_30_traces, sim_fit_colors, simt_fit_types, file):
     sns.relplot(x='t', y='popen', hue='type', kind="line", data=for_plot,
                 palette=sim_fit_colors,
                 #style='type',
-                height=2, aspect=1.,
-                #linewidth=3,
+                height=2, aspect=2,
+                #linewidth=6,
                 #scale=2,
                 size='type',
-                sizes=(0.5, 1)
+                sizes=(0.5, 2)
                 )
     plt.savefig(file + '.png', dpi=600)
     #plt.show()
@@ -92,11 +92,11 @@ def plot_traces1000(sim_fit_1000_traces, sim_fit_colors, simt_fit_types, file):
 #plot_traces5(sim_fit_5_traces, [(0.40, 0.67, 0.67), 'black'], ['L300V_exp', 'L300V_fit'], 'L300V')
 
 
-plot_traces30(sim_fit_30_traces, [(0.57, 0.55, 0.55), 'black'], ['wt_exp', 'wt_fit'], 'WT')
+plot_traces30(sim_fit_30_traces, [(0.57, 0.55, 0.55), 'black'], ['WT_EXP', 'WT_FIT'], 'WT')
 #plot_traces30(sim_fit_30_traces, [(0.57, 0.55, 0.55), 'black'], ['WT_exp2', 'WT_fit2'], 'WT2')
 #plot_traces30(sim_fit_30_traces, [(0.57, 0.55, 0.55), 'black'], ['WT_LC_exp', 'WT_LC_fit'], 'WT_LC')
-plot_traces30(sim_fit_30_traces, [(0.88, 0.54, 0.31), 'black'], ['k_exp', 'k_fit'], 'P277K')
-plot_traces30(sim_fit_30_traces, [(0.70, 0.62, 0.17), 'black'], ['h_exp', 'h_fit'], 'P277H')
+#plot_traces30(sim_fit_30_traces, [(0.88, 0.54, 0.31), 'black'], ['k_exp', 'k_fit'], 'P277K')
+#plot_traces30(sim_fit_30_traces, [(0.70, 0.62, 0.17), 'black'], ['h_exp', 'h_fit'], 'P277H')
 #plot_traces30(sim_fit_30_traces, [(0.77, 0.20, 0.25), 'black'], ['G254V_exp', 'G254V_fit'], 'G254V')
 
 
