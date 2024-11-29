@@ -163,7 +163,7 @@ class Model:
 
 class ModelsBuilder:
 
-    def __init__(self, s_rates, e_rates, topo, annotation):
+    def __init__(self, s_rates, e_rates, topo, annotation, concentration, pulse_length):
         """
         builds multiple SCALCS models and performs basic analysis/simulations
         dict:param s_rates: starting rates
@@ -174,6 +174,10 @@ class ModelsBuilder:
         self.start_rates = s_rates
         self.exclude_rates = e_rates
         self.annotation = annotation
+        self.concentration = concentration
+        self.pulse_length = pulse_length
+
+    # TODO: add missing get/set property methods
 
     @property
     def topology(self):
@@ -327,7 +331,8 @@ class ModelsBuilder:
         builds multiple SCALCS model for macroscopic trend analysis
         """
         step_size = 8e-5
-        record_length = 2000e-3
+        # TODO: parametrize record_length
+        record_length = self.pulse_length + 2000e-3     # add 1000 ms after pulse
         model_traces = []
 
         for variable_rate in self.start_rates.keys():
@@ -335,7 +340,7 @@ class ModelsBuilder:
             if self.exclude_rates and variable_rate in self.exclude_rates:
                 steps = [1]
             else:
-                steps = [0.10, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
+                steps = [0.05, 0.10, 0.15, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
                 #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
                 #steps = [1]
 
@@ -351,8 +356,11 @@ class ModelsBuilder:
 
                 # concentration here?
                 # problem with lower than 1e-4
+                # pulse_square : max concentration / background concentration / prepulse / pulse
+                # TODO: parametrize pulse length
                 t, c, p_open, p = cjumps.solve_jump(sample_model.model_mechanism, record_length, step_size,
-                                                    cjumps.pulse_square, (1e-5, 0.0, 100e-3, 500e-3))
+                                                    cjumps.pulse_square, (self.concentration, 0.0, 100e-3,
+                                                                          self.pulse_length))
 
                 model_trace = pd.DataFrame()
 
@@ -445,7 +453,7 @@ class ModelsBuilder:
                       facet_col_wrap=4,
                       height=125 * len(self.start_rates.keys()),
                       template='simple_white',
-                      color_discrete_sequence=px.colors.diverging.balance,)
+                      color_discrete_sequence=px.colors.sample_colorscale("amp", [n/(len(steps) -1) for n in range(len(steps))]))
                       # conc
                       # hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
 
@@ -460,13 +468,16 @@ parser.add_argument("-sr", "--start_rates", type=str)
 parser.add_argument("-er", "--exclude_rates", nargs='+')
 parser.add_argument("-tp", "--topology", type=str)
 parser.add_argument("-an", "--annotation", type=str)
+parser.add_argument("-co", "--concentration", type=float)
+parser.add_argument("-pl", "--pulse_length", type=float)
 
 args = parser.parse_args()
 
 start_rates = pd.read_csv(args.start_rates, header=None)
 start_rates = dict(zip(start_rates[0], start_rates[1]))
 
-builder = ModelsBuilder(start_rates, args.exclude_rates, args.topology, args.annotation)
+builder = ModelsBuilder(start_rates, args.exclude_rates, args.topology, args.annotation, args.concentration,
+                        args.pulse_length)
 builder.build_models_multi()
 
 
