@@ -36,14 +36,14 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model):
     if model == 'CFOODD':
         selected['beta'] = 5000
         selected['betap'] = 5000
-        selected['alpha'] = 5000
-        selected['alphap'] = 5000
+        selected['alpha'] = 1000
+        selected['alphap'] = 1000
         selected['delta'] = 5000
         selected['gamma'] = 5000
         selected['d'] = 5000
-        selected['dp'] = 5000
+        selected['dp'] = 500
         selected['r'] = 5000
-        selected['rp'] = 5000
+        selected['rp'] = 500
 
     selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres',
                              'final_tcrit': 'tcrit_KT'}, inplace=True)
