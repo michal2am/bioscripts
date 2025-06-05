@@ -10,6 +10,8 @@ from scikit_posthocs import posthoc_dunn
 from scikit_posthocs import posthoc_tukey
 from scikit_posthocs import posthoc_dunnett
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from statsmodels import robust
+
 import argparse
 import matplotlib.pyplot as plt
 
@@ -18,6 +20,34 @@ sns.set_context("talk")
 sns.set_palette('muted')
 
 
+def outliers_mz(data, rates_list):
+    for mut in data.meta_receptor.unique():
+        # print('Looking for outliers in {}'.format(mut))
+        for rate in rates_list:
+            # print('Checking rate {}'.format(rate))
+            rates = data.loc[data['meta_receptor'] == mut][rate]
+            #cells = list(data.loc[data['meta_receptor'] == mut]['meta_file'])
+            #outliers_val = outliers_iqr(rates, ret='outliers')
+            #outliers_ind = outliers_iqr(rates, ret='outliers_indices')
+
+            median = np.median(rates)
+            mad = robust.mad(rates)
+            modified_z_scores = 0.6745 * (rates - median) / mad
+            outliers = rates[np.abs(modified_z_scores) > 3.5]
+            #TODO: make outliers a mask to select values
+            if len(outliers) > 0:
+                print('all {} {}'.format(rate, mut))
+                print(rates)
+                print(outliers)
+                data.loc[(data[rate].isin(outliers) & (data['meta_receptor']) == mut), rate] = np.NAN
+                print(data.loc[np.isclose(data[rate], outliers) & (data['meta_receptor']) == mut, rate])
+            '''
+            if outliers_val.size > 0:
+                outliers_cel = [cells[ind] for ind in outliers_ind]
+                print('{} value outliers in {} type; cells: {}, values: {} \n within: {}'.
+                      format(rate, mut, outliers_cel, outliers_val, rates))
+                data.loc[data['meta_file'].isin(outliers_cel), rate] = np.NAN
+            '''
 def outliers_iqrsckit(data, rates_list):
     for mut in data.meta_receptor.unique():
         # print('Looking for outliers in {}'.format(mut))
@@ -34,6 +64,7 @@ def outliers_iqrsckit(data, rates_list):
                 print('{} value outliers in {} type; cells: {}, values: {} \n within: {}'.
                       format(rate, mut, outliers_cel, outliers_val, rates))
                 data.loc[data['meta_file'].isin(outliers_cel), rate] = np.NAN
+
 
 
 def statistics(data):
@@ -165,7 +196,7 @@ def desens_FR_plot(data):
     plt.savefig('desens_FR_plot' + '.png', dpi=300)
 
 
-def multi_plot(data, params, params_name, labels, height, aspect):
+def multi_plot(data, params, params_name, labels, height, aspect, yticks):
 
     data_desens = data.melt(id_vars='meta_receptor', value_vars= params,
                             var_name=params_name, value_name='value')
@@ -183,7 +214,7 @@ def multi_plot(data, params, params_name, labels, height, aspect):
           order=params,
             palette=sns.xkcd_palette(["pale red", 'windows blue', 'green']))
 
-    g.axes[0, 0].axes.set_yticks(ticks=[0.00, 0.25, 0.5, 0.75])
+    g.axes[0, 0].axes.set_yticks(ticks=yticks)
     g.ax.set_xticklabels(labels)
     g.fig.set_size_inches(height*aspect, height)
     g.despine(trim=True)
@@ -222,11 +253,19 @@ parser.add_argument('--file_name')
 args = parser.parse_args()
 
 
+
+
+feature_list = ['shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4',
+                'openings_t1', 'openings_t2',  'openings_p1', 'openings_p2',
+                'rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_d2', 'rates_r2',
+                'rates_d2p', 'rates_r2p']
+
+'''
 feature_list = ['shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4',
                 'openings_t1', 'openings_t2',  'openings_p1', 'openings_p2',
                 'rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_b2p', 'rates_a2p', 'rates_d2', 'rates_r2',
                 'rates_d2p', 'rates_r2p']
-
+'''
 '''
 feature_list = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes_FR300', 'amplitudes_FR500',
                             'desensitization_tau_fast', 'desensitization_tau_slow',
@@ -237,7 +276,8 @@ feature_list = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes_FR300', 'am
 data = pd.read_csv(args.file_name, header=[0, 1], sep=',')
 data.columns = ['_'.join(col) for col in data.columns.values]
 data.to_csv('all_data.csv')
-outliers_iqrsckit(data, feature_list)
+outliers_mz(data, feature_list)
+#outliers_iqrsckit(data, feature_list)
 data.to_csv('no_outliers_data.csv')
 statistics = statistics(data)
 statistics.to_csv('statistics.csv')
@@ -248,13 +288,30 @@ test_statistics(data, feature_list)
 #plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0.30, 0.6, 0.9, 1.2, 1.5])
 #plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 5, 10, 15, 20])
 
+#plot('openings_t1', ['WT', 'E153K', 'E153A'], [0., 0.5, 1, 1.5])
+#plot('openings_t2', ['WT', 'E153K', 'E153A'], [1, 1.5, 2, 2.5, 3])
 
 
-multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
-                 ['P1', 'P2', 'P3', 'P4'], 3, 1.2)
+#multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
+#                ['P1', 'P2', 'P3', 'P4'], 3, 1.2, [0.00, 0.25, 0.5, 0.75])
 
-multi_plot(data, ['openings_p1', 'openings_p2'], 'openings_distribution_parameter',
-                 ['P1', 'P2'], 3, 0.8)
+#multi_plot(data, ['openings_p1', 'openings_p2'], 'openings_distribution_parameter',
+#                 ['P1', 'P2'], 3, 0.8, [0.00, 0.25, 0.5, 0.75, 1])
+
+#multi_plot(data, ['rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_b2p', 'rates_a2p', 'rates_d2', 'rates_r2',
+#                'rates_d2p', 'rates_r2p'], 'model_rates',
+#                 ['d', 'g', 'b2', 'a2', 'b2p', 'a2p', 'd', 'r', 'dp', 'rp'], 3, 2, [0,5,10,15,20])
+#TODO: no explicit data passed to plot
+#plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
+#plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
+#plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
+#plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
+#plot('rates_b2p', ['WT', 'E153K', 'E153A'], [0, 3, 6, 9,])
+#plot('rates_a2p', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5])
+#plot('rates_d2', ['WT', 'E153K', 'E153A'])
+#plot('rates_r2', ['WT', 'E153K', 'E153A'])
+#plot('rates_d2p', ['WT', 'E153K', 'E153A'])
+#plot('rates_r2p', ['WT', 'E153K', 'E153A'])
 
 
 #desens_A_plot(data)

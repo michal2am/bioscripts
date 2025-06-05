@@ -26,8 +26,9 @@ def printiter(theta):
     iternum += 1
     lik = dcprogslik(theta)
     if iternum % 10 == 0:
-        print("iteration # {0:d}; log-lik = {1:.6f}".format(iternum, -lik))
-        print(np.exp(theta))
+        pass
+        #print("iteration # {0:d}; log-lik = {1:.6f}".format(iternum, -lik))
+        #print(np.exp(theta))
 
 def mechanism_RO(rates):
 
@@ -73,7 +74,7 @@ def mechanism_CFOODD(rates):
 
     rate_list = [
         mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
-        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]), #1e0
         mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
@@ -85,6 +86,31 @@ def mechanism_CFOODD(rates):
     ]
 
     complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    #complete_mechanism.Rates[1].fixed = True
+    # complete_mechanism.set_eff('c', 100e-9)
+
+    return complete_mechanism
+def mechanism_CFODD(rates):
+
+    c = mechanism.State('B', 'A2R', 0.0)
+    f = mechanism.State('B', 'A2F', 0.0)
+    o = mechanism.State('A', 'A2O', 50e-12)
+    d = mechanism.State('C', 'A2D', 0.0)
+    dp = mechanism.State('C', 'A2Dp', 0.0)
+
+    rate_list = [
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], o, f, name='alpha', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[2], c, f, name='delta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[3], f, c, name='gamma', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[4], f, d, name='d', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[5], f, dp, name='dp', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[6], d, f, name='r', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[7], dp, f, name='rp', limits=[1e0, 1.5e4])
+    ]
+
+    complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
+    #complete_mechanism.Rates[1].fixed = True
     # complete_mechanism.set_eff('c', 100e-9)
 
     return complete_mechanism
@@ -98,8 +124,8 @@ def mechanism_CFOOD(rates):
     d = mechanism.State('C', 'A2D', 0.0)
 
     rate_list = [
-        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
-        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1e1]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1e1]),
         mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
@@ -167,6 +193,7 @@ project = args.project
 results = []
 
 for file_name in config.file.unique():
+    # TODO: BIG PROBLEM IF MULTIPLE ABFs FOR SINGLE CELL
 
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
     single_cell.reset_index(inplace=True)
@@ -202,7 +229,14 @@ for file_name in config.file.unique():
         else:
             print('SCN file not found {}.'.format(scn))
 
-    rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, sc_tcrit)
+    # TODO: tcrit for non-CO models
+    if sc_model == 'CFOODD':
+        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, 1000000)
+    elif sc_model == 'CFODD':
+        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, 1000000)
+    else:
+        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, sc_tcrit)
+
     rec.record_type = 'recorded'
     rec.printout()
 
@@ -227,7 +261,15 @@ for file_name in config.file.unique():
                           single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
                           single_cell.at[0, 'd'],
                           single_cell.at[0, 'r']])
+    elif sc_model == 'CFODD':
+        print('making mechanism')
+        mec = mechanism_CFODD([single_cell.at[0, 'beta'],
+                          single_cell.at[0, 'alpha'],
+                          single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
+                          single_cell.at[0, 'd'], single_cell.at[0, 'dp'],
+                          single_cell.at[0, 'r'], single_cell.at[0, 'rp']])
     elif sc_model == 'CFOODD':
+        print('making mechanism')
         mec = mechanism_CFOODD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
                           single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
                           single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
@@ -257,60 +299,64 @@ for file_name in config.file.unique():
     lik = dcprogslik(res.x)
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
-    # plot and event times of shuts, works only for CFO model
-    if sc_model == 'CFO':
-        print(scl.printout_distributions(mec, sc_tres))
-        shuts = scl.printout_distributions(mec, sc_tres)
 
-        t1_mod = shuts.splitlines()[10].split('\t')[1]
-        p1_mod = shuts.splitlines()[10].split('\t')[2]
-        t2_mod = shuts.splitlines()[11].split('\t')[1]
-        p2_mod = shuts.splitlines()[11].split('\t')[2]
+    plots = False
+    if plots:
 
-        shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
+        # plot event times of shuts, works only for CFO model
+        if sc_model == 'CFO':
+            print(scl.printout_distributions(mec, sc_tres))
+            shuts = scl.printout_distributions(mec, sc_tres)
 
-        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fshut(t)')
-        plt.xlabel('Shut time, ms')
-        plt.title(file_name + ' ' + sc_type + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) + '\n' + shuts_format)
-        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-        plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
-        plt.close()
-        #plt.show()
+            t1_mod = shuts.splitlines()[10].split('\t')[1]
+            p1_mod = shuts.splitlines()[10].split('\t')[2]
+            t2_mod = shuts.splitlines()[11].split('\t')[1]
+            p2_mod = shuts.splitlines()[11].split('\t')[2]
+
+            shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
+
+            t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+            plt.ylabel('fshut(t)')
+            plt.xlabel('Shut time, ms')
+            plt.title(file_name + ' ' + sc_type + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) + '\n' + shuts_format)
+            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+            plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
+            plt.close()
+            #plt.show()
 
 
-    # plot and events times for openings and shuts, works only for complex models
-    if sc_model in ['CFOODD', 'CFOOD', 'CFOO']:
+        # plot and events times for openings and shuts, works only for complex models
+        if sc_model in ['CFOODD', 'CFOOD', 'CFOO', 'CFODD']:
+            print('problem')
+            event_times_data = scl.printout_distributions(mec, sc_tres)
+            print(event_times_data)
+            #'''
+            event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
+            n = event_times_log.write(event_times_data)
+            event_times_log.close()
 
-        event_times_data = scl.printout_distributions(mec, sc_tres)
-        print(event_times_data)
+            t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+            plt.ylabel('fshut(t)')
+            plt.xlabel('Shut time, ms')
+            plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) )#+ '\n' + shuts_format)
+            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+            plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
+            plt.close()
+            plt.show()
 
-        event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
-        n = event_times_log.write(event_times_data)
-        event_times_log.close()
-
-        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fshut(t)')
-        plt.xlabel('Shut time, ms')
-        plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) )#+ '\n' + shuts_format)
-        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
-        plt.close()
-        #plt.show()
-
-        t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fopen(t)')
-        plt.xlabel('Open time, ms')
-        plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str(
-            sc_tcrit * 1000))  # + '\n' + shuts_format)
-        print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
-        plt.close()
-        # plt.show()
-
+            t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
+            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+            plt.ylabel('fopen(t)')
+            plt.xlabel('Open time, ms')
+            plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str(
+                sc_tcrit * 1000))  # + '\n' + shuts_format)
+            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
+            plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
+            plt.close()
+            plt.show()
+            #'''
     # results saving below:
 
     if sc_model == 'CO':
@@ -376,6 +422,21 @@ for file_name in config.file.unique():
                         'beta': beta, 'alpha': alpha,
                         'gamma': gamma, 'delta': delta, 'd': d, 'r': r}
 
+    elif sc_model == 'CFODD':
+
+        beta = mec.Rates[0].rateconstants[0]
+        alpha = mec.Rates[1].rateconstants[0]
+        delta = mec.Rates[2].rateconstants[0]
+        gamma = mec.Rates[3].rateconstants[0]
+        d = mec.Rates[4].rateconstants[0]
+        dp = mec.Rates[5].rateconstants[0]
+        r = mec.Rates[6].rateconstants[0]
+        rp = mec.Rates[7].rateconstants[0]
+
+        refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'delta': delta/1000, 'gamma': gamma/1000, 'beta': beta/1000,  'alpha': alpha/1000,
+                        'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000}
+
     elif sc_model == 'CFOODD':
 
         beta = mec.Rates[0].rateconstants[0]
@@ -390,8 +451,9 @@ for file_name in config.file.unique():
         rp = mec.Rates[9].rateconstants[0]
 
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
-                        'beta': beta, 'betap': betap, 'alpha': alpha, 'alphap': alphap,
-                        'gamma': gamma, 'delta': delta, 'd': d, 'dp': dp, 'r': r, 'rp': rp}
+                        'delta': delta/1000, 'gamma': gamma/1000,
+                        'beta': beta/1000, 'alpha': alpha/1000, 'betap': betap/1000, 'alphap': alphap/1000,
+                        'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000}
 
     results.append(refer_result)
 

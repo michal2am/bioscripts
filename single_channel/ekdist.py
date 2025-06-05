@@ -8,13 +8,6 @@ import numpy as np
 from scipy.optimize import minimize, bisect
 
 
-taus_op = [0.0005, 0.002]
-areas_op = [0.5, 0.5]
-taus_sh = [0.0005, 0.002, 0.001, 0.01]
-areas_sh = [0.25, 0.25, 0.25, 0.25]
-scns = ['V53A2_K2.SCN', 'V53A2_K4.SCN', 'V53A2_K8.SCN']
-tres = 50e-6
-
 def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
 
     rec = ekrecord.SingleChannelRecord()
@@ -32,7 +25,7 @@ def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
     print(res)
     expPDF.theta = res.x
 
-    ekplot.plot_xlog_interval_histogram_fit(rec.opint, rec.tres, expPDF.to_plot, res.x, shut=False)
+    ekplot.plot_xlog_interval_histogram_fit(rec.opint, rec.tres, expPDF.to_plot, res.x, 2, 2, shut=False)
     print(expPDF)
 
     ax = plt.gca()
@@ -41,16 +34,20 @@ def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
 
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                  ax.get_xticklabels() + ax.get_yticklabels()):
-        item.set_fontsize(12)
+        item.set_fontsize(9)
+    ax.set_xlabel('')
+    ax.set_ylabel('')
 
     for axis in ['top', 'right']:
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
     ax.set_xlim([3e-5, lim])
+    ax.set_ylim([0, 20])
+
 
     plt.tight_layout()
-    plt.savefig(plot_name, dpi=600)
-    plt.show()
+    plt.savefig(plot_name, dpi=300)
+    #plt.show()
 
 def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
 
@@ -58,8 +55,8 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
     rec.load_SCN_file(scns)
     rec.tres = tres
     print(rec)
-    # ekplot.pl/ot_xlog_interval_histogram(rec.shint, rec.tres, shut=True)
-    # plt.show()
+    # ekplot.plot_xlog_interval_histogram(rec.shint, rec.tres, shut=True)
+    #plt.show()
 
     expPDF = dceq.MultiExponentialPDF(np.asarray(rec.shint), taus=np.asarray(taus), areas=np.asarray(areas))
     theta = expPDF.theta
@@ -68,7 +65,7 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
     print(res)
     expPDF.theta = res.x
 
-    ekplot.plot_xlog_interval_histogram_fit(rec.shint, rec.tres, expPDF.to_plot, res.x, shut=True)
+    ekplot.plot_xlog_interval_histogram_fit(rec.shint, rec.tres, expPDF.to_plot, res.x, 2, 2, shut=True)
     print(expPDF)
     ax = plt.gca()
     for line in ax.get_lines():
@@ -76,22 +73,37 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
 
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                  ax.get_xticklabels() + ax.get_yticklabels()):
-        item.set_fontsize(12)
+        item.set_fontsize(9)
+    ax.set_xlabel('')
+    ax.set_ylabel('')
 
     for axis in ['top', 'right']:
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
     ax.set_xlim([3e-5, lim])
+    ax.set_ylim([0, 20])
+
 
     plt.tight_layout()
-    plt.savefig(plot_name, dpi=600)
-    plt.show()
+    plt.savefig(plot_name, dpi=300)
+    #plt.show()
 
 
-fit_ekdist_shuts(['53WT3_K1.SCN'], 40e-6, [0.02e-3, 0.156e-3, 0.55e-3, 6.04e-3], [0.67, 0.25, 0.07, 0.006], '#0070c0', 'V53WT3_shuts.png', 1e-1)
-fit_ekdist_openings(['53WT3_K1.SCN'], 40e-6, [1.28e-3, 2.19e-3], [0.48, 0.52], '#ff0000', 'V53WT3_openings.png', 1e-1)
+#fit_ekdist_shuts(['53WT3_K1.SCN'], 40e-6, [0.02e-3, 0.156e-3, 0.55e-3, 6.04e-3], [0.67, 0.25, 0.07, 0.006], '#ff0000', 'V53WT3_shuts.png', 1e-1)
+#fit_ekdist_openings(['53WT3_K1.SCN'], 40e-6, [1.28e-3, 2.19e-3], [0.48, 0.52], '#0070c0', 'V53WT3_openings.png', 1e-1)
 
+#fit_ekdist_shuts(['kom1_1k.SCN', 'KOM1_2k.SCN', 'KOM1_3k.SCN', 'KOM1_4k.SCN', 'KOM1_5k.SCN', 'KOM1_6k.SCN'], 50e-6, [0.06e-3, 0.65e-3, 3.72e-3, 28.58e-3], [0.58, 0.26, 0.13, 0.02], '#ff0000', 'E270K1_shuts.png', 1e0)
+#fit_ekdist_openings(['kom1_1k.SCN', 'KOM1_2k.SCN', 'KOM1_3k.SCN', 'KOM1_4k.SCN', 'KOM1_5k.SCN', 'KOM1_6k.SCN'], 50e-6, [0.82e-3, 4.99e-3], [0.39, 0.61], '#0070c0', 'E270K1_openings.png', 1e-1)
 
+#fit_ekdist_shuts(['KOM2(1).SCN', 'KOM2(2).SCN', 'KOM2(3).SCN', 'KOM2(4).SCN', 'KOM2(5).SCN'], 40e-6, [0.08e-3, 0.37e-3, 2.97e-3, 20.18e-3], [0.53, 0.39, 0.06, 0.02], '#ff0000', 'E270Q1_shuts.png', 1e0)
+#fit_ekdist_openings(['KOM2(1).SCN', 'KOM2(2).SCN', 'KOM2(3).SCN', 'KOM2(4).SCN', 'KOM2(5).SCN'], 40e-6, [0.31e-3, 1.67e-3], [0.13, 0.87], '#0070c0', 'E270Q1_openings.png', 1e-1)
+#fit_ekdist_openings(['KOM2(1).SCN', 'KOM2(2).SCN', 'KOM2(3).SCN', 'KOM2(5).SCN'], 40e-6, [0.31e-3, 1.67e-3], [0.13, 0.87], '#0070c0', 'E270Q1_openings.png', 1e-1)
+
+fit_ekdist_shuts(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [0.05e-3, 0.40e-3, 1.73e-3, 16.09e-3], [0.25, 0.57, 0.16, 0.02], '#ff0000', 'E270F1_shuts.png', 1e0)
+fit_ekdist_openings(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [1.38e-3, 5.09e-3], [0.9, 0.1], '#0070c0', 'E270F1_openings.png', 1e-1)
+
+#fit_ekdist_shuts(['2406_C1.SCN', '2406_C2.SCN', '2406_C3.SCN'], 70e-6, [0.25e-3, 2.08e-3, 9.47e-3], [0.26, 0.68, 0.06], '#ff0000', 'E270C1_shuts.png', 1e0)
+#fit_ekdist_openings(['2406_C1.SCN', '2406_C2.SCN', '2406_C3.SCN'], 70e-6, [0.16e-3, 0.66e-3], [0.78, 0.22], '#0070c0', 'E270C1_openings.png', 1e-1)
 
 #fit_ekdist_openings(scns, tres, taus_op, areas_op)
 #fit_ekdist_shuts(scns, tres, taus_sh, areas_sh)
