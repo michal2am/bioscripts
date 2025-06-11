@@ -21,33 +21,31 @@ sns.set_palette('muted')
 
 
 def outliers_mz(data, rates_list):
-    for mut in data.meta_receptor.unique():
-        # print('Looking for outliers in {}'.format(mut))
-        for rate in rates_list:
-            # print('Checking rate {}'.format(rate))
-            rates = data.loc[data['meta_receptor'] == mut][rate]
-            #cells = list(data.loc[data['meta_receptor'] == mut]['meta_file'])
-            #outliers_val = outliers_iqr(rates, ret='outliers')
-            #outliers_ind = outliers_iqr(rates, ret='outliers_indices')
 
-            median = np.median(rates)
-            mad = robust.mad(rates)
-            modified_z_scores = 0.6745 * (rates - median) / mad
-            outliers = rates[np.abs(modified_z_scores) > 3.5]
-            #TODO: make outliers a mask to select values
-            if len(outliers) > 0:
-                print('all {} {}'.format(rate, mut))
-                print(rates)
-                print(outliers)
-                data.loc[(data[rate].isin(outliers) & (data['meta_receptor']) == mut), rate] = np.NAN
-                print(data.loc[np.isclose(data[rate], outliers) & (data['meta_receptor']) == mut, rate])
-            '''
-            if outliers_val.size > 0:
-                outliers_cel = [cells[ind] for ind in outliers_ind]
-                print('{} value outliers in {} type; cells: {}, values: {} \n within: {}'.
-                      format(rate, mut, outliers_cel, outliers_val, rates))
-                data.loc[data['meta_file'].isin(outliers_cel), rate] = np.NAN
-            '''
+    def modified_zscore(series):
+        median = series.median()
+        mad = np.median(np.abs(series - median))
+        if mad == 0:
+            return pd.Series(np.zeros(len(series)), index=series.index)
+        return 0.6745 * (series - median) / mad
+
+    for rate in rates_list:
+        z_scores = data.groupby('meta_receptor')[rate].transform(modified_zscore)
+        outlier_mask = np.abs(z_scores) > 3.5
+        data[f'{rate}_outlier'] = outlier_mask
+
+        print(f'\n=== Analysis for "{rate}" ===')
+        for group, group_df in data.groupby('meta_receptor'):
+            original_values = group_df[rate]
+            outliers = original_values[group_df[f'{rate}_outlier']]
+            print(f'\nGroup: {group}')
+            print(f'  All values: {original_values.tolist()}')
+            print(f'  Outliers:   {outliers.tolist()}')
+
+        data.loc[outlier_mask, rate] = np.NaN
+
+
+
 def outliers_iqrsckit(data, rates_list):
     for mut in data.meta_receptor.unique():
         # print('Looking for outliers in {}'.format(mut))
@@ -83,58 +81,69 @@ def statistics(data):
     return pd.concat(all_mut_statistics)
 
 def test_statistics(data, feature_list):
-    with open('test_statistics.log', 'w') as f:
-        for feature in feature_list:
-            groups = [data[data['meta_receptor'] == mut][feature] for mut in data['meta_receptor'].unique()]
-            cleaned_groups = [[x for x in inner_list if not pd.isna(x)] for inner_list in groups]
-            print(feature)  # , file=f)
+    # TODO: this can be done clearer like outliers_mz
 
-            # shapiro-wilk
-            for group in cleaned_groups:
-                if len(group) >= 3:
-                    s_statistic, sp_value = shapiro(group)
-                    if sp_value < 0.05:
-                        print("Data not normal {}".format(sp_value))
-                        print(group)
-                    else:
-                        print("Data normal {}".format(sp_value))
+    for feature in feature_list:
+
+        print(f'\n=== Differences analysis for "{feature}" ===\n')
+
+        groups = [data[data['meta_receptor'] == mut][feature] for mut in data['meta_receptor'].unique()]
+        cleaned_groups = [[x for x in inner_list if not pd.isna(x)] for inner_list in groups]
+
+        print(data[['meta_receptor', feature]])
+        print('')
+        print(data.groupby('meta_receptor')[feature].mean())
+        print('')
+
+        # shapiro-wilk
+        for mut, group in zip(data['meta_receptor'].unique(), cleaned_groups):
+            if len(group) >= 3:
+                s_statistic, sp_value = shapiro(group)
+                if sp_value < 0.05:
+                    print(""
+                          "{} data not normal {}".format(mut, sp_value))
+                    print(group)
                 else:
-                    print("n < 3, no Shapiro test")
-            # levene
-            l_statistic, lp_value = levene(*cleaned_groups)
-            if lp_value < 0.05:
-                print("Variances not equal {}".format(lp_value))
+                    print("{} data normal {}".format(mut, sp_value))
             else:
-                print("Variances equal {}".format(lp_value))
+                print("n < 3, no Shapiro test")
+        # levene
+        l_statistic, lp_value = levene(*cleaned_groups)
+        if lp_value < 0.05:
+            print("Variances not equal {}".format(lp_value))
+        else:
+            print("Variances equal {}".format(lp_value))
+
+        print('')
+
+        if sp_value > 0.05 and lp_value > 0.05:
 
             f_statistic, p_value = f_oneway(*cleaned_groups)
-            print(f_statistic, p_value)  # , file=f)
-            if p_value < 0.05:
-                print("There is a significant difference between the groups (Anova).")  # , file=f)
-                dropped_data = data.dropna(subset=feature)
 
-                # tukey = pairwise_tukeyhsd(endog=dropped_data[feature], groups=dropped_data['meta_residue_mut'], alpha=0.05)
-                # print(tukey.summary())  # , file=f)
+            if p_value < 0.05:
+                print("There is a significant difference between the groups (Anova f={}, p={}).".format(f_statistic, p_value))
+                dropped_data = data.dropna(subset=feature)
 
                 tuckey_results = posthoc_tukey(dropped_data, val_col=feature, group_col="meta_receptor")
-                print("Tuckey's")
+                print("\nTuckey's")
                 print(tuckey_results)
                 dunnet_results = posthoc_dunnett(dropped_data, val_col=feature, group_col="meta_receptor", control="WT")
-                print("Dunnet's")
+                print("\nDunnet's")
                 print(dunnet_results)
             else:
-                print("There is not a significant difference between the groups (Anova).")  # , file=f)
+                print("There is not a significant difference between the groups (Anova f={}, p={}).".format(f_statistic, p_value))
+
+        else:
 
             h_statistic, hp_value = kruskal(*cleaned_groups)
-            print(h_statistic, hp_value)
             if hp_value < 0.05:
-                print("There is a significant difference between the groups (Kruskal).")
+                print("There is a significant difference between the groups (Kruskal h={}, p={}).".format(h_statistic, hp_value))
                 dropped_data = data.dropna(subset=feature)
                 dunn_results = posthoc_dunn(dropped_data, val_col=feature, group_col='meta_receptor', p_adjust='holm-sidak')
-                print("Dunn's")
+                print("\nDunn's")
                 print(dunn_results)
             else:
-                print("There is not a significant difference between the groups (Kruskal).")  # , file=f)
+                print("There is not a significant difference between the groups (Kruskal h={}, p={}).".format(h_statistic, hp_value))
 
 
 
@@ -302,16 +311,16 @@ test_statistics(data, feature_list)
 #                'rates_d2p', 'rates_r2p'], 'model_rates',
 #                 ['d', 'g', 'b2', 'a2', 'b2p', 'a2p', 'd', 'r', 'dp', 'rp'], 3, 2, [0,5,10,15,20])
 #TODO: no explicit data passed to plot
-#plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
-#plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
-#plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
-#plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
+plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
+plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
+plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
+plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
 #plot('rates_b2p', ['WT', 'E153K', 'E153A'], [0, 3, 6, 9,])
 #plot('rates_a2p', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5])
-#plot('rates_d2', ['WT', 'E153K', 'E153A'])
-#plot('rates_r2', ['WT', 'E153K', 'E153A'])
-#plot('rates_d2p', ['WT', 'E153K', 'E153A'])
-#plot('rates_r2p', ['WT', 'E153K', 'E153A'])
+plot('rates_d2', ['WT', 'E153K', 'E153A'])
+plot('rates_r2', ['WT', 'E153K', 'E153A'])
+plot('rates_d2p', ['WT', 'E153K', 'E153A'])
+plot('rates_r2p', ['WT', 'E153K', 'E153A'])
 
 
 #desens_A_plot(data)

@@ -191,6 +191,7 @@ config = pd.read_csv(args.config)
 #project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 project = args.project
 results = []
+model_results = []
 
 for file_name in config.file.unique():
     # TODO: BIG PROBLEM IF MULTIPLE ABFs FOR SINGLE CELL
@@ -203,15 +204,6 @@ for file_name in config.file.unique():
     sc_tres = (single_cell.at[0, 'tres']/1000000)
     sc_tcrit = (single_cell.at[0, args.tcrit]/1000)
 
-    # TODO: some integration with real data validation
-    # experimental event times, for further analysis, works only for CFO
-    # needs to be in a config file, not supported by fit_HJCFIT_config.py
-    if sc_model == 'CFO':
-        sc_t1_exp = single_cell.at[0, 't1_exp']
-        sc_t2_exp = single_cell.at[0, 't2_exp']
-        sc_p1_exp = single_cell.at[0, 'p1_exp']
-        sc_p2_exp = single_cell.at[0, 'p2_exp']
-    # end
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
@@ -300,7 +292,7 @@ for file_name in config.file.unique():
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
 
-    plots = False
+    plots = True
     if plots:
 
         # plot event times of shuts, works only for CFO model
@@ -328,14 +320,33 @@ for file_name in config.file.unique():
 
         # plot and events times for openings and shuts, works only for complex models
         if sc_model in ['CFOODD', 'CFOOD', 'CFOO', 'CFODD']:
-            print('problem')
-            event_times_data = scl.printout_distributions(mec, sc_tres)
-            print(event_times_data)
-            #'''
-            event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
-            n = event_times_log.write(event_times_data)
-            event_times_log.close()
 
+            (open_dist, asymptotic_open_dist, asymptotic_open_norm,
+             shut_dist, asymptotic_shut_dist, asymptotic_shut_norm,
+             event_times_data) = scl.printout_distributions(mec, sc_tres)
+
+            print(event_times_data)
+
+            open_dist = pd.DataFrame(open_dist, columns=['term', 'w', 'rate', 'op_tau_id', 'op_area_id']).drop(['w', 'rate'], axis=1)
+            asymptotic_open_dist = pd.DataFrame(asymptotic_open_dist, columns=['term', 'op_tau_as', 'op_area_as', 'rate']).drop(['rate'], axis=1)
+            asymptotic_open_norm = pd.DataFrame(asymptotic_open_norm, columns=['term', 'op_area_nas'])
+            full_open_dist = open_dist.merge(asymptotic_open_dist, on='term').merge(asymptotic_open_norm, on='term')
+            print(full_open_dist)
+
+
+            shut_dist = pd.DataFrame(shut_dist, columns=['term', 'w', 'rate', 'sh_tau_id', 'sh_area_id']).drop(['w', 'rate'], axis=1)
+            asymptotic_shut_dist = pd.DataFrame(asymptotic_shut_dist, columns=['term', 'sh_tau_as', 'sh_area_as', 'rate']).drop(['rate'], axis=1)
+            asymptotic_shut_norm = pd.DataFrame(asymptotic_shut_norm, columns=['term', 'sh_area_nas'])
+            full_shut_dist = shut_dist.merge(asymptotic_shut_dist, on='term').merge(asymptotic_shut_norm, on='term')
+            print(full_shut_dist)
+
+            #'''
+            #event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
+            #n = event_times_log.write(event_times_data)
+            #event_times_log.close()
+
+
+            # THIS WORKS
             t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
             plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
             plt.ylabel('fshut(t)')
@@ -346,6 +357,7 @@ for file_name in config.file.unique():
             plt.close()
             plt.show()
 
+            #THIS NOT
             t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
             plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
             plt.ylabel('fopen(t)')
@@ -379,7 +391,6 @@ for file_name in config.file.unique():
                         'alpha': alpha, 'beta': beta,
                         'gamma': gamma, 'delta': delta,
                         't1_mod': t1_mod, 'p1_mod': p1_mod, 't2_mod': t2_mod, 'p2_mod': p2_mod,
-                        't1_exp': sc_t1_exp, 'p1_exp': sc_p1_exp, 't2_exp': sc_t2_exp, 'p2_exp': sc_p2_exp
                         }
 
     elif sc_model == 'CFOO':
@@ -437,6 +448,24 @@ for file_name in config.file.unique():
                         'delta': delta/1000, 'gamma': gamma/1000, 'beta': beta/1000,  'alpha': alpha/1000,
                         'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000}
 
+        model_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
+                        'delta': delta/1000, 'gamma': gamma/1000,
+                        'beta': beta/1000, 'alpha': alpha/1000,
+                        'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000,
+                        }
+        full_open_long = full_open_dist.melt(id_vars='term', var_name='variable', value_name='value')
+        full_open_long['var_term'] = full_open_long['variable'] + '_' + full_open_long['term'].astype(str)
+        full_open_wide = full_open_long.pivot_table(index=None, columns='var_term', values='value')
+        #print(df_wide)
+        #full_open_dist_long = pd.DataFrame([df_wide.iloc[0]], columns=df_wide.columns)
+        #print(full_open_dist_long)
+        full_shut_long = full_shut_dist.melt(id_vars='term', var_name='variable', value_name='value')
+        full_shut_long['var_term'] = full_shut_long['variable'] + '_' + full_shut_long['term'].astype(str)
+        full_shut_wide = full_shut_long.pivot_table(index=None, columns='var_term', values='value')
+
+        model_result = {**model_result, **full_open_wide.iloc[0].to_dict(), **full_shut_wide.iloc[0].to_dict()}
+
+
     elif sc_model == 'CFOODD':
 
         beta = mec.Rates[0].rateconstants[0]
@@ -455,10 +484,17 @@ for file_name in config.file.unique():
                         'beta': beta/1000, 'alpha': alpha/1000, 'betap': betap/1000, 'alphap': alphap/1000,
                         'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000}
 
-    results.append(refer_result)
 
-results = pd.DataFrame(results)
-print(results)
-results.to_csv('hjcfit_rates_' + project + '.csv')
+
+
+    results.append(refer_result)
+    model_results.append(model_result)
+
+pd.DataFrame(model_results).to_csv('test_model_results.csv')
+
+# REFER legacy
+#results = pd.DataFrame(results)
+#print(results)
+#results.to_csv('hjcfit_rates_' + project + '.csv')
 
 
