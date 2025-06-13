@@ -1,3 +1,4 @@
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 from dcpyps.ekdist import ekrecord
@@ -7,6 +8,58 @@ from dcpyps import dataset
 import numpy as np
 from scipy.optimize import minimize, bisect
 
+def fit_from_config_4sh1op(ekdist_config):
+    config = pd.read_csv(ekdist_config)
+    results = []
+
+
+    for cell in config.cell_id.unique():
+
+        single_cell = config[config.loc[:, 'cell_id'] == cell].copy()
+        single_cell.reset_index(inplace=True)
+
+        # ideal time distribution areas from hjcfit works better for shut dwell time fitting
+        # taus are rather similar in both cases
+
+        sh_p1id = single_cell.at[0, 'sh_p1id']/100
+        sh_p2id = single_cell.at[0, 'sh_p2id']/100
+        sh_p3id = single_cell.at[0, 'sh_p3id']/100
+        sh_p4id = single_cell.at[0, 'sh_p4id']/100
+
+        sh_t1id = single_cell.at[0, 'sh_t1id']*1e-3
+        sh_t2id = single_cell.at[0, 'sh_t2id']*1e-3
+        sh_t3id = single_cell.at[0, 'sh_t3id']*1e-3
+        sh_t4id = single_cell.at[0, 'sh_t4id']*1e-3
+
+        # for 1xop area doesnt matter, tau fit is always good, but exp res from hjcfit is more accurate
+        op_p1id = single_cell.at[0, 'op_p1id']/100
+        op_t1id = single_cell.at[0, 'op_t1id']*1e-3
+
+        sc_tres = single_cell.at[0, 'tres']*1e-6
+        sc_scns = list(single_cell.loc[:, 'file_scn'])
+        sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
+
+        # print(sc_scns)
+        # print(sc_tres)
+
+        ini_sh_taus = [sh_t1id, sh_t2id, sh_t3id, sh_t4id]
+        ini_sh_areas = [sh_p1id, sh_p2id, sh_p3id, sh_p4id]
+
+        ini_op_taus = [op_t1id]
+        ini_op_areas = [op_p1id]
+
+        # TODO: some printing and comparison to initials
+
+        fit_sh_taus, fit_sh_areas = fit_ekdist_shuts(sc_scns, sc_tres, ini_sh_taus, ini_sh_areas, '#ff0000', cell + '_shuts.png', 1e0)
+        fit_op_taus, fit_op_areas = fit_ekdist_openings(sc_scns, sc_tres, ini_op_taus, ini_op_areas , '#0070c0', cell + '_openings.png', 1e-1)
+
+        cell_result = {'cell_id': cell, 'sh_area_ek_1': fit_sh_areas[0], 'sh_area_ek_2': fit_sh_areas[1], 'sh_area_ek_3': fit_sh_areas[2], 'sh_area_ek_4': fit_sh_areas[3],
+                       'sh_tau_ek_1': fit_sh_taus[0], 'sh_tau_ek_2': fit_sh_taus[1], 'sh_tau_ek_3': fit_sh_taus[2], 'sh_tau_ek_4': fit_sh_taus[3],
+                       'op_area_ek1': fit_op_areas[0], 'op_tau_ek1': fit_op_taus[0]}
+        results.append(cell_result)
+
+    results = pd.DataFrame(results)
+    results.to_csv("ekdist_results_e153_2025_CFODD_DISTS.csv")
 
 def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
 
@@ -14,19 +67,19 @@ def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
     rec.load_SCN_file(scns)
     rec.tres = tres
     print(rec)
+    print('')
+
     #ekplot.plot_xlog_interval_histogram(rec.opint, rec.tres, shut=False)
     #plt.show()
 
-
     expPDF = dceq.MultiExponentialPDF(np.asarray(rec.opint), taus=np.asarray(taus), areas=np.asarray(areas))
     theta = expPDF.theta
-    print('Start LogLikelihood =', expPDF.loglik(theta))
+    #print('Start LogLikelihood =', expPDF.loglik(theta))
     res = minimize(expPDF.loglik, theta, method='Nelder-Mead')
-    print(res)
+    #print(res)
     expPDF.theta = res.x
 
     ekplot.plot_xlog_interval_histogram_fit(rec.opint, rec.tres, expPDF.to_plot, res.x, 2, 2, shut=False)
-    print(expPDF)
 
     ax = plt.gca()
     for line in ax.get_lines():
@@ -42,12 +95,14 @@ def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
     ax.set_xlim([3e-5, lim])
-    ax.set_ylim([0, 20])
-
+    ax.set_ylim([0, 15])
 
     plt.tight_layout()
     plt.savefig(plot_name, dpi=300)
     #plt.show()
+
+    return expPDF.taus, expPDF.areas
+
 
 def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
 
@@ -55,18 +110,20 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
     rec.load_SCN_file(scns)
     rec.tres = tres
     print(rec)
+    print('')
+
     # ekplot.plot_xlog_interval_histogram(rec.shint, rec.tres, shut=True)
     #plt.show()
 
     expPDF = dceq.MultiExponentialPDF(np.asarray(rec.shint), taus=np.asarray(taus), areas=np.asarray(areas))
     theta = expPDF.theta
-    print('Start LogLikelihood =', expPDF.loglik(theta))
+    #print('Start LogLikelihood =', expPDF.loglik(theta))
     res = minimize(expPDF.loglik, theta, method='Nelder-Mead')
-    print(res)
+    #print(res)
     expPDF.theta = res.x
 
     ekplot.plot_xlog_interval_histogram_fit(rec.shint, rec.tres, expPDF.to_plot, res.x, 2, 2, shut=True)
-    print(expPDF)
+
     ax = plt.gca()
     for line in ax.get_lines():
         line.set_color(color)
@@ -81,13 +138,15 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
     ax.set_xlim([3e-5, lim])
-    ax.set_ylim([0, 20])
-
+    ax.set_ylim([0, 25])
 
     plt.tight_layout()
     plt.savefig(plot_name, dpi=300)
     #plt.show()
 
+    return expPDF.taus, expPDF.areas
+
+fit_from_config_4sh1op("ekdist_config_e153_2025_CFODD_DISTS.csv")
 
 #fit_ekdist_shuts(['53WT3_K1.SCN'], 40e-6, [0.02e-3, 0.156e-3, 0.55e-3, 6.04e-3], [0.67, 0.25, 0.07, 0.006], '#ff0000', 'V53WT3_shuts.png', 1e-1)
 #fit_ekdist_openings(['53WT3_K1.SCN'], 40e-6, [1.28e-3, 2.19e-3], [0.48, 0.52], '#0070c0', 'V53WT3_openings.png', 1e-1)
@@ -99,8 +158,8 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
 #fit_ekdist_openings(['KOM2(1).SCN', 'KOM2(2).SCN', 'KOM2(3).SCN', 'KOM2(4).SCN', 'KOM2(5).SCN'], 40e-6, [0.31e-3, 1.67e-3], [0.13, 0.87], '#0070c0', 'E270Q1_openings.png', 1e-1)
 #fit_ekdist_openings(['KOM2(1).SCN', 'KOM2(2).SCN', 'KOM2(3).SCN', 'KOM2(5).SCN'], 40e-6, [0.31e-3, 1.67e-3], [0.13, 0.87], '#0070c0', 'E270Q1_openings.png', 1e-1)
 
-fit_ekdist_shuts(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [0.05e-3, 0.40e-3, 1.73e-3, 16.09e-3], [0.25, 0.57, 0.16, 0.02], '#ff0000', 'E270F1_shuts.png', 1e0)
-fit_ekdist_openings(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [1.38e-3, 5.09e-3], [0.9, 0.1], '#0070c0', 'E270F1_openings.png', 1e-1)
+#fit_ekdist_shuts(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [0.05e-3, 0.40e-3, 1.73e-3, 16.09e-3], [0.25, 0.57, 0.16, 0.02], '#ff0000', 'E270F1_shuts.png', 1e0)
+#fit_ekdist_openings(['270F1_K1.SCN', '270F1_K7.SCN'], 35e-6, [1.38e-3, 5.09e-3], [0.9, 0.1], '#0070c0', 'E270F1_openings.png', 1e-1)
 
 #fit_ekdist_shuts(['2406_C1.SCN', '2406_C2.SCN', '2406_C3.SCN'], 70e-6, [0.25e-3, 2.08e-3, 9.47e-3], [0.26, 0.68, 0.06], '#ff0000', 'E270C1_shuts.png', 1e0)
 #fit_ekdist_openings(['2406_C1.SCN', '2406_C2.SCN', '2406_C3.SCN'], 70e-6, [0.16e-3, 0.66e-3], [0.78, 0.22], '#0070c0', 'E270C1_openings.png', 1e-1)

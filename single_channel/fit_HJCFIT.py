@@ -15,7 +15,6 @@ from scalcs import scalcslib as scl
 from scalcs import scplotlib as scpl
 
 
-
 def dcprogslik(x):
     mec.theta_unsqueeze(np.exp(x))
     mec.set_eff('c', 100e-9)
@@ -90,6 +89,7 @@ def mechanism_CFOODD(rates):
     # complete_mechanism.set_eff('c', 100e-9)
 
     return complete_mechanism
+
 def mechanism_CFODD(rates):
 
     c = mechanism.State('B', 'A2R', 0.0)
@@ -188,12 +188,12 @@ parser.add_argument('--project')
 args = parser.parse_args()
 
 config = pd.read_csv(args.config)
-#project = '_'.join(re.split('[_,.]', args.config)[2:-1])
 project = args.project
 results = []
 model_results = []
 
 for file_name in config.file.unique():
+
     # TODO: BIG PROBLEM IF MULTIPLE ABFs FOR SINGLE CELL
 
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
@@ -201,12 +201,16 @@ for file_name in config.file.unique():
 
     sc_model = single_cell.at[0, 'model']
     sc_type = single_cell.at[0, 'type']
-    sc_tres = (single_cell.at[0, 'tres']/1000000)
-    sc_tcrit = (single_cell.at[0, args.tcrit]/1000)
+    sc_tres = (single_cell.at[0, 'tres']/1000000)        # in config [us]
 
+    if single_cell.at[0, args.tcrit] == 1000000:
+        sc_tcrit = None
+    else:
+        sc_tcrit = (single_cell.at[0, args.tcrit]/1000)  # in config [ms]
 
     sc_scns = list(single_cell.loc[:, 'file_scn'])
     sc_scns = [name if name.endswith('.SCN') else name + '.SCN' for name in sc_scns]
+
     print(sc_scns)
 
     checked_scns = []
@@ -221,14 +225,12 @@ for file_name in config.file.unique():
         else:
             print('SCN file not found {}.'.format(scn))
 
-    # TODO: tcrit for non-CO models
-    if sc_model == 'CFOODD':
-        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, 1000000)
-    elif sc_model == 'CFODD':
-        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, 1000000)
+    if sc_tcrit is None:
+        print("Setting t_crit = None [ms] and t_res = {} [us]".format( sc_tres * 1000000))
     else:
-        rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, sc_tcrit)
+        print("Setting t_crit = {} [ms] and t_res = {} [us]".format(sc_tcrit * 1000, sc_tres * 1000000))
 
+    rec = dataset.SCRecord(checked_scns, 100e-9, sc_tres, sc_tcrit)
     rec.record_type = 'recorded'
     rec.printout()
 
@@ -254,14 +256,12 @@ for file_name in config.file.unique():
                           single_cell.at[0, 'd'],
                           single_cell.at[0, 'r']])
     elif sc_model == 'CFODD':
-        print('making mechanism')
         mec = mechanism_CFODD([single_cell.at[0, 'beta'],
                           single_cell.at[0, 'alpha'],
                           single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
                           single_cell.at[0, 'd'], single_cell.at[0, 'dp'],
                           single_cell.at[0, 'r'], single_cell.at[0, 'rp']])
     elif sc_model == 'CFOODD':
-        print('making mechanism')
         mec = mechanism_CFOODD([single_cell.at[0, 'beta'], single_cell.at[0, 'betap'],
                           single_cell.at[0, 'alpha'], single_cell.at[0, 'alphap'],
                           single_cell.at[0, 'delta'], single_cell.at[0, 'gamma'],
@@ -274,102 +274,64 @@ for file_name in config.file.unique():
 
     bursts = rec.bursts.intervals()
     logfac = math.log(10)
-    print('\nFirst likelihood calculation ...')
-    print(sc_tres, sc_tcrit)
+    print('\nModel fitting started...')
     likelihood = Log10Likelihood(bursts, mec.kA, sc_tres, sc_tcrit)
-
-    print('\nFirst iter ...')
     iternum = 0
-
-    print("Minimizing starts")
     res = minimize(dcprogslik, np.log(theta), method='Nelder-Mead', callback=printiter, )
-
-    print('xout', res.x)
     mec.theta_unsqueeze(np.exp(res.x))
     print("\n Final rate constants:")
     mec.printout(sys.stdout)
     lik = dcprogslik(res.x)
     print("\nFinal likelihood = {0:.6f}".format(-lik))
 
+    ### Calculations of model dwell times
+    # TODO: hardcode for other model types
 
+    if sc_model == 'CFODD':
+
+        (open_dist, asymptotic_open_dist, asymptotic_open_norm,
+         shut_dist, asymptotic_shut_dist, asymptotic_shut_norm,
+         event_times_data) = scl.printout_distributions(mec, sc_tres)
+
+        print(event_times_data)
+
+        open_dist = pd.DataFrame(open_dist, columns=['term', 'w', 'rate', 'op_tau_id', 'op_area_id']).drop(['w', 'rate'], axis=1)
+        asymptotic_open_dist = pd.DataFrame(asymptotic_open_dist, columns=['term', 'op_tau_as', 'op_area_as', 'rate']).drop(['rate'], axis=1)
+        asymptotic_open_norm = pd.DataFrame(asymptotic_open_norm, columns=['term', 'op_area_nas'])
+        full_open_dist = open_dist.merge(asymptotic_open_dist, on='term').merge(asymptotic_open_norm, on='term')
+
+        shut_dist = pd.DataFrame(shut_dist, columns=['term', 'w', 'rate', 'sh_tau_id', 'sh_area_id']).drop(['w', 'rate'], axis=1)
+        asymptotic_shut_dist = pd.DataFrame(asymptotic_shut_dist, columns=['term', 'sh_tau_as', 'sh_area_as', 'rate']).drop(['rate'], axis=1)
+        asymptotic_shut_norm = pd.DataFrame(asymptotic_shut_norm, columns=['term', 'sh_area_nas'])
+        full_shut_dist = shut_dist.merge(asymptotic_shut_dist, on='term').merge(asymptotic_shut_norm, on='term')
+
+    ### Plots of model dwell times:
     plots = True
+    if sc_tcrit is None:
+        str_crit = 'none_tcrit'
+    else:
+        str_crit = str(sc_tcrit*1000)
+
     if plots:
+        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        plt.ylabel('fshut(t)')
+        plt.xlabel('Shut time, ms')
+        plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str_crit )#+ '\n' + shuts_format)
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
+        plt.close()
+        plt.show()
 
-        # plot event times of shuts, works only for CFO model
-        if sc_model == 'CFO':
-            print(scl.printout_distributions(mec, sc_tres))
-            shuts = scl.printout_distributions(mec, sc_tres)
+        t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
+        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        plt.ylabel('fopen(t)')
+        plt.xlabel('Open time, ms')
+        plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str_crit)  # + '\n' + shuts_format)
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
+        plt.close()
+        plt.show()
 
-            t1_mod = shuts.splitlines()[10].split('\t')[1]
-            p1_mod = shuts.splitlines()[10].split('\t')[2]
-            t2_mod = shuts.splitlines()[11].split('\t')[1]
-            p2_mod = shuts.splitlines()[11].split('\t')[2]
-
-            shuts_format = 't1: ' + t1_mod + ' p1: ' + p1_mod + ' t2: ' + t2_mod + ' p2: ' + p2_mod
-
-            t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-            plt.ylabel('fshut(t)')
-            plt.xlabel('Shut time, ms')
-            plt.title(file_name + ' ' + sc_type + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) + '\n' + shuts_format)
-            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-            plt.savefig(project + '_' + file_name.strip('.abf') + '_shut_plot.png')
-            plt.close()
-            #plt.show()
-
-
-        # plot and events times for openings and shuts, works only for complex models
-        if sc_model in ['CFOODD', 'CFOOD', 'CFOO', 'CFODD']:
-
-            (open_dist, asymptotic_open_dist, asymptotic_open_norm,
-             shut_dist, asymptotic_shut_dist, asymptotic_shut_norm,
-             event_times_data) = scl.printout_distributions(mec, sc_tres)
-
-            print(event_times_data)
-
-            open_dist = pd.DataFrame(open_dist, columns=['term', 'w', 'rate', 'op_tau_id', 'op_area_id']).drop(['w', 'rate'], axis=1)
-            asymptotic_open_dist = pd.DataFrame(asymptotic_open_dist, columns=['term', 'op_tau_as', 'op_area_as', 'rate']).drop(['rate'], axis=1)
-            asymptotic_open_norm = pd.DataFrame(asymptotic_open_norm, columns=['term', 'op_area_nas'])
-            full_open_dist = open_dist.merge(asymptotic_open_dist, on='term').merge(asymptotic_open_norm, on='term')
-            print(full_open_dist)
-
-
-            shut_dist = pd.DataFrame(shut_dist, columns=['term', 'w', 'rate', 'sh_tau_id', 'sh_area_id']).drop(['w', 'rate'], axis=1)
-            asymptotic_shut_dist = pd.DataFrame(asymptotic_shut_dist, columns=['term', 'sh_tau_as', 'sh_area_as', 'rate']).drop(['rate'], axis=1)
-            asymptotic_shut_norm = pd.DataFrame(asymptotic_shut_norm, columns=['term', 'sh_area_nas'])
-            full_shut_dist = shut_dist.merge(asymptotic_shut_dist, on='term').merge(asymptotic_shut_norm, on='term')
-            print(full_shut_dist)
-
-            #'''
-            #event_times_log = open(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_event_times.txt', 'w')
-            #n = event_times_log.write(event_times_data)
-            #event_times_log.close()
-
-
-            # THIS WORKS
-            t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-            plt.ylabel('fshut(t)')
-            plt.xlabel('Shut time, ms')
-            plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str(sc_tcrit*1000) )#+ '\n' + shuts_format)
-            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-            plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
-            plt.close()
-            plt.show()
-
-            #THIS NOT
-            t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
-            plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-            plt.ylabel('fopen(t)')
-            plt.xlabel('Open time, ms')
-            plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str(
-                sc_tcrit * 1000))  # + '\n' + shuts_format)
-            print('RED- ideal distribution\nGREEN- HJC distribution (corrected for missed events)')
-            plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
-            plt.close()
-            plt.show()
-            #'''
-    # results saving below:
+    ### Final fit data export:
 
     if sc_model == 'CO':
 
@@ -390,7 +352,6 @@ for file_name in config.file.unique():
         refer_result = {'project': project, 'type': sc_type, 'file': file_name, 'model': sc_model,
                         'alpha': alpha, 'beta': beta,
                         'gamma': gamma, 'delta': delta,
-                        't1_mod': t1_mod, 'p1_mod': p1_mod, 't2_mod': t2_mod, 'p2_mod': p2_mod,
                         }
 
     elif sc_model == 'CFOO':
@@ -453,12 +414,13 @@ for file_name in config.file.unique():
                         'beta': beta/1000, 'alpha': alpha/1000,
                         'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000,
                         }
+
+        # below is only because my SCALC-hack generates pd.DF that needs to be melted to long format and pivoted
+
         full_open_long = full_open_dist.melt(id_vars='term', var_name='variable', value_name='value')
         full_open_long['var_term'] = full_open_long['variable'] + '_' + full_open_long['term'].astype(str)
         full_open_wide = full_open_long.pivot_table(index=None, columns='var_term', values='value')
-        #print(df_wide)
-        #full_open_dist_long = pd.DataFrame([df_wide.iloc[0]], columns=df_wide.columns)
-        #print(full_open_dist_long)
+
         full_shut_long = full_shut_dist.melt(id_vars='term', var_name='variable', value_name='value')
         full_shut_long['var_term'] = full_shut_long['variable'] + '_' + full_shut_long['term'].astype(str)
         full_shut_wide = full_shut_long.pivot_table(index=None, columns='var_term', values='value')
@@ -485,12 +447,10 @@ for file_name in config.file.unique():
                         'd': d/1000, 'r': r/1000, 'dp': dp/1000, 'rp': rp/1000}
 
 
-
-
     results.append(refer_result)
     model_results.append(model_result)
 
-pd.DataFrame(model_results).to_csv('test_model_results.csv')
+pd.DataFrame(model_results).to_csv('hjcfit_rates_' + project + '.csv')
 
 # REFER legacy
 #results = pd.DataFrame(results)

@@ -45,6 +45,16 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model):
         selected['r'] = 100
         selected['rp'] = 50
 
+    if model == 'CFODD':
+        selected['beta'] = 15000
+        selected['alpha'] = 1000
+        selected['delta'] = 5000
+        selected['gamma'] = 5000
+        selected['d'] = 1000
+        selected['dp'] = 500
+        selected['r'] = 100
+        selected['rp'] = 50
+
     selected.rename(columns={'residue_mut': 'type', 'cluster_name': 'file_scn', 'min_res': 'tres',
                              'final_tcrit': 'tcrit_KT'}, inplace=True)
 
@@ -53,6 +63,7 @@ def prepare_hjcfit_config(meta, mutant, control, file_name, model):
     selected['tcrit_CS'] = selected.apply(calculate_tcrit_CS, axis=1)
     selected['tcrit_J'] = selected.apply(calculate_tcrit_J, axis=1)
     selected['tcrit_MPCN'] = selected.apply(calculate_tcrit_MPCN, axis=1)
+    selected['tcrit_inf'] = 1000000
 
     print(selected)
     selected.to_csv(file_name)
