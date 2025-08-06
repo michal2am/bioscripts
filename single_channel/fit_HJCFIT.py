@@ -13,7 +13,9 @@ from dcpyps import mechanism
 from dcprogs.likelihood import Log10Likelihood
 from scalcs import scalcslib as scl
 from scalcs import scplotlib as scpl
-
+from dcpyps.ekdist import ekrecord
+from dcpyps.ekdist import ekplot
+from dcpyps import dcequations as dceq
 
 def dcprogslik(x):
     mec.theta_unsqueeze(np.exp(x))
@@ -110,7 +112,13 @@ def mechanism_CFODD(rates):
     ]
 
     complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
-    #complete_mechanism.Rates[1].fixed = True
+    complete_mechanism.Rates[2].fixed = True
+    complete_mechanism.Rates[3].fixed = True
+    complete_mechanism.Rates[4].fixed = True
+    complete_mechanism.Rates[5].fixed = True
+    complete_mechanism.Rates[6].fixed = True
+    complete_mechanism.Rates[7].fixed = True
+
     # complete_mechanism.set_eff('c', 100e-9)
 
     return complete_mechanism
@@ -124,8 +132,8 @@ def mechanism_CFOOD(rates):
     d = mechanism.State('C', 'A2D', 0.0)
 
     rate_list = [
-        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1e1]),
-        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1e1]),
+        mechanism.Rate(rates[0], f, o, name='beta', limits=[1e0, 1.5e4]),
+        mechanism.Rate(rates[1], f, op, name='betap', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[2], o, f, name='alpha', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[3], op, f, name='alphap', limits=[1e0, 1.5e4]),
         mechanism.Rate(rates[4], c, f, name='delta', limits=[1e0, 1.5e4]),
@@ -194,8 +202,6 @@ model_results = []
 
 for file_name in config.file.unique():
 
-    # TODO: BIG PROBLEM IF MULTIPLE ABFs FOR SINGLE CELL
-
     single_cell = config[config.loc[:, 'file'] == file_name].copy()
     single_cell.reset_index(inplace=True)
 
@@ -203,7 +209,7 @@ for file_name in config.file.unique():
     sc_type = single_cell.at[0, 'type']
     sc_tres = (single_cell.at[0, 'tres']/1000000)        # in config [us]
 
-    if single_cell.at[0, args.tcrit] == 1000000:
+    if single_cell.at[0, args.tcrit] == 1000000:         # in config as tcrit_inf
         sc_tcrit = None
     else:
         sc_tcrit = (single_cell.at[0, args.tcrit]/1000)  # in config [ms]
@@ -318,8 +324,18 @@ for file_name in config.file.unique():
         plt.ylabel('fshut(t)')
         plt.xlabel('Shut time, ms')
         plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str_crit )#+ '\n' + shuts_format)
-        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
-        plt.close()
+        #plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
+        #plt.close()
+        #plt.show()
+
+        # EKDIST
+
+        erec = ekrecord.SingleChannelRecord()
+        erec.load_SCN_file(checked_scns)
+        erec.tres = sc_tres
+        ekplot.plot_xlog_interval_histogram(erec.shint, erec.tres, shut=True, sizex=4, sizey=4)
+        plt.savefig('test')
+        #plt.close()
         plt.show()
 
         t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
@@ -456,5 +472,3 @@ pd.DataFrame(model_results).to_csv('hjcfit_rates_' + project + '.csv')
 #results = pd.DataFrame(results)
 #print(results)
 #results.to_csv('hjcfit_rates_' + project + '.csv')
-
-
