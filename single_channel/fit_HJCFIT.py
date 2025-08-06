@@ -15,6 +15,7 @@ from scalcs import scalcslib as scl
 from scalcs import scplotlib as scpl
 from dcpyps.ekdist import ekrecord
 from dcpyps.ekdist import ekplot
+from dcpyps.dcplots import xlog_hist_HJC_fit
 from dcpyps import dcequations as dceq
 
 def dcprogslik(x):
@@ -112,12 +113,12 @@ def mechanism_CFODD(rates):
     ]
 
     complete_mechanism = mechanism.Mechanism(rate_list, mtitle='CFOODD', rtitle='CFOODD_rates')
-    complete_mechanism.Rates[2].fixed = True
-    complete_mechanism.Rates[3].fixed = True
-    complete_mechanism.Rates[4].fixed = True
-    complete_mechanism.Rates[5].fixed = True
-    complete_mechanism.Rates[6].fixed = True
-    complete_mechanism.Rates[7].fixed = True
+    #complete_mechanism.Rates[2].fixed = True
+    #complete_mechanism.Rates[3].fixed = True
+    #complete_mechanism.Rates[4].fixed = True
+    #complete_mechanism.Rates[5].fixed = True
+    #complete_mechanism.Rates[6].fixed = True
+    #complete_mechanism.Rates[7].fixed = True
 
     # complete_mechanism.set_eff('c', 100e-9)
 
@@ -211,6 +212,8 @@ for file_name in config.file.unique():
 
     if single_cell.at[0, args.tcrit] == 1000000:         # in config as tcrit_inf
         sc_tcrit = None
+        #sc_tcrit = 1
+
     else:
         sc_tcrit = (single_cell.at[0, args.tcrit]/1000)  # in config [ms]
 
@@ -319,21 +322,84 @@ for file_name in config.file.unique():
         str_crit = str(sc_tcrit*1000)
 
     if plots:
-        t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fshut(t)')
-        plt.xlabel('Shut time, ms')
-        plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str_crit )#+ '\n' + shuts_format)
+        from dcprogs.likelihood import QMatrix
+        from dcprogs.likelihood import missed_events_pdf, ideal_pdf, IdealG, eig
+        from dcprogs.likelihood import inv
+        from dcpyps.dcplots import xlog_hist_HJC_fit
+
+        # 1 for 1 open state
+        qmatrix = QMatrix(mec.Q, 1)
+        print(qmatrix)
+        idealG = IdealG(qmatrix)
+
+        # does not work for 1 open state ....
+        def scalefac(tres, matrix, phiA):
+            eigs, M = eig(-matrix)
+            N = inv(M)
+            k = N.shape[0]
+            A = np.zeros((k, k, k))
+            for i in range(k):
+                A[i] = np.dot(M[:, i].reshape(k, 1), N[i].reshape(1, k))
+            w = np.zeros(k)
+            for i in range(k):
+                w[i] = np.dot(np.dot(np.dot(phiA, A[i]), (-matrix)), np.ones((k, 1)))
+            return 1 / np.sum((w / eigs) * np.exp(-tres * eigs))
+
+
+        fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Plot apparent open period histogram
+        #ipdf = ideal_pdf(qmatrix, shut=False)
+        #iscale = scalefac(sc_tres, qmatrix.aa, idealG.initial_occupancies)
+        #epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=False)
+        #xlog_hist_HJC_fit(ax[0], rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
+
+        # Plot apparent shut period histogram
+        ipdf = ideal_pdf(qmatrix, shut=True)
+        iscale = scalefac(sc_tres, qmatrix.ff, idealG.final_occupancies)
+        epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=True)
+        xlog_hist_HJC_fit(ax[1], rec.tres, rec.shint, epdf, ipdf, iscale, tcrit=rec.tcrit)
+
+        fig.tight_layout()
+
+        #fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+        #ipdf = ideal_pdf(qmatrix, shut=False)
+        #iscale = scalefac(tr, qmatrix.aa, idealG.initial_occupancies)
+        #epdf = missed_events_pdf(qmatrix, tr, nmax=2, shut=False)
+        #dcplots.xlog_hist_HJC_fit(ax[0], rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
+
+        #t, ipdf, epdf, apdf = scpl.shut_time_pdf(mec, sc_tres)
+        #erec = ekrecord.SingleChannelRecord()
+        #erec.load_SCN_file(checked_scns)
+        #erec.tres = sc_tres
+        #print("DUPA")
+        #print(ipdf)
+        #fig, ax = plt.subplots(figsize=(6,5))
+        #xlog_hist_HJC_fit(ax, sc_tres, X=erec.shint, pdf=apdf, ipdf=epdf, iscale=ipdf, shut=True, tcrit=10000,)
+        #plt.show()
+
+        #ax.semilogx(t, ipdf, 'r--', label='ipdf')
+        #ax.semilogx(t, epdf, 'b-', label='epdf')
+        #ax.semilogx(t, apdf, 'g-', label='apdf')
+        #dcplots.xlog_hist_data(ax, intervals, tres, shut)
+        #ekplot.plot_xlog_interval_histogram(erec.shint, erec.tres, shut=True, sizex=4, sizey=4, ax=ax)
+        #plt.tight_layout()
+        #plt.savefig('combined_overlay_plot.png')
+        #plt.show()
+
+
+        #plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        #plt.ylabel('fshut(t)')
+        #plt.xlabel('Shut time, ms')
+        #plt.title(sc_type + ' ' + file_name + ' ' + str(sc_tres*1000000) + ' ' + str_crit )#+ '\n' + shuts_format)
         #plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_shut_plot.png')
         #plt.close()
         #plt.show()
 
         # EKDIST
 
-        erec = ekrecord.SingleChannelRecord()
-        erec.load_SCN_file(checked_scns)
-        erec.tres = sc_tres
-        ekplot.plot_xlog_interval_histogram(erec.shint, erec.tres, shut=True, sizex=4, sizey=4)
+
         plt.savefig('test')
         #plt.close()
         plt.show()
