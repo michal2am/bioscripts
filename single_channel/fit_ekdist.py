@@ -21,6 +21,9 @@ def fit_from_config_4sh1op(ekdist_config):
         # ideal time distribution areas from hjcfit works better for shut dwell time fitting
         # taus are rather similar in both cases
 
+        # areas input/output in 0.xx format
+        # taus input/output format in [s]
+
         sh_p1id = single_cell.at[0, 'sh_p1id']/100
         sh_p2id = single_cell.at[0, 'sh_p2id']/100
         sh_p3id = single_cell.at[0, 'sh_p3id']/100
@@ -94,8 +97,8 @@ def fit_ekdist_openings(scns, tres, taus, areas, color, plot_name, lim):
     for axis in ['top', 'right']:
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
-    ax.set_xlim([3e-5, lim])
-    ax.set_ylim([0, 15])
+    ax.set_xlim([2e-5, lim])
+    ax.set_ylim([0, 20])
 
     plt.tight_layout()
     plt.savefig(plot_name, dpi=300)
@@ -137,8 +140,8 @@ def fit_ekdist_shuts(scns, tres, taus, areas, color, plot_name, lim):
     for axis in ['top', 'right']:
         ax.spines[axis].set_linewidth(0)
     ax.tick_params(width=2, which='both')
-    ax.set_xlim([3e-5, lim])
-    ax.set_ylim([0, 25])
+    ax.set_xlim([2e-5, lim])
+    ax.set_ylim([0, 20])
 
     plt.tight_layout()
     plt.savefig(plot_name, dpi=300)

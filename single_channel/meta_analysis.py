@@ -80,7 +80,11 @@ def plot(data, feature, yticks=False):
 #plot(rates_WT,'openings_t1', [0, 1, 2, 3, 4, 5])
 #plot(rates_WT,'openings_t2', [0, 1, 2, 3, 4, 5, 7, 8 ,9, 10])
 
-corr = True
+plot(rates_WT,'shuts_%P4', [0, 0.01, 0.02, 0.03])
+plot(rates_WT,'shuts_t4', [0, 10, 20, 30, 40, 50])
+
+
+corr = False
 if corr:
     correlations = rates_WT[rates_list].corr()
     mask = np.zeros_like(correlations)

@@ -90,6 +90,8 @@ def test_statistics(data, feature_list):
         groups = [data[data['meta_receptor'] == mut][feature] for mut in data['meta_receptor'].unique()]
         cleaned_groups = [[x for x in inner_list if not pd.isna(x)] for inner_list in groups]
 
+
+
         print(data[['meta_receptor', feature]])
         print('')
         print(data.groupby('meta_receptor')[feature].mean())
@@ -265,7 +267,7 @@ args = parser.parse_args()
 
 
 feature_list = ['shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4',
-                'openings_t1', 'openings_t2',  'openings_p1', 'openings_p2',
+                'openings_t1',
                 'rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_d2', 'rates_r2',
                 'rates_d2p', 'rates_r2p']
 
@@ -275,34 +277,34 @@ feature_list = ['shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_p1', 'shu
                 'rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_b2p', 'rates_a2p', 'rates_d2', 'rates_r2',
                 'rates_d2p', 'rates_r2p']
 '''
-'''
-feature_list = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes_FR300', 'amplitudes_FR500',
+
+feature_list_macroscopic = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes_FR300', 'amplitudes_FR500',
                             'desensitization_tau_fast', 'desensitization_tau_slow',
                             'desensitization_A%fast', 'desensitization_A%slow', 'desensitization_C%',
                             'deactivation_tau_1_comp']
-'''
+
 
 data = pd.read_csv(args.file_name, header=[0, 1], sep=',')
 data.columns = ['_'.join(col) for col in data.columns.values]
 data.to_csv('all_data.csv')
 outliers_mz(data, feature_list)
-#outliers_iqrsckit(data, feature_list)
+##outliers_iqrsckit(data, feature_list)
 data.to_csv('no_outliers_data.csv')
 statistics = statistics(data)
 statistics.to_csv('statistics.csv')
 test_statistics(data, feature_list)
 
-#plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
-#plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.15, 0.20, 0.25, 0.30, 0.35])
-#plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0.30, 0.6, 0.9, 1.2, 1.5])
-#plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 5, 10, 15, 20])
+plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
+plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.1, 0.2, 0.3, 0.4])
+plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
+plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 15, 30, 45, 60])
 
-#plot('openings_t1', ['WT', 'E153K', 'E153A'], [0., 0.5, 1, 1.5])
+plot('openings_t1', ['WT', 'E153K', 'E153A'], [0.5, 1, 1.5, 2])
 #plot('openings_t2', ['WT', 'E153K', 'E153A'], [1, 1.5, 2, 2.5, 3])
 
 
-#multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
-#                ['P1', 'P2', 'P3', 'P4'], 3, 1.2, [0.00, 0.25, 0.5, 0.75])
+multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
+                ['P1', 'P2', 'P3', 'P4'], 3, 1.2, [0.00, 0.25, 0.5, 0.75])
 
 #multi_plot(data, ['openings_p1', 'openings_p2'], 'openings_distribution_parameter',
 #                 ['P1', 'P2'], 3, 0.8, [0.00, 0.25, 0.5, 0.75, 1])
@@ -311,16 +313,16 @@ test_statistics(data, feature_list)
 #                'rates_d2p', 'rates_r2p'], 'model_rates',
 #                 ['d', 'g', 'b2', 'a2', 'b2p', 'a2p', 'd', 'r', 'dp', 'rp'], 3, 2, [0,5,10,15,20])
 #TODO: no explicit data passed to plot
-plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
-plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
-plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
-plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
+#plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
+#plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
+#plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
+#plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
 #plot('rates_b2p', ['WT', 'E153K', 'E153A'], [0, 3, 6, 9,])
 #plot('rates_a2p', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5])
-plot('rates_d2', ['WT', 'E153K', 'E153A'])
-plot('rates_r2', ['WT', 'E153K', 'E153A'])
-plot('rates_d2p', ['WT', 'E153K', 'E153A'])
-plot('rates_r2p', ['WT', 'E153K', 'E153A'])
+#plot('rates_d2', ['WT', 'E153K', 'E153A'])
+#plot('rates_r2', ['WT', 'E153K', 'E153A'])
+#plot('rates_d2p', ['WT', 'E153K', 'E153A'])
+#plot('rates_r2p', ['WT', 'E153K', 'E153A'])
 
 
 #desens_A_plot(data)

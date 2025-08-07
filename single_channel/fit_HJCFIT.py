@@ -17,6 +17,10 @@ from dcpyps.ekdist import ekrecord
 from dcpyps.ekdist import ekplot
 from dcpyps.dcplots import xlog_hist_HJC_fit
 from dcpyps import dcequations as dceq
+from dcprogs.likelihood import QMatrix
+from dcprogs.likelihood import missed_events_pdf, ideal_pdf, IdealG, eig
+from dcprogs.likelihood import inv
+from dcpyps.dcplots import xlog_hist_HJC_fit
 
 def dcprogslik(x):
     mec.theta_unsqueeze(np.exp(x))
@@ -315,23 +319,23 @@ for file_name in config.file.unique():
         full_shut_dist = shut_dist.merge(asymptotic_shut_dist, on='term').merge(asymptotic_shut_norm, on='term')
 
     ### Plots of model dwell times:
-    plots = True
+    # TODO: hardcode for other model types
+
     if sc_tcrit is None:
         str_crit = 'none_tcrit'
     else:
         str_crit = str(sc_tcrit*1000)
 
+    plots = True
     if plots:
-        from dcprogs.likelihood import QMatrix
-        from dcprogs.likelihood import missed_events_pdf, ideal_pdf, IdealG, eig
-        from dcprogs.likelihood import inv
-        from dcpyps.dcplots import xlog_hist_HJC_fit
 
-        # 1 for 1 open state
-        qmatrix = QMatrix(mec.Q, 1)
-        print(qmatrix)
-        idealG = IdealG(qmatrix)
+        if sc_model == 'CFODD':
+            # 1 for 1 open state
+            qmatrix = QMatrix(mec.Q, 1)
+            print(qmatrix)
+            idealG = IdealG(qmatrix)
 
+        '''
         # does not work for 1 open state ....
         def scalefac(tres, matrix, phiA):
             eigs, M = eig(-matrix)
@@ -344,15 +348,39 @@ for file_name in config.file.unique():
             for i in range(k):
                 w[i] = np.dot(np.dot(np.dot(phiA, A[i]), (-matrix)), np.ones((k, 1)))
             return 1 / np.sum((w / eigs) * np.exp(-tres * eigs))
+        '''
 
+        def scalefac(tres, matrix, phiA):
+            eigs, M = eig(-matrix)
+
+            # Ensure eigs is at least 1D
+            eigs = np.atleast_1d(eigs)
+            M = np.atleast_2d(M)
+
+            N = inv(M)
+            k = N.shape[0]
+
+            A = np.zeros((k, k, k))
+            for i in range(k):
+                A[i] = np.dot(M[:, i].reshape(k, 1), N[i].reshape(1, k))
+
+            w = np.zeros(k)
+            for i in range(k):
+                prod = np.dot(phiA, A[i])
+                prod = np.dot(prod, -matrix)
+                prod = np.dot(prod, np.ones((k, 1)))
+                w[i] = prod
+
+            result = 1 / np.sum((w / eigs) * np.exp(-tres * eigs))
+            return result
 
         fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
         # Plot apparent open period histogram
-        #ipdf = ideal_pdf(qmatrix, shut=False)
-        #iscale = scalefac(sc_tres, qmatrix.aa, idealG.initial_occupancies)
-        #epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=False)
-        #xlog_hist_HJC_fit(ax[0], rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
+        ipdf = ideal_pdf(qmatrix, shut=False)
+        iscale = scalefac(sc_tres, qmatrix.aa, idealG.initial_occupancies)
+        epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=False)
+        xlog_hist_HJC_fit(ax[0], rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
 
         # Plot apparent shut period histogram
         ipdf = ideal_pdf(qmatrix, shut=True)
@@ -361,6 +389,8 @@ for file_name in config.file.unique():
         xlog_hist_HJC_fit(ax[1], rec.tres, rec.shint, epdf, ipdf, iscale, tcrit=rec.tcrit)
 
         fig.tight_layout()
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_hjcfit_plot.png')
+
 
         #fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -397,21 +427,19 @@ for file_name in config.file.unique():
         #plt.close()
         #plt.show()
 
-        # EKDIST
 
-
-        plt.savefig('test')
+        #plt.savefig('test')
         #plt.close()
-        plt.show()
+        #plt.show()
 
-        t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
-        plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
-        plt.ylabel('fopen(t)')
-        plt.xlabel('Open time, ms')
-        plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str_crit)  # + '\n' + shuts_format)
-        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
-        plt.close()
-        plt.show()
+        #t, ipdf, epdf, apdf = scpl.open_time_pdf(mec, sc_tres)
+        #plt.semilogx(t, ipdf, 'r--', t, epdf, 'b-', t, apdf, 'g-')
+        #plt.ylabel('fopen(t)')
+        #plt.xlabel('Open time, ms')
+        #plt.title(sc_type + ' ' + file_name + ' ' +  str(sc_tres * 1000000) + ' ' + str_crit)  # + '\n' + shuts_format)
+        #plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_open_plot.png')
+        #plt.close()
+        #plt.show()
 
     ### Final fit data export:
 
