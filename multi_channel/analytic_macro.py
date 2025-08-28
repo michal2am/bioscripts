@@ -247,6 +247,24 @@ class ModelsBuilder:
             des_popt = [0, 0, 0, 0, 0]
 
         d_a1, d_t1, d_a2, d_t2, d_a3 = des_popt
+
+        if d_a1 < 0 or d_a1 > 1.1:
+            print("Wrong d_a1 parameter: {}".format(d_a1))
+            d_a1 = np.NAN
+        if d_a2 < 0 or d_a2 > 1.1:
+            print("Wrong d_a2 parameter: {}".format(d_a2))
+            d_a2 = np.NAN
+        if d_a3 < 0 or d_a3 > 1.1:
+            print("Wrong d_a3 parameter: {}".format(d_a3))
+            d_a3 = np.NAN
+
+        if d_t1 < 0 or d_t1 > 100:
+            print("Wrong d_t1 parameter: {}".format(d_t1))
+            d_t1 = np.NAN
+        if d_t2 < 0 or d_t2 > 1000:
+            print("Wrong d_t1 parameter: {}".format(d_t2))
+            d_t2 = np.NAN
+
         print('Desensitization parameters, A1, t1, A2, t2, A3:')
         print(des_popt)
 
@@ -294,6 +312,11 @@ class ModelsBuilder:
         print(dea_popt)
         dea_mean = dea_popt[1] * (dea_popt[0] / (dea_popt[0] + dea_popt[2])) + dea_popt[3] * (
                     dea_popt[2] * (dea_popt[0] + dea_popt[2]))
+
+        if dea_mean < 0 or dea_mean > 1000:
+            print("Wrong dea_mean parameter: {}".format(dea_mean))
+            dea_mean = np.NAN
+
         print('Deactivation mean:')
         print(dea_mean)
 
@@ -340,7 +363,7 @@ class ModelsBuilder:
             if self.exclude_rates and variable_rate in self.exclude_rates:
                 steps = [1]
             else:
-                steps = [0.05, 0.10, 0.15, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]
+                steps = [0.05, 0.10, 0.15, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 5, 7.5, 10]
                 #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
                 #steps = [1]
 
@@ -390,23 +413,20 @@ class ModelsBuilder:
                 model_trace['rt'] = float(param_rt)
 
                 if self.topology == 'RAAFOD':
-                    # conc
-                    pass
-                    #trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
-                    #trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
-                    #params_des = self.fit_des_single(trace_des)
+                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():1875].copy()
+                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    params_des = self.fit_des_single(trace_des)
                 else:
-                    pass
-                    #trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500].copy()
-                    #trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
-                    #params_des = self.fit_des(trace_des)
+                    trace_des = model_trace.iloc[model_trace['Popen'].idxmax():7500].copy()
+                    trace_des.loc[:, 't'] -= trace_des['t'][trace_des['Popen'].idxmax()]
+                    params_des = self.fit_des(trace_des)
 
                 # conc
-                #model_trace['d_a1'] = float(params_des[0])
-                #model_trace['d_t1'] = float(params_des[1])
-                #model_trace['d_a2'] = float(params_des[2])
-                #model_trace['d_t2'] = float(params_des[3])
-                #model_trace['d_a3'] = float(params_des[4])
+                model_trace['d_a1'] = float(params_des[0])
+                model_trace['d_t1'] = float(params_des[1])
+                model_trace['d_a2'] = float(params_des[2])
+                model_trace['d_t2'] = float(params_des[3])
+                model_trace['d_a3'] = float(params_des[4])
 
                 trace_dea = model_trace.iloc[7500:].copy()
                 trace_dea.loc[:, 't'] -= 600
@@ -468,8 +488,8 @@ parser.add_argument("-sr", "--start_rates", type=str)
 parser.add_argument("-er", "--exclude_rates", nargs='+')
 parser.add_argument("-tp", "--topology", type=str)
 parser.add_argument("-an", "--annotation", type=str)
-parser.add_argument("-co", "--concentration", type=float)
-parser.add_argument("-pl", "--pulse_length", type=float)
+parser.add_argument("-co", "--concentration", type=float) # M
+parser.add_argument("-pl", "--pulse_length", type=float) # sec
 
 args = parser.parse_args()
 

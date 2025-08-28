@@ -16,7 +16,7 @@ def ll4(x, b, c, d, e):
     return c + (d - c)/(1 + np.exp(b * (np.log(x) - np.log(e))))
 
 
-dr_data = pd.read_csv('dose_response_WT_python.csv')
+dr_data = pd.read_csv('e153_doseresponse_noE153C.csv')
 print(dr_data)
 
 compoundData = dr_data.groupby(['type'])
@@ -34,11 +34,11 @@ fitTable = pd.DataFrame(fitData).set_index('type')
 print(fitTable)
 
 sns.set_style()
-sns.set_context("talk")
+sns.set_context("paper")
 
 refDose = np.logspace(-5, 5, base=10, num=2000)
-g = sns.relplot(x='concentration', y='response', data=dr_data, hue='type',
-                aspect=1.5)
+g = sns.relplot(x='concentration', y='response', data=dr_data, hue='type', palette = sns.xkcd_palette(["pale red", 'windows blue', 'green']),
+                height=2, aspect=1.5, hue_order=['WT', 'E153K', 'E153A'])
 #g.despine(top=False, right=False)
 
 for fit in fitData:
@@ -57,3 +57,4 @@ g.set(xlabel='[mM GABA]', ylabel='relative amplitude', xscale='log')
 
 plt.savefig('dose_response.png', dpi=300)
 plt.show()
+

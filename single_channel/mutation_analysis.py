@@ -294,17 +294,17 @@ statistics = statistics(data)
 statistics.to_csv('statistics.csv')
 test_statistics(data, feature_list)
 
-plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
-plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.1, 0.2, 0.3, 0.4])
-plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
-plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 15, 30, 45, 60])
+#plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
+#plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.1, 0.2, 0.3, 0.4])
+#plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
+#plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 15, 30, 45, 60])
 
-plot('openings_t1', ['WT', 'E153K', 'E153A'], [0.5, 1, 1.5, 2])
+#plot('openings_t1', ['WT', 'E153K', 'E153A'], [0.5, 1, 1.5, 2])
 #plot('openings_t2', ['WT', 'E153K', 'E153A'], [1, 1.5, 2, 2.5, 3])
 
 
-multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
-                ['P1', 'P2', 'P3', 'P4'], 3, 1.2, [0.00, 0.25, 0.5, 0.75])
+#multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distribution_parameter',
+#                ['P1', 'P2', 'P3', 'P4'], 3, 1.2, [0.00, 0.25, 0.5, 0.75])
 
 #multi_plot(data, ['openings_p1', 'openings_p2'], 'openings_distribution_parameter',
 #                 ['P1', 'P2'], 3, 0.8, [0.00, 0.25, 0.5, 0.75, 1])
@@ -313,16 +313,16 @@ multi_plot(data, ['shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4'], 'shuts_distri
 #                'rates_d2p', 'rates_r2p'], 'model_rates',
 #                 ['d', 'g', 'b2', 'a2', 'b2p', 'a2p', 'd', 'r', 'dp', 'rp'], 3, 2, [0,5,10,15,20])
 #TODO: no explicit data passed to plot
-#plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7,])
-#plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
-#plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
-#plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
+plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7, 8])
+plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
+plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
+plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
 #plot('rates_b2p', ['WT', 'E153K', 'E153A'], [0, 3, 6, 9,])
 #plot('rates_a2p', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5])
-#plot('rates_d2', ['WT', 'E153K', 'E153A'])
-#plot('rates_r2', ['WT', 'E153K', 'E153A'])
-#plot('rates_d2p', ['WT', 'E153K', 'E153A'])
-#plot('rates_r2p', ['WT', 'E153K', 'E153A'])
+plot('rates_d2', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
+plot('rates_r2', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5, 2 ])
+plot('rates_d2p', ['WT', 'E153K', 'E153A'], [0, 0.1, 0.2, 0.3, 0.4])
+plot('rates_r2p', ['WT', 'E153K', 'E153A'], [0, 0.05, 0.1, 0.15])
 
 
 #desens_A_plot(data)
