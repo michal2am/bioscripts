@@ -374,22 +374,61 @@ for file_name in config.file.unique():
             result = 1 / np.sum((w / eigs) * np.exp(-tres * eigs))
             return result
 
-        fig, ax = plt.subplots(1, 2, figsize=(12, 5))
-
         # Plot apparent open period histogram
+        fig_op, ax_op = plt.subplots(1, 1, figsize=(2, 2))
+
         ipdf = ideal_pdf(qmatrix, shut=False)
         iscale = scalefac(sc_tres, qmatrix.aa, idealG.initial_occupancies)
         epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=False)
-        xlog_hist_HJC_fit(ax[0], rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
+        xlog_hist_HJC_fit(ax_op, rec.tres, rec.opint, epdf, ipdf, iscale, shut=False)
+
+        ax = plt.gca()
+        for line in ax.get_lines():
+            line.set_color('#0070c0')
+
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(9)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        for axis in ['top', 'right']:
+            ax.spines[axis].set_linewidth(0)
+        ax.tick_params(width=2, which='both')
+        ax.set_xlim([2e-5, 1e-1])
+        ax.set_ylim([0, 15])
+        ax.get_legend().remove()
+
+        fig_op.tight_layout()
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_hjcfit_plot_op.png', dpi=300)
 
         # Plot apparent shut period histogram
+        fig_sh, ax_sh = plt.subplots(1, 1, figsize=(2, 2))
+
         ipdf = ideal_pdf(qmatrix, shut=True)
         iscale = scalefac(sc_tres, qmatrix.ff, idealG.final_occupancies)
         epdf = missed_events_pdf(qmatrix, sc_tres, nmax=2, shut=True)
-        xlog_hist_HJC_fit(ax[1], rec.tres, rec.shint, epdf, ipdf, iscale, tcrit=rec.tcrit)
+        xlog_hist_HJC_fit(ax_sh, rec.tres, rec.shint, epdf, ipdf, iscale, tcrit=rec.tcrit)
 
-        fig.tight_layout()
-        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_hjcfit_plot.png')
+        ax = plt.gca()
+        for line in ax.get_lines():
+            line.set_color('#ff0000')
+
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(9)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        for axis in ['top', 'right']:
+            ax.spines[axis].set_linewidth(0)
+        ax.tick_params(width=2, which='both')
+        ax.set_xlim([2e-5, 1e0])
+        ax.set_ylim([0, 20])
+        ax.get_legend().remove()
+
+        fig_sh.tight_layout()
+        plt.savefig(project + '_' + sc_type + '_' + file_name.strip('.abf') + '_hjcfit_plot_sh.png', dpi=300)
 
 
         #fig, ax = plt.subplots(1, 2, figsize=(12, 5))
