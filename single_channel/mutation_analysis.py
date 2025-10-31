@@ -240,7 +240,7 @@ def plot(feature, order, yticks=False):
 
     g = sns.catplot(
         data=data, kind="point",
-        x="meta_receptor", y=feature,  join=False, estimator=np.mean, errorbar=('ci', 98),
+        x="meta_receptor", y=feature,  join=False, estimator=np.mean, errorbar=('ci', 95), #90?
         height=2, aspect=1, order=order,
         palette=sns.xkcd_palette(["pale red", 'windows blue', 'green']
     ))
@@ -266,7 +266,9 @@ args = parser.parse_args()
 
 
 
-feature_list = ['shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4',
+feature_list = ['meta_p_open',
+                'shuts_t1', 'shuts_t2', 'shuts_t3', 'shuts_t4', 'shuts_t_mean',
+                'shuts_p1', 'shuts_p2', 'shuts_p3', 'shuts_p4',
                 'openings_t1',
                 'rates_d', 'rates_g', 'rates_b2', 'rates_a2', 'rates_d2', 'rates_r2',
                 'rates_d2p', 'rates_r2p']
@@ -283,6 +285,7 @@ feature_list_macroscopic = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes
                             'desensitization_A%fast', 'desensitization_A%slow', 'desensitization_C%',
                             'deactivation_tau_1_comp']
 
+feature_list = feature_list
 
 data = pd.read_csv(args.file_name, header=[0, 1], sep=',')
 data.columns = ['_'.join(col) for col in data.columns.values]
@@ -294,10 +297,16 @@ statistics = statistics(data)
 statistics.to_csv('statistics.csv')
 test_statistics(data, feature_list)
 
-#plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
-#plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.1, 0.2, 0.3, 0.4])
-#plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
-#plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 15, 30, 45, 60])
+# SINGLE CHANNEL #
+
+plot('meta_p_open', ['WT', 'E153K', 'E153A'], [0.25, 0.5, .75, 1])
+plot('shuts_t_mean', ['WT', 'E153K', 'E153A'], [0.00, 0.5, 1, 1.5])
+
+
+##plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
+##plot('shuts_t2', ['WT', 'E153K', 'E153A'], [0.1, 0.2, 0.3, 0.4])
+##plot('shuts_t3', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
+##plot('shuts_t4', ['WT', 'E153K', 'E153A'], [0, 15, 30, 45, 60])
 
 #plot('openings_t1', ['WT', 'E153K', 'E153A'], [0.5, 1, 1.5, 2])
 #plot('openings_t2', ['WT', 'E153K', 'E153A'], [1, 1.5, 2, 2.5, 3])
@@ -313,18 +322,20 @@ test_statistics(data, feature_list)
 #                'rates_d2p', 'rates_r2p'], 'model_rates',
 #                 ['d', 'g', 'b2', 'a2', 'b2p', 'a2p', 'd', 'r', 'dp', 'rp'], 3, 2, [0,5,10,15,20])
 #TODO: no explicit data passed to plot
-plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7, 8])
-plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
-plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
-plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
+#plot('rates_d', ['WT', 'E153K', 'E153A'], [4,5, 6, 7, 8])
+#plot('rates_g', ['WT', 'E153K', 'E153A'], [2,5,8,11,14])
+#plot('rates_b2', ['WT', 'E153K', 'E153A'], [5,15,25,35])
+#plot('rates_a2', ['WT', 'E153K', 'E153A'], [0.5, 1,1.5,2, 2.5])
 #plot('rates_b2p', ['WT', 'E153K', 'E153A'], [0, 3, 6, 9,])
 #plot('rates_a2p', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5])
-plot('rates_d2', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
-plot('rates_r2', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5, 2 ])
-plot('rates_d2p', ['WT', 'E153K', 'E153A'], [0, 0.1, 0.2, 0.3, 0.4])
-plot('rates_r2p', ['WT', 'E153K', 'E153A'], [0, 0.05, 0.1, 0.15])
+#plot('rates_d2', ['WT', 'E153K', 'E153A'], [0, 1, 2, 3])
+#plot('rates_r2', ['WT', 'E153K', 'E153A'], [0, 0.5, 1, 1.5, 2 ])
+#plot('rates_d2p', ['WT', 'E153K', 'E153A'], [0, 0.1, 0.2, 0.3, 0.4])
+#plot('rates_r2p', ['WT', 'E153K', 'E153A'], [0, 0.05, 0.1, 0.15])
 
+# MACROSCOPIC #
 
+# TODO: replace with multiplot?
 #desens_A_plot(data)
 #desens_FR_plot(data)
 ##plot('desensitization_A%fast', ['WT', 'E153K', 'E153A'], [.5, .75, 1])

@@ -4,13 +4,16 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import seaborn as sns
 # import matplotlib.pyplot as plt
 import argparse
+
 from scalcs import mechanism
 from scalcs import cjumps
 from scalcs import popen
 from scipy.optimize import curve_fit
 
+import matplotlib.pyplot as plt
 
 class Model:
 
@@ -176,6 +179,7 @@ class ModelsBuilder:
         self.annotation = annotation
         self.concentration = concentration
         self.pulse_length = pulse_length
+        self.steps = [0.05, 0.10, 0.15, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 5, 7.5, 10]
 
     # TODO: add missing get/set property methods
 
@@ -293,7 +297,7 @@ class ModelsBuilder:
         return ['{:.2f}'.format(param) for param in [d_a1, d_t1, 0, 0, d_a3]]
 
     @staticmethod
-    def fit_dea(trace_dea):
+    def fit_dea(trace_dea, param, step):
         """
         dataframe:param trace_dea: cut and 0-started deactivation period
         float:return: deactivation time constant
@@ -313,9 +317,25 @@ class ModelsBuilder:
         dea_mean = dea_popt[1] * (dea_popt[0] / (dea_popt[0] + dea_popt[2])) + dea_popt[3] * (
                     dea_popt[2] * (dea_popt[0] + dea_popt[2]))
 
-        if dea_mean < 0 or dea_mean > 1000:
+        if dea_mean < 0 or dea_mean > 2000:
             print("Wrong dea_mean parameter: {}".format(dea_mean))
             dea_mean = np.NAN
+
+        plot_fits = True
+        if plot_fits:
+            # plot to check desensitization fit
+
+            # plot to check desensitization fit
+            curvey = func_dea(trace_dea['t'], dea_popt[0], dea_popt[1], dea_popt[2],
+                              dea_popt[3])  # This is your y axis fit-line
+            plt.plot(trace_dea['t'], curvey, 'red', label='The best-fit line')
+            plt.scatter(trace_dea['t'], trace_dea['Popen'], c='b', label='The data points')
+            plt.legend(loc='best')
+            plt.xlabel('x')
+            plt.ylabel('y')
+            plt.savefig(param + str(step) + '_deaFit.png')
+            #plt.show()
+            plt.cla()
 
         print('Deactivation mean:')
         print(dea_mean)
@@ -361,15 +381,11 @@ class ModelsBuilder:
         for variable_rate in self.start_rates.keys():
 
             if self.exclude_rates and variable_rate in self.exclude_rates:
-                steps = [1]
-            else:
-                steps = [0.05, 0.10, 0.15, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 5, 7.5, 10]
-                #steps = [0.1, 0.25, 0.5, 0.75, 1, 1.3, 2, 4, 10]
-                #steps = [1]
+                self.steps = [1]
 
             single_var_trace_atf = pd.DataFrame()
 
-            for step in steps:
+            for step in self.steps:
 
                 variable_rate_val = self.start_rates[variable_rate] * step
 
@@ -407,6 +423,8 @@ class ModelsBuilder:
                 print('full simulated trace:')
                 print(model_trace)
 
+
+
                 trace_rise = model_trace.iloc[1250:model_trace['Popen'].idxmax()].copy()
                 trace_rise.loc[:, 't'] -= 100.00
                 param_rt = self.fit_rise(trace_rise)
@@ -430,7 +448,7 @@ class ModelsBuilder:
 
                 trace_dea = model_trace.iloc[7500:].copy()
                 trace_dea.loc[:, 't'] -= 600
-                param_dea = self.fit_dea(trace_dea)
+                param_dea = self.fit_dea(trace_dea, variable_rate, step)
                 model_trace['dea_m'] = float(param_dea)
 
                 model_traces.append(model_trace)
@@ -446,7 +464,9 @@ class ModelsBuilder:
         parameters = parameters.drop(labels=['Popen', 't'], axis=1)
         parameters = parameters.melt(id_vars=['Rate_name', 'Rate_value', 'Rate_value_step'])
 
-        parameters.to_csv('parameters.csv')
+        parameters.to_csv('parameters.csv', index=False)
+        parameters.to_pickle('parameters.pkl')
+        all_traces.to_pickle('all_traces.pkl')
 
         # Somehow got messed up - y-axis is not ordered, maybe values are not floats?
         # fixed by float() where params are put into the df
@@ -454,6 +474,41 @@ class ModelsBuilder:
         # parameters = pd.to_numeric(parameters['value'], errors='coerce')
         # print(parameters.dtypes)
 
+    def plot_models(self, data_parameters, data_traces):
+
+        #parameters = pd.read_pickle(data_parameters)
+        parameters = pd.read_csv('parameters_manual.csv')
+        all_traces = pd.read_pickle(data_traces)
+
+        sns.set_style()
+        sns.set_context("paper")
+
+        def rate_plot(parameter, yticks, xticks):
+
+            data = parameters[parameters['variable'] == parameter]
+            g = sns.relplot(
+                data=data, hue='Rate_name', kind='line',
+                x='Rate_value_step', y='value', marker='.', markersize=5, markeredgecolor="none",  # line_kws={"marker": "o", "markersize": 5},
+                height=2, aspect=1.)
+
+            g.set_axis_labels("", "")
+            g.axes[0, 0].axes.set_yticks(ticks=yticks)
+            g.axes[0, 0].axes.set_xticks(ticks=xticks)
+            g.despine(trim=True)
+            g.legend.remove()
+            #g.map(plt.axhline, x=1, ls='--', c='black')
+            #g.fig.tight_layout()
+            g.fig.subplots_adjust(left=0.2)                        #aligns to left each plot the same
+            plt.savefig(parameter + '.png', dpi=300)
+
+        rate_plot('rt', [0, 0.5, 1, 1.5, 2, 2.5], [0, 1, 2, 5, 10])
+        rate_plot('d_a1', [0, 0.25, 0.5, .75, 1], [0, 1, 2, 5, 10])
+        rate_plot('d_a2',[0, 0.25, 0.5, .75, 1], [0, 1, 2, 5, 10])
+        rate_plot('d_t1',[0, 2, 4, 6, 8, 10], [0, 1, 2, 5, 10])
+        rate_plot('d_t2',[0, 200, 400, 600], [0, 1, 2, 5, 10])
+        rate_plot('dea_m',[0, 500, 1000, 1500, 2000], [0, 1, 2, 5, 10])
+
+        '''
         fig2 = px.scatter(parameters, x='Rate_value_step', y='value', facet_col='variable', color='Rate_name',
                           facet_col_wrap=4,
                           height=1000,
@@ -467,13 +522,46 @@ class ModelsBuilder:
         fig2.update_layout(font=dict(family="Courier New, monospace", size=18))
         fig2.write_html(self.topology + '_' + self.annotation + '_parameters' + '.html')
         # fig2.write_image(self.topology + '_parameters' + '.png')
+        '''
+
+        def trace_plot(parameter):
 
 
+            data = all_traces[all_traces['Rate_name'] == parameter]
+            g = sns.relplot(
+                data=data, hue='Rate_value_step', kind='line',
+                x='t', y='Popen', linewidth=0.5,
+                height=1.5, aspect=1)
+
+            g.set_axis_labels("", "")
+            g.set(xlim=(0, 1500))
+            g.axes[0, 0].axes.set_yticks(ticks=[0, 0.25, .5, 0.75, 1])
+            g.axes[0, 0].axes.set_xticks(ticks=[0, 500, 1000, 1500])
+            g.despine(trim=True)
+            g.fig.tight_layout()
+            g.legend.remove()
+
+            #print(sns.color_palette())
+            #g.fig.subplots_adjust(left=0.2)                        #aligns to left each plot the same
+            plt.savefig(parameter + '_trace.png', dpi=300)
+
+        trace_plot('kon')
+        trace_plot('koff')
+        trace_plot('delta')
+        trace_plot('gamma')
+        trace_plot('beta')
+        trace_plot('alpha')
+        trace_plot('des')
+        trace_plot('res')
+        trace_plot('des_p')
+        trace_plot('res_p')
+
+        '''
         fig = px.line(all_traces, x='t', y='Popen', facet_col='Rate_name', color='Rate_value_step',
                       facet_col_wrap=4,
                       height=125 * len(self.start_rates.keys()),
                       template='simple_white',
-                      color_discrete_sequence=px.colors.sample_colorscale("amp", [n/(len(steps) -1) for n in range(len(steps))]))
+                      color_discrete_sequence=px.colors.sample_colorscale("amp", [n/(len(self.steps) -1) for n in range(len(self.steps))]))
                       # conc
                       # hover_data=['Rate_value', 'rt', 'd_a1', 'd_t1', 'd_a2', 'd_t2', 'd_a3', 'dea_m'],)
 
@@ -481,7 +569,7 @@ class ModelsBuilder:
 
         fig.write_html(self.topology + '_' + self.annotation + '_simulations' + '.html')
         # fig.write_image(self.topology + '_simulations' + '.png')
-
+        '''
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-sr", "--start_rates", type=str)
@@ -498,8 +586,8 @@ start_rates = dict(zip(start_rates[0], start_rates[1]))
 
 builder = ModelsBuilder(start_rates, args.exclude_rates, args.topology, args.annotation, args.concentration,
                         args.pulse_length)
-builder.build_models_multi()
-
+#builder.build_models_multi()
+builder.plot_models('parameters.pkl', 'all_traces.pkl')
 
 '''
 

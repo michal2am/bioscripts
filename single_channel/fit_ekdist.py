@@ -59,6 +59,9 @@ def fit_from_config_4sh1op(ekdist_config):
         cell_result = {'cell_id': cell, 'sh_area_ek_1': fit_sh_areas[0], 'sh_area_ek_2': fit_sh_areas[1], 'sh_area_ek_3': fit_sh_areas[2], 'sh_area_ek_4': fit_sh_areas[3],
                        'sh_tau_ek_1': fit_sh_taus[0], 'sh_tau_ek_2': fit_sh_taus[1], 'sh_tau_ek_3': fit_sh_taus[2], 'sh_tau_ek_4': fit_sh_taus[3],
                        'op_area_ek1': fit_op_areas[0], 'op_tau_ek1': fit_op_taus[0]}
+
+        # TODO: add mean open and shut times calculation
+
         results.append(cell_result)
 
     results = pd.DataFrame(results)
