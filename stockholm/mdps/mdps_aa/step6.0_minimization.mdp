@@ -2,7 +2,7 @@ define                  = -DPOSRES -DPOSRES_FC_BB=4000.0 -DPOSRES_FC_SC=2000.0 -
 integrator              = steep
 emtol                   = 1000.0
 nsteps                  = 10000
-nstlist                 = 10
+nstlist                 = 100
 cutoff-scheme           = Verlet
 rlist                   = 1.2
 vdwtype                 = Cut-off
