@@ -285,7 +285,7 @@ feature_list_macroscopic = ['amplitudes_RT_1090', 'amplitudes_FR10', 'amplitudes
                             'desensitization_A%fast', 'desensitization_A%slow', 'desensitization_C%',
                             'deactivation_tau_1_comp']
 
-feature_list = feature_list
+feature_list = feature_list_macroscopic
 
 data = pd.read_csv(args.file_name, header=[0, 1], sep=',')
 data.columns = ['_'.join(col) for col in data.columns.values]
@@ -299,8 +299,8 @@ test_statistics(data, feature_list)
 
 # SINGLE CHANNEL #
 
-plot('meta_p_open', ['WT', 'E153K', 'E153A'], [0.25, 0.5, .75, 1])
-plot('shuts_t_mean', ['WT', 'E153K', 'E153A'], [0.00, 0.5, 1, 1.5])
+#plot('meta_p_open', ['WT', 'E153K', 'E153A'], [0.25, 0.5, .75, 1])
+#plot('shuts_t_mean', ['WT', 'E153K', 'E153A'], [0.00, 0.5, 1, 1.5])
 
 
 ##plot('shuts_t1', ['WT', 'E153K', 'E153A'], [0.01, 0.03, 0.05, 0.07])
