@@ -7,4 +7,4 @@ inname_str=$2
 inname_tpr=$3
 
 gmx make_ndx -f $inname_str -n index.ndx -o "$name_template".ndx
-gmx trjconv -f $inname_str -s $inname_tpr -n "$name_template".ndx -o "$name_template".pdb
+gmx trjconv -f $inname_str -s $inname_tpr -n "$name_template".ndx -pbc whole -o "$name_template".pdb
