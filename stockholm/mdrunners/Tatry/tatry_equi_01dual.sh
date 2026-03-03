@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# nohup ./tatru_equi_01dual.sh > run.out 2> run.err &
+# nohup ./tatry_equi_01dual.sh > run.out 2> run.err &
 
 init=step5_input
 rest_prefix=step5_input
