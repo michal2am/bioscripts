@@ -25,28 +25,28 @@ contacts["RunStab"] = contacts["PresenceList"].apply(lambda lst: sum(lst[2001:])
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 
-to_print = contacts[["ChainA", "ResnameA","ResidA", "ChainB", "ResnameB", "ResidB", "Type", "StartPres", "EquiStab200", "EquiStab", "RunStab"]]
+contacts_without_vector = contacts[["ChainA", "ResnameA", "ResidA", "ChainB", "ResnameB", "ResidB", "Type", "StartPres", "EquiStab200", "EquiStab", "RunStab"]]
 
-print(to_print[(contacts['StartPres'] == 1)
-               & (contacts['EquiStab200'] < 0.75)
-               & (contacts['EquiStab'] < 1.01)
-               & (contacts['RunStab'] < 1.01)
-               & (contacts['ResidA'] < 220)])
+print(contacts_without_vector[(contacts['StartPres'] == 1)
+                              & (contacts['EquiStab200'] < 0.75)
+                              & (contacts['EquiStab'] < 1.01)
+                              & (contacts['RunStab'] < 1.01)
+                              & (contacts['ResidA'] < 220)])
 
 # here EquiStab should exclude EquiStab200 part ...
-print(to_print[(contacts["StartPres"] == 1)
-               & (contacts['ResidA'] < 220)
-               & (contacts['EquiStab'] < 0.75*contacts['EquiStab200'])])
+print(contacts_without_vector[(contacts["StartPres"] == 1)
+                              & (contacts['ResidA'] < 220)
+                              & (contacts['EquiStab'] < 0.75*contacts['EquiStab200'])])
 
-print(to_print[(contacts["StartPres"] == 1)
-               & (contacts['ResidA'] < 220)
-               & (contacts['RunStab'] < 0.75*contacts['EquiStab'])])
+print(contacts_without_vector[(contacts["StartPres"] == 1)
+                              & (contacts['ResidA'] < 220)
+                              & (contacts['RunStab'] < 0.75*contacts['EquiStab'])])
 
-selected_contacts = to_print[(to_print['StartPres'] == 1)
-                     & (to_print['EquiStab200'] < 1.01)
-                     & (to_print['EquiStab'] < 1.01)
-                     & (to_print['RunStab'] < 1.01)
-                     & (to_print['ResidA'] < 220)]
+selected_contacts = contacts_without_vector[(contacts_without_vector['StartPres'] == 1)
+                                            & (contacts_without_vector['EquiStab200'] < 1.01)
+                                            & (contacts_without_vector['EquiStab'] < 1.01)
+                                            & (contacts_without_vector['RunStab'] < 1.01)
+                                            & (contacts_without_vector['ResidA'] < 220)].copy()
 
 # Build x-axis labels: ResnameA_ResidA – ResnameB_ResidB
 selected_contacts["label"] = ( selected_contacts["ResnameA"] + " " + selected_contacts["ResidA"].astype(str) + " – "
@@ -58,19 +58,19 @@ selected_contacts.sort_values(['ResidA', 'ResidB'], inplace=True)
 print(selected_contacts)
 
 # Melt the three stability columns into long format
-df_melted = selected_contacts.melt(
+selected_contacts_melted = selected_contacts.melt(
     id_vars=["label", "Type", "ResidA", "ResidB", "BS"],
     value_vars=["EquiStab200", "EquiStab", "RunStab"],
     var_name="Metric",
     value_name="Stability",
 )
 
-df_melted.sort_values(['ResidA', 'ResidB'], inplace=True)
-ordered_labels = df_melted['label'].tolist()
+selected_contacts_melted.sort_values(['ResidA', 'ResidB'], inplace=True)
+ordered_labels = selected_contacts_melted['label'].tolist()
 
 
 fig = px.bar(
-    df_melted,
+    selected_contacts_melted[selected_contacts_melted['Type'] == 'hbond'],
     x="label",
     y="Stability",
     color="Metric",
