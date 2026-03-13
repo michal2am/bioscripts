@@ -6,8 +6,8 @@ import plotly.express as px
 
 # is StartPres really a start?
 
-contactsAB = pd.read_csv('contacts_AB_sys2.csv', dtype={'PresenceVector': str})
-contactsCD = pd.read_csv('contacts_CD_sys2.csv', dtype={'PresenceVector': str})
+contactsAB = pd.read_csv('contacts_A_sys2.csv', dtype={'PresenceVector': str})
+contactsCD = pd.read_csv('contacts_C_sys2.csv', dtype={'PresenceVector': str})
 
 contacts = pd.concat([contactsAB, contactsCD], ignore_index=True)
 
@@ -42,11 +42,16 @@ print(contacts_without_vector[(contacts["StartPres"] == 1)
                               & (contacts['ResidA'] < 220)
                               & (contacts['RunStab'] < 0.75*contacts['EquiStab'])])
 
+
+# plot
+
 selected_contacts = contacts_without_vector[(contacts_without_vector['StartPres'] == 1)
-                                            & (contacts_without_vector['EquiStab200'] < 1.01)
+                                            & (contacts_without_vector['EquiStab200'] < 1.00)
                                             & (contacts_without_vector['EquiStab'] < 1.01)
                                             & (contacts_without_vector['RunStab'] < 1.01)
-                                            & (contacts_without_vector['ResidA'] < 220)].copy()
+                                            & ((contacts_without_vector['ResidA'].between(190,220) |
+                                                contacts_without_vector['ResidB'].between(190,220)))
+                                            & (contacts_without_vector['Type'] == 'hbond')].copy()
 
 # Build x-axis labels: ResnameA_ResidA – ResnameB_ResidB
 selected_contacts["label"] = ( selected_contacts["ResnameA"] + " " + selected_contacts["ResidA"].astype(str) + " – "
