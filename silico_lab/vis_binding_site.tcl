@@ -52,6 +52,8 @@ mol color Element
 mol material AOChalky
 mol addrep top
 
+# selected glycans
+
 mol representation Licorice
 mol selection {glycan or (chain A C and resid 149 80)}
 mol color ColorID 2

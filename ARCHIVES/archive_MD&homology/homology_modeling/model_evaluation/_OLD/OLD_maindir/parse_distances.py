@@ -11,7 +11,7 @@ read_pdbs = []
 for file_name in dirs:
     if file_name.endswith('.pdb'):
 
-        raw_read = PandasPdb().read_pdb(file_name).df['ATOM']
+        raw_read = PandasPdb().read_pdb(file_name).selected_contacts['ATOM']
         raw_read.loc[:, 'model'] = int(file_name[-11:-8])
         raw_read.loc[:, 'template'] = '6i53'
         raw_read.loc[:, 'type'] = 'LYS'
