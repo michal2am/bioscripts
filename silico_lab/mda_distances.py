@@ -103,12 +103,36 @@ PAIRS = [
 p = argparse.ArgumentParser(description="Atom-pair distances from GROMACS trajectory")
 p.add_argument("-s", "--tpr", required=True, help="Topology file (.tpr/.gro/.pdb)")
 p.add_argument("-f", "--xtc", required=True, help="Trajectory file (.xtc/.trr)")
+p.add_argument("-b", "--begin", type=float, default=None, help="Start time in ns (default: first frame)")
+p.add_argument("-e", "--end",   type=float, default=None, help="End time in ns (default: last frame)")
+p.add_argument("-dt", "--step", type=int,   default=None, help="Process every Nth frame (default: all)")
+p.add_argument("-w", "--window", type=int, default=50, help="Smoothing window in frames (default: 50, 0=off)")
 p.add_argument("-o", "--prefix", default="distances", help="Output file prefix")
 args = p.parse_args()
 
 # ── Load universe ────────────────────────────────────────────────────
 u = mda.Universe(args.tpr, args.xtc)
-print(f"Loaded: {u.trajectory.n_frames} frames, {u.atoms.n_atoms} atoms")
+
+# Convert ns → ps for MDAnalysis slicing
+start_ps = args.begin * 1000 if args.begin is not None else None
+stop_ps  = args.end   * 1000 if args.end   is not None else None
+traj_slice = u.trajectory[:]  # default: all frames
+if start_ps is not None or stop_ps is not None or args.step is not None:
+    # Build start/stop/step for frame slicing via time
+    start_frame = 0
+    stop_frame  = u.trajectory.n_frames
+    step_frame  = args.step or 1
+    for i, ts in enumerate(u.trajectory):
+        if start_ps is not None and ts.time < start_ps:
+            start_frame = i + 1
+        if stop_ps is not None and ts.time > stop_ps:
+            stop_frame = i
+            break
+    traj_slice = u.trajectory[start_frame:stop_frame:step_frame]
+
+print(f"Loaded: {u.trajectory.n_frames} total frames, {u.atoms.n_atoms} atoms")
+print(f"Analysing: {len(traj_slice)} frames"
+      f" ({traj_slice[0].time/1000:.2f}–{traj_slice[-1].time/1000:.2f} ns, step={args.step or 1})")
 
 # ── Validate selections ─────────────────────────────────────────────
 valid_pairs = []
@@ -133,12 +157,12 @@ for sel1, sel2, label in valid_pairs:
 idx1 = np.array([p[0] for p in atom_pairs])
 idx2 = np.array([p[1] for p in atom_pairs])
 
-n_frames = u.trajectory.n_frames
+n_frames = len(traj_slice)
 times = np.zeros(n_frames)
 all_dists = np.zeros((len(valid_pairs), n_frames))
 
 # Single loop, vectorized distance for ALL pairs at once
-for i, ts in enumerate(u.trajectory):
+for i, ts in enumerate(traj_slice):
     times[i] = ts.time / 1000.0  # ps → ns
     pos = ts.positions  # direct reference, no copy
     diff = pos[idx1] - pos[idx2]  # (n_pairs, 3) in one shot
@@ -155,6 +179,12 @@ print(f"Saved {args.prefix}.csv")
 
 # ── Interactive Plotly figure ────────────────────────────────────────
 # Group pairs by similar interactions for subplots
+
+def smooth(y, window=50):
+    """Running average with edge handling."""
+    kernel = np.ones(window) / window
+    return np.convolve(y, kernel, mode="same")
+
 fig = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.06,
                     subplot_titles=(
                         "loop C cap",
@@ -169,17 +199,34 @@ colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 
 for j, (_, _, label) in enumerate(valid_pairs):
     row = row_map[j] if j < len(row_map) else 3
-    ref_d = all_dists[j, 0]  # distance at first frame
+    ref_d = all_dists[j, 0]
+    raw = all_dists[j] - ref_d
+    color = colors[j % len(colors)]
+
+    # Raw trace (thin, semi-transparent)
     fig.add_trace(
         go.Scatter(
-            x=times, y=all_dists[j], mode="lines", name=label,
-            line=dict(width=1.2, color=colors[j % len(colors)]),
+            x=times, y=raw, mode="lines", name=label,
+            line=dict(width=0.5, color=color), opacity=0.3,
             hovertemplate=f"{label}<br>t=%{{x:.2f}} ns<br>d=%{{y:.2f}} Å<extra></extra>",
             legendgroup=label,
         ),
         row=row, col=1,
     )
+    # Smoothed trace (bold, on top)
+    if args.window > 1:
+        fig.add_trace(
+            go.Scatter(
+                x=times, y=smooth(raw, args.window), mode="lines",
+                name=f"{label} (avg {args.window}f)", showlegend=False,
+                line=dict(width=2, color=color),
+                hovertemplate=f"{label} smoothed<br>t=%{{x:.2f}} ns<br>d=%{{y:.2f}} Å<extra></extra>",
+                legendgroup=label,
+            ),
+            row=row, col=1,
+        )
     # add initial-frame reference as dashed line (toggles with main trace)
+    '''
     color = colors[j % len(colors)]
     fig.add_trace(
         go.Scatter(
@@ -191,7 +238,9 @@ for j, (_, _, label) in enumerate(valid_pairs):
             hoverinfo="skip",
         ),
         row=row, col=1,
+    
     )
+    '''
 
 for r in range(1, 4):
     fig.update_yaxes(title_text="Distance (Å)", row=r, col=1)

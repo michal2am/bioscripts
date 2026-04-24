@@ -1,6 +1,6 @@
 #! /bin/bash
-# concatenates all raw xtc files from equilibration steps
-# outname is for temporary file which has to be converted, eg. all_equisteps.xtc
+# concatenates all raw xtc files from equilibration steps, timestamps are cumulative durations + cumulative 50 ps (xtc step size)
+# concat_equisteps.sh 8si9_ABUY4B_equi_sys1_newEqui.xtc
 
 outname=$1
 
