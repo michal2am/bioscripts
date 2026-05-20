@@ -9,6 +9,18 @@ import MDAnalysis as mda
 # Each entry: (selection1, selection2, label, group)
 PAIRS = [
 
+    # BS_opening
+    ("chainID A and resid 200 and name CA", "chainID B and resid 46 and name CA",
+     "A:Phe200-CA ↔ B:Phe46-CA", "BS_opening"),
+    ("chainID B and resid 205 and name CA", "chainID C and resid 43 and name CA",
+     "B:Ser205-CA ↔ C:Asp43-CA", "BS_opening"),
+    ("chainID C and resid 200 and name CA", "chainID D and resid 46 and name CA",
+     "C:Phe200-CA ↔ D:Phe46-CA", "BS_opening"),
+    ("chainID D and resid 205 and name CA", "chainID E and resid 58 and name CA",
+     "D:Ser205-CA ↔ E:Tyr58-CA", "BS_opening"),
+    ("chainID E and resid 215 and name CA", "chainID A and resid 43 and name CA",
+     "E:Phe215-CA ↔ A:Asp43-CA", "BS_opening"),
+
     # loop C
     # 1-2 F200 ↔ T202 h-bond cap
     ("chainID A and resid 205 and name OH", "chainID A and resid 202 and name OG1",
@@ -172,4 +184,4 @@ for i, ts in enumerate(traj_slice):
 header = "time_ns," + ",".join(f'"{g}|{l}"' for _, _, l, g in valid_pairs)
 out_data = np.column_stack([times] + [all_dists[j] for j in range(len(valid_pairs))])
 np.savetxt(f"{args.prefix}_distances.csv", out_data, delimiter=",", header=header, comments="")
-print(f"Saved {args.prefix}_distances.csv")
+print(f"Saved {args.prefix}_distancesrr.csv")

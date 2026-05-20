@@ -11,6 +11,7 @@ from plotly.subplots import make_subplots
 p = argparse.ArgumentParser(description="Plot atom-pair distances from CSV")
 p.add_argument("-i", "--input", required=True, help="Input CSV (from distances_calc.py)")
 p.add_argument("-w", "--window", type=int, default=50, help="Smoothing window in frames (default: 50, 0=off)")
+p.add_argument("-b", "--bins", type=int, default=60, help="Histogram bin count (default: 60)")
 p.add_argument("-o", "--prefix", default="distances", help="Output file prefix")
 args = p.parse_args()
 
@@ -39,7 +40,7 @@ group_to_row = {g: i + 1 for i, g in enumerate(unique_groups)}
 print(f"Loaded {len(times)} frames, {len(labels)} pairs, {len(unique_groups)} groups: {unique_groups}")
 
 
-# ── Interactive Plotly figure ────────────────────────────────────────
+# ── Time-series figure ──────────────────────────────────────────────
 def smooth(y, window=50):
     """Running average with edge handling."""
     kernel = np.ones(window) / window
@@ -55,9 +56,9 @@ colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 for j, (label, group) in enumerate(zip(labels, groups)):
     row = group_to_row[group]
     ref_d = all_dists[j, 0]
-    #TODO: toggle initial value substraction
+    # TODO: toggle initial value substraction
     raw = all_dists[j] - ref_d
-    #raw = all_dists[j]
+    # raw = all_dists[j]
     color = colors[j % len(colors)]
 
     # Raw trace (thin, semi-transparent)
@@ -114,3 +115,43 @@ out_html = f"{args.prefix}_distances_plots.html"
 fig.write_html(out_html, include_plotlyjs="cdn")
 print(f"Saved {out_html}")
 fig.show()
+
+# ── Histogram figure ────────────────────────────────────────────────
+# Distributions of the absolute distance for each pair, overlaid within each
+# group. Each subplot keeps its own x-range so groups with different distance
+# ranges (e.g. h-bonds vs CG–CG spacings) plot cleanly.
+fig_hist = make_subplots(rows=n_rows, cols=1, vertical_spacing=0.08,
+                         subplot_titles=tuple(unique_groups))
+
+for j, (label, group) in enumerate(zip(labels, groups)):
+    row = group_to_row[group]
+    color = colors[j % len(colors)]
+
+    fig_hist.add_trace(
+        go.Histogram(
+            x=all_dists[j], name=label,
+            marker=dict(color=color), opacity=0.5,
+            nbinsx=args.bins,
+            histnorm="probability density",
+            legendgroup=label,
+            hovertemplate=f"{label}<br>d=%{{x:.2f}} Å<br>density=%{{y:.3f}}<extra></extra>",
+        ),
+        row=row, col=1,
+    )
+
+for r in range(1, n_rows + 1):
+    fig_hist.update_yaxes(title_text="Density", row=r, col=1)
+    fig_hist.update_xaxes(title_text="Distance (Å)", row=r, col=1)
+
+fig_hist.update_layout(
+    barmode="overlay",
+    height=900, template="plotly_white",
+    legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="center", x=0.5,
+                font=dict(size=9)),
+    title="Atom-Pair Distance Distributions",
+)
+
+out_html_hist = f"{args.prefix}_distances_histograms.html"
+fig_hist.write_html(out_html_hist, include_plotlyjs="cdn")
+print(f"Saved {out_html_hist}")
+fig_hist.show()
