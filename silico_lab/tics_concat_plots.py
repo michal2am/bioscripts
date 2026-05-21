@@ -3,6 +3,7 @@
 Plot TICA results from tica_calc.py outputs (multi-replica aware).
 
 Layout:
+  - 1 row (optional): auxiliary interface distances per site (from <prefix>_aux.csv)
   - n_tics-shown rows: TIC time series, one trace per replica (color = replica)
   - n_replicas rows:   TIC1 vs TIC2 free energy landscape, one row per replica
   - 1 row:             feature ↔ TIC correlation heatmaps
@@ -32,6 +33,13 @@ tics = pd.read_csv(f"{args.input_prefix}_tics.csv")
 eig = pd.read_csv(f"{args.input_prefix}_eigenvalues.csv")
 loadings = pd.read_csv(f"{args.input_prefix}_loadings.csv")
 
+# Optional auxiliary distances (interface contacts tracked alongside TICA)
+try:
+    aux = pd.read_csv(f"{args.input_prefix}_aux.csv")
+    has_aux = True
+except FileNotFoundError:
+    has_aux = False
+
 # Discover sites
 sites = []
 for col in tics.columns:
@@ -50,13 +58,20 @@ else:
 n_rep = len(replicas)
 
 n_show = args.n_tics_shown
-fel_first_row = n_show + 1
-fel_last_row = n_show + n_rep
-load_row = n_show + n_rep + 1
+n_aux = 1 if has_aux else 0
+aux_row = 1
+ts_first_row = n_aux + 1
+fel_first_row = n_aux + n_show + 1
+fel_last_row = n_aux + n_show + n_rep
+load_row = n_aux + n_show + n_rep + 1
 n_rows = load_row
 
 # Subplot titles (row-major)
 titles = []
+if has_aux:
+    for s in sites:
+        aux_col = next(c for c in aux.columns if c.startswith(f"{s}|"))
+        titles.append(f"{s}: {aux_col.split('|')[1]}")
 for i in range(n_show):
     for s in sites:
         titles.append(f"{s}: TIC{i+1} vs time")
@@ -78,6 +93,25 @@ fig = make_subplots(
 
 replica_colors = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e", "#8c564b"]
 
+# --- Auxiliary distance time series (top row, if present) ---
+if has_aux:
+    for rep_i, rep in enumerate(replicas):
+        rep_data = aux[aux["replica"] == rep]
+        color = replica_colors[rep_i % len(replica_colors)]
+        for col_i, site in enumerate(sites):
+            aux_col = next(c for c in aux.columns if c.startswith(f"{site}|"))
+            fig.add_trace(
+                go.Scattergl(
+                    x=rep_data["time_ns"], y=rep_data[aux_col],
+                    mode="lines",
+                    line=dict(width=1, color=color),
+                    name=f"replica {rep}",
+                    legendgroup=f"rep{rep}",
+                    showlegend=(col_i == 0),
+                ),
+                row=aux_row, col=col_i+1
+            )
+
 # --- TIC time series, one trace per replica per panel ---
 for rep_i, rep in enumerate(replicas):
     rep_data = tics[tics["replica"] == rep]
@@ -92,9 +126,9 @@ for rep_i, rep in enumerate(replicas):
                     line=dict(width=1, color=color),
                     name=f"replica {rep}",
                     legendgroup=f"rep{rep}",
-                    showlegend=(tic_i == 0 and col_i == 0),
+                    showlegend=(not has_aux and tic_i == 0 and col_i == 0),
                 ),
-                row=tic_i+1, col=col_i+1
+                row=ts_first_row + tic_i, col=col_i+1
             )
 
 # --- Free energy landscapes, one row per replica (shared bins + color scale) ---
@@ -137,11 +171,15 @@ for col_i, site in enumerate(sites):
     )
 
 # --- Axis labels ---
+if has_aux:
+    for col_i in range(n_sites):
+        fig.update_yaxes(title_text="d [Å]", row=aux_row, col=col_i+1)
+
 for tic_i in range(n_show):
     for col_i in range(n_sites):
-        fig.update_yaxes(title_text=f"TIC{tic_i+1}", row=tic_i+1, col=col_i+1)
+        fig.update_yaxes(title_text=f"TIC{tic_i+1}", row=ts_first_row + tic_i, col=col_i+1)
         if tic_i == n_show - 1:
-            fig.update_xaxes(title_text="time [ns]", row=tic_i+1, col=col_i+1)
+            fig.update_xaxes(title_text="time [ns]", row=ts_first_row + tic_i, col=col_i+1)
 
 for rep_i in range(n_rep):
     for col_i in range(n_sites):
@@ -182,7 +220,7 @@ load_len = 0.85 * (load_bot - load_top)
 fig.update_layout(
     title=dict(text=f"<sub>{subtitle}</sub>", x=0.5),
     height=int(300 * total_h),
-    width=560 * n_sites + 220,
+    width=500 * n_sites + 220,
     template="plotly_white",
     legend=dict(orientation="h", x=0.5, xanchor="center", y=1.0, yanchor="bottom"),
     coloraxis=dict(

@@ -63,6 +63,12 @@ SITES = {
     ],
 }
 
+# Per-site auxiliary distances (computed separately, not used as TICA features)
+AUX_DISTS = {
+    "site1": ("chainID A and resid 200 and name CG", "chainID B and resid 46 and name CG", "200CG-46CG"),
+    "site2": ("chainID C and resid 200 and name CG", "chainID D and resid 46 and name CG", "200CG-46CG"),
+}
+
 # Per-site chain containing the residues for dihedral computation
 SITE_CHAIN = {"site1": "A", "site2": "C"}
 
@@ -139,6 +145,18 @@ for site, pairs in SITES.items():
     idx2 = [u_ref.select_atoms(s2).indices[0] for _, s2, _ in pairs]
     site_indices[site] = (np.array(idx1), np.array(idx2))
 
+# Resolve auxiliary distance atom indices (tracked alongside TICA but not used as features)
+aux_indices = {}
+for site, (s1, s2, label) in AUX_DISTS.items():
+    aux_indices[site] = (
+        u_ref.select_atoms(s1).indices[0],
+        u_ref.select_atoms(s2).indices[0],
+        label,
+    )
+aux_site_order = list(AUX_DISTS.keys())
+aux_i1_arr = np.array([aux_indices[s][0] for s in aux_site_order])
+aux_i2_arr = np.array([aux_indices[s][1] for s in aux_site_order])
+
 # Resolve dihedral atom quads per site (backbone phi/psi + side chain chi)
 site_dihed_quads = {}
 site_dihed_labels = {}
@@ -180,10 +198,12 @@ n_dihed = len(site_dihed_labels["site1"])
 print(f"Per-site features: {n_dist} distances + {n_dihed} dihedrals × 2 sin/cos = {n_dist + 2*n_dihed} total")
 print(f"  site1 dihedrals: {', '.join(site_dihed_labels['site1'])}")
 print(f"  site2 dihedrals: {', '.join(site_dihed_labels['site2'])}")
+print(f"Aux distances (tracked, not in TICA): {', '.join(f'{s}|{aux_indices[s][2]}' for s in aux_site_order)}")
 print()
 
 # Collect features per replica (list of arrays per site for joint TICA fit)
 features_per_rep = {site: [] for site in SITES}
+aux_per_rep = {site: [] for site in AUX_DISTS}
 times_per_rep = []
 effective_dt_ps = None
 
@@ -196,6 +216,7 @@ for rep_idx, xtc in enumerate(args.xtc, 1):
 
     rep_times = []
     rep_feats = {site: [] for site in SITES}
+    rep_aux = {site: [] for site in AUX_DISTS}
     for ts in u.trajectory:
         t_ns = ts.time / 1000.0
         if begin is not None and t_ns < begin:
@@ -217,9 +238,14 @@ for rep_idx, xtc in enumerate(args.xtc, 1):
             sc[0::2] = np.sin(angles)
             sc[1::2] = np.cos(angles)
             rep_feats[site].append(np.concatenate([d, sc]))
+        d_aux = calc_bonds(positions[aux_i1_arr], positions[aux_i2_arr], box=ts.dimensions)
+        for i, site in enumerate(aux_site_order):
+            rep_aux[site].append(d_aux[i])
 
     for site in SITES:
         features_per_rep[site].append(np.array(rep_feats[site]))
+    for site in AUX_DISTS:
+        aux_per_rep[site].append(np.array(rep_aux[site]))
     times_per_rep.append(np.array(rep_times))
     print(f"Replica {rep_idx}: {len(rep_times)} frames from {xtc} (b={begin} ns, e={end} ns)")
 
@@ -299,3 +325,12 @@ for site in SITES:
         load_df[f"{site}|TIC{i+1}"] = loadings[site][:, i]
 load_df.to_csv(f"{args.prefix}_loadings.csv", index=False)
 print(f"Wrote {args.prefix}_loadings.csv")
+
+
+# Save auxiliary distances (tracked alongside but not used in TICA)
+aux_df = pd.DataFrame({"replica": all_replicas, "time_ns": all_times})
+for site in aux_site_order:
+    label = aux_indices[site][2]
+    aux_df[f"{site}|{label}"] = np.concatenate(aux_per_rep[site])
+aux_df.to_csv(f"{args.prefix}_aux.csv", index=False)
+print(f"Wrote {args.prefix}_aux.csv")

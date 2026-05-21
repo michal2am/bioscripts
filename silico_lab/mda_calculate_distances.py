@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Calculate distances between selected atom pairs from a GROMACS trajectory and save to CSV."""
+"""Calculate atom-pair distances from one or more replicas of the same system
+and save to a single CSV in long format (one row per replica × frame), with a
+'replica' column added alongside 'time_ns'."""
 
 import argparse
+import csv
 import numpy as np
 import MDAnalysis as mda
 
@@ -9,7 +12,102 @@ import MDAnalysis as mda
 # Each entry: (selection1, selection2, label, group)
 PAIRS = [
 
-    # BS_opening
+    # BS1
+    ("chainID A and resid 202 and name CA", "chainID B and resid 46 and name CA",
+     "A:X202-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 201 and name CA", "chainID B and resid 46 and name CA",
+     "A:X201-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 200 and name CA", "chainID B and resid 46 and name CA",
+     "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 199 and name CA", "chainID B and resid 46 and name CA",
+     "A:X199-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 198 and name CA", "chainID B and resid 46 and name CA",
+     "A:X198-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 197 and name CA", "chainID B and resid 46 and name CA",
+     "A:X197-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 196 and name CA", "chainID B and resid 46 and name CA",
+     "A:Lys196-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 195 and name CA", "chainID B and resid 46 and name CA",
+     "A:X195-CA ↔ B:Phe46-CA", "BS_1"),
+
+    ("chainID A and resid 197 and name NZ", "chainID A and resid 165 and name OE1",
+     "A:Lys197-NZ ↔ A:Glu165-OE1", "BS_1"),
+    ("chainID A and resid 197 and name NZ", "chainID A and resid 165 and name OE2",
+     "A:Lys197-NZ ↔ A:Glu165-OE2", "BS_1"),
+    ("chainID A and resid 196 and name NZ", "chainID A and resid 153 and name OE1",
+     "A:Lys196-NZ ↔ A:Glu153-OE1", "BS_1"),
+    ("chainID A and resid 196 and name NZ", "chainID A and resid 153 and name OE2",
+     "A:Lys196-NZ ↔ A:Glu153-OE2", "BS_1"),
+
+
+    ("chainID A and resid 205 and name CA", "chainID B and resid 67 and name CA",
+     "A:Tyr205-CA ↔ B:Arg67-CA", "BS_1"),
+    ("chainID A and resid 31 and name CA", "chainID B and resid 15 and name CA",
+     "A:Phe31-CA ↔ B:Phe15-CA", "BS_1"),
+    ("chainID A and resid 157 and name CA", "chainID B and resid 117 and name CA",
+     "A:Tyr157-CA ↔ B:Lys117-CA", "BS_1"),
+    ("chainID A and resid 136 and name CA", "chainID B and resid 186 and name CA",
+     "A:Cys136-CA ↔ B:Ser186-CA", "BS_1"),
+
+
+    ("chainID A and resid 205 and name OH", "chainID A and resid 202 and name OG1",
+     "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
+
+    # BS2
+    ("chainID C and resid 202 and name CA", "chainID D and resid 46 and name CA",
+     "C:X202-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 201 and name CA", "chainID D and resid 46 and name CA",
+     "C:X201-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 200 and name CA", "chainID D and resid 46 and name CA",
+     "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 199 and name CA", "chainID D and resid 46 and name CA",
+     "C:X199-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 198 and name CA", "chainID D and resid 46 and name CA",
+     "C:X198-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 197 and name CA", "chainID D and resid 46 and name CA",
+     "C:X197-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 196 and name CA", "chainID D and resid 46 and name CA",
+     "C:Lys196-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 195 and name CA", "chainID D and resid 46 and name CA",
+     "C:X195-CA ↔ D:Phe46-CA", "BS_2"),
+
+    ("chainID C and resid 197 and name NZ", "chainID C and resid 165 and name OE1",
+     "C:Lys197-NZ ↔ C:Glu165-OE1", "BS_2"),
+    ("chainID C and resid 197 and name NZ", "chainID C and resid 165 and name OE2",
+     "C:Lys197-NZ ↔ C:Glu165-OE2", "BS_2"),
+    ("chainID C and resid 196 and name NZ", "chainID C and resid 153 and name OE1",
+     "C:Lys196-NZ ↔ C:Glu153-OE1", "BS_2"),
+    ("chainID C and resid 196 and name NZ", "chainID C and resid 153 and name OE2",
+     "C:Lys196-NZ ↔ C:Glu153-OE2", "BS_2"),
+
+
+    ("chainID C and resid 205 and name CA", "chainID D and resid 67 and name CA",
+     "C:Tyr205-CA ↔ D:Arg67-CA", "BS_2"),
+    ("chainID C and resid 31 and name CA", "chainID D and resid 15 and name CA",
+     "C:Phe31-CA ↔ D:Phe15-CA", "BS_2"),
+    ("chainID C and resid 157 and name CA", "chainID D and resid 117 and name CA",
+     "C:Tyr157-CA ↔ D:Lys117-CA", "BS_2"),
+    ("chainID C and resid 136 and name CA", "chainID D and resid 186 and name CA",
+     "C:Cys136-CA ↔ D:Ser186-CA", "BS_2"),
+
+    ("chainID C and resid 205 and name OH", "chainID C and resid 202 and name OG1",
+     "C:Tyr205-OH ↔ C:Thr202-OG1", "BS_2"),
+
+
+    ("chainID B and resid 205 and name CA", "chainID C and resid 43 and name CA",
+     "B:Ser205-CA ↔ C:Asp43-CA", "a/b"),
+
+    ("chainID D and resid 205 and name CA", "chainID E and resid 58 and name CA",
+     "D:Ser205-CA ↔ E:Tyr58-CA", "a/g"),
+
+
+    ("chainID E and resid 215 and name CA", "chainID A and resid 43 and name CA",
+     "E:Phe215-CA ↔ A:Asp43-CA", "g/a"),
+
+]
+
+PAIRS_UNUSED = [
+    # BS_opening multi-sub
     ("chainID A and resid 200 and name CA", "chainID B and resid 46 and name CA",
      "A:Phe200-CA ↔ B:Phe46-CA", "BS_opening"),
     ("chainID B and resid 205 and name CA", "chainID C and resid 43 and name CA",
@@ -109,43 +207,43 @@ PAIRS = [
 ]
 
 # ── CLI ──────────────────────────────────────────────────────────────
-p = argparse.ArgumentParser(description="Atom-pair distances from GROMACS trajectory")
-p.add_argument("-s", "--tpr", required=True, help="Topology file (.tpr/.gro/.pdb)")
-p.add_argument("-f", "--xtc", required=True, help="Trajectory file (.xtc/.trr)")
-p.add_argument("-b", "--begin", type=float, default=None, help="Start time in ns (default: first frame)")
-p.add_argument("-e", "--end", type=float, default=None, help="End time in ns (default: last frame)")
-p.add_argument("-dt", "--step", type=int, default=None, help="Process every Nth frame (default: all)")
+p = argparse.ArgumentParser(description="Atom-pair distances from GROMACS trajectories (multi-replica)")
+p.add_argument("-s", "--tpr", required=True, help="Topology file (.tpr/.gro/.pdb), shared across replicas")
+p.add_argument("-f", "--xtc", required=True, nargs="+",
+               help="Trajectory file(s); one per replica (labelled replica1, replica2, …)")
+p.add_argument("-b", "--begin", type=float, default=None, nargs="+",
+               help="Start time(s) in ns: one value for all replicas, or one per replica")
+p.add_argument("-e", "--end", type=float, default=None, nargs="+",
+               help="End time(s) in ns: one value for all replicas, or one per replica")
+p.add_argument("-dt", "--step", type=int, default=None, nargs="+",
+               help="Frame step(s): one value for all replicas, or one per replica")
 p.add_argument("-o", "--prefix", default="distances", help="Output file prefix")
 args = p.parse_args()
 
-# ── Load universe ────────────────────────────────────────────────────
-u = mda.Universe(args.tpr, args.xtc)
 
-# Convert ns → ps for MDAnalysis slicing
-start_ps = args.begin * 1000 if args.begin is not None else None
-stop_ps = args.end * 1000 if args.end is not None else None
-traj_slice = u.trajectory[:]  # default: all frames
-if start_ps is not None or stop_ps is not None or args.step is not None:
-    # Build start/stop/step for frame slicing via time
-    start_frame = 0
-    stop_frame = u.trajectory.n_frames
-    step_frame = args.step or 1
-    for i, ts in enumerate(u.trajectory):
-        if start_ps is not None and ts.time < start_ps:
-            start_frame = i + 1
-        if stop_ps is not None and ts.time > stop_ps:
-            stop_frame = i
-            break
-    traj_slice = u.trajectory[start_frame:stop_frame:step_frame]
+def per_replica(arg, n):
+    """Expand a 1- or n-list to length n; None → list of Nones."""
+    if arg is None:
+        return [None] * n
+    if len(arg) == 1:
+        return list(arg) * n
+    if len(arg) == n:
+        return list(arg)
+    raise SystemExit(f"Expected 1 or {n} values, got {len(arg)}")
 
-print(f"Loaded: {u.trajectory.n_frames} total frames, {u.atoms.n_atoms} atoms")
-print(f"Analysing: {len(traj_slice)} frames"
-      f" ({traj_slice[0].time / 1000:.2f}–{traj_slice[-1].time / 1000:.2f} ns, step={args.step or 1})")
 
-# ── Validate selections ─────────────────────────────────────────────
+n_replicas = len(args.xtc)
+begins = per_replica(args.begin, n_replicas)
+ends   = per_replica(args.end,   n_replicas)
+steps  = per_replica(args.step,  n_replicas)
+
+# ── Validate selections (once, against first replica's topology) ────
+u0 = mda.Universe(args.tpr, args.xtc[0])
+print(f"Topology: {u0.atoms.n_atoms} atoms; {n_replicas} replica(s)")
+
 valid_pairs = []
 for sel1, sel2, label, group in PAIRS:
-    ag1, ag2 = u.select_atoms(sel1), u.select_atoms(sel2)
+    ag1, ag2 = u0.select_atoms(sel1), u0.select_atoms(sel2)
     if ag1.n_atoms == 0 or ag2.n_atoms == 0:
         print(f"  SKIP  {label}  (sel1: {ag1.n_atoms}, sel2: {ag2.n_atoms} atoms)")
         continue
@@ -154,34 +252,64 @@ for sel1, sel2, label, group in PAIRS:
     valid_pairs.append((sel1, sel2, label, group))
     print(f"  OK    [{group}]  {label}")
 
-# ── Calculate distances ──────────────────────────────────────────────
-# Pre-select atoms ONCE (avoid re-parsing selections every frame)
-atom_pairs = []
-for sel1, sel2, label, group in valid_pairs:
-    a1 = u.select_atoms(sel1)[0]  # single Atom object
-    a2 = u.select_atoms(sel2)[0]
-    atom_pairs.append((a1.index, a2.index))
+# Pre-resolve atom indices once — topology is shared, so indices are stable
+idx1 = np.array([u0.select_atoms(s1)[0].index for s1, _, _, _ in valid_pairs])
+idx2 = np.array([u0.select_atoms(s2)[0].index for _, s2, _, _ in valid_pairs])
 
-idx1 = np.array([pr[0] for pr in atom_pairs])
-idx2 = np.array([pr[1] for pr in atom_pairs])
+# ── Process each replica ────────────────────────────────────────────
+replica_results = []  # list of (rep_label, times, all_dists)
 
-n_frames = len(traj_slice)
-times = np.zeros(n_frames)
-all_dists = np.zeros((len(valid_pairs), n_frames))
+for r_idx, xtc in enumerate(args.xtc):
+    rep_label = f"replica{r_idx + 1}"
+    print(f"\n── {rep_label}: {xtc} ──")
 
-# Single loop, vectorized distance for ALL pairs at once
-for i, ts in enumerate(traj_slice):
-    times[i] = ts.time / 1000.0  # ps → ns
-    pos = ts.positions  # direct reference, no copy
-    diff = pos[idx1] - pos[idx2]  # (n_pairs, 3) in one shot
-    all_dists[:, i] = np.sqrt((diff * diff).sum(axis=1))
-    if (i + 1) % 2000 == 0 or i == n_frames - 1:
-        print(f"  Frame {i + 1}/{n_frames}")
+    u = u0 if r_idx == 0 else mda.Universe(args.tpr, xtc)
 
-# ── Save CSV ─────────────────────────────────────────────────────────
-# Encode group in column header as "group|label" so the plot script can
-# assign each data series to a subplot panel by its group.
-header = "time_ns," + ",".join(f'"{g}|{l}"' for _, _, l, g in valid_pairs)
-out_data = np.column_stack([times] + [all_dists[j] for j in range(len(valid_pairs))])
-np.savetxt(f"{args.prefix}_distances.csv", out_data, delimiter=",", header=header, comments="")
-print(f"Saved {args.prefix}_distancesrr.csv")
+    begin, end, step = begins[r_idx], ends[r_idx], steps[r_idx]
+    start_ps = begin * 1000 if begin is not None else None
+    stop_ps  = end   * 1000 if end   is not None else None
+    traj_slice = u.trajectory[:]
+    if start_ps is not None or stop_ps is not None or step is not None:
+        start_frame = 0
+        stop_frame  = u.trajectory.n_frames
+        step_frame  = step or 1
+        for i, ts in enumerate(u.trajectory):
+            if start_ps is not None and ts.time < start_ps:
+                start_frame = i + 1
+            if stop_ps is not None and ts.time > stop_ps:
+                stop_frame = i
+                break
+        traj_slice = u.trajectory[start_frame:stop_frame:step_frame]
+
+    print(f"  Total {u.trajectory.n_frames} frames; analysing {len(traj_slice)}"
+          f" ({traj_slice[0].time / 1000:.2f}–{traj_slice[-1].time / 1000:.2f} ns, step={step or 1})")
+
+    n_frames = len(traj_slice)
+    times = np.zeros(n_frames)
+    all_dists = np.zeros((len(valid_pairs), n_frames))
+
+    for i, ts in enumerate(traj_slice):
+        times[i] = ts.time / 1000.0  # ps → ns
+        pos = ts.positions
+        diff = pos[idx1] - pos[idx2]
+        all_dists[:, i] = np.sqrt((diff * diff).sum(axis=1))
+        if (i + 1) % 2000 == 0 or i == n_frames - 1:
+            print(f"  Frame {i + 1}/{n_frames}")
+
+    replica_results.append((rep_label, times, all_dists))
+
+# ── Save CSV (long format) ──────────────────────────────────────────
+# Columns: time_ns, replica, "group|label1", "group|label2", …
+# csv.writer handles the mixed string/float types cleanly.
+header = ["time_ns", "replica"] + [f"{g}|{l}" for _, _, l, g in valid_pairs]
+out_path = f"{args.prefix}_distances.csv"
+with open(out_path, "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(header)
+    for rep_label, times, all_dists in replica_results:
+        for i in range(len(times)):
+            row = [f"{times[i]:.4f}", rep_label] + [f"{all_dists[j, i]:.4f}" for j in range(all_dists.shape[0])]
+            w.writerow(row)
+
+total_rows = sum(len(t) for _, t, _ in replica_results)
+print(f"\nSaved {out_path} ({total_rows} rows across {n_replicas} replicas)")
