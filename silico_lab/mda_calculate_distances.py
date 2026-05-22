@@ -13,6 +13,7 @@ import MDAnalysis as mda
 PAIRS = [
 
     # BS1
+    # loop C vs F45
     ("chainID A and resid 202 and name CA", "chainID B and resid 46 and name CA",
      "A:X202-CA ↔ B:Phe46-CA", "BS_1"),
     ("chainID A and resid 201 and name CA", "chainID B and resid 46 and name CA",
@@ -30,6 +31,7 @@ PAIRS = [
     ("chainID A and resid 195 and name CA", "chainID B and resid 46 and name CA",
      "A:X195-CA ↔ B:Phe46-CA", "BS_1"),
 
+    # K196 and K196 s-bridges
     ("chainID A and resid 197 and name NZ", "chainID A and resid 165 and name OE1",
      "A:Lys197-NZ ↔ A:Glu165-OE1", "BS_1"),
     ("chainID A and resid 197 and name NZ", "chainID A and resid 165 and name OE2",
@@ -39,7 +41,8 @@ PAIRS = [
     ("chainID A and resid 196 and name NZ", "chainID A and resid 153 and name OE2",
      "A:Lys196-NZ ↔ A:Glu153-OE2", "BS_1"),
 
-
+    # interfaces
+    #TODO:  add E153/D184 (loop F)
     ("chainID A and resid 205 and name CA", "chainID B and resid 67 and name CA",
      "A:Tyr205-CA ↔ B:Arg67-CA", "BS_1"),
     ("chainID A and resid 31 and name CA", "chainID B and resid 15 and name CA",
@@ -49,11 +52,12 @@ PAIRS = [
     ("chainID A and resid 136 and name CA", "chainID B and resid 186 and name CA",
      "A:Cys136-CA ↔ B:Ser186-CA", "BS_1"),
 
-
+    # h-bond loop C cap
     ("chainID A and resid 205 and name OH", "chainID A and resid 202 and name OG1",
      "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
 
     # BS2
+    # loop C vs F45
     ("chainID C and resid 202 and name CA", "chainID D and resid 46 and name CA",
      "C:X202-CA ↔ D:Phe46-CA", "BS_2"),
     ("chainID C and resid 201 and name CA", "chainID D and resid 46 and name CA",
@@ -71,6 +75,7 @@ PAIRS = [
     ("chainID C and resid 195 and name CA", "chainID D and resid 46 and name CA",
      "C:X195-CA ↔ D:Phe46-CA", "BS_2"),
 
+    # K196 and K196 s-bridges
     ("chainID C and resid 197 and name NZ", "chainID C and resid 165 and name OE1",
      "C:Lys197-NZ ↔ C:Glu165-OE1", "BS_2"),
     ("chainID C and resid 197 and name NZ", "chainID C and resid 165 and name OE2",
@@ -80,7 +85,8 @@ PAIRS = [
     ("chainID C and resid 196 and name NZ", "chainID C and resid 153 and name OE2",
      "C:Lys196-NZ ↔ C:Glu153-OE2", "BS_2"),
 
-
+    # interfaces
+    # TODO:  add E153/D184 (loop F)
     ("chainID C and resid 205 and name CA", "chainID D and resid 67 and name CA",
      "C:Tyr205-CA ↔ D:Arg67-CA", "BS_2"),
     ("chainID C and resid 31 and name CA", "chainID D and resid 15 and name CA",
@@ -90,17 +96,19 @@ PAIRS = [
     ("chainID C and resid 136 and name CA", "chainID D and resid 186 and name CA",
      "C:Cys136-CA ↔ D:Ser186-CA", "BS_2"),
 
+    # h-bond loop C cap
     ("chainID C and resid 205 and name OH", "chainID C and resid 202 and name OG1",
      "C:Tyr205-OH ↔ C:Thr202-OG1", "BS_2"),
 
-
+    # interface a/b
     ("chainID B and resid 205 and name CA", "chainID C and resid 43 and name CA",
      "B:Ser205-CA ↔ C:Asp43-CA", "a/b"),
 
+    # interface a/g
     ("chainID D and resid 205 and name CA", "chainID E and resid 58 and name CA",
      "D:Ser205-CA ↔ E:Tyr58-CA", "a/g"),
 
-
+    # interface g/a
     ("chainID E and resid 215 and name CA", "chainID A and resid 43 and name CA",
      "E:Phe215-CA ↔ A:Asp43-CA", "g/a"),
 
