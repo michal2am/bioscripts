@@ -13,7 +13,24 @@ import MDAnalysis as mda
 PAIRS = [
 
     # BS1
+    # glycan h-bond
+    ('chainID A and resid 2 and name O', 'chainID A and resid 196 and name NZ',
+     'A:glyc2-O ↔ A:Lys196-NZ', 'BS_1'),
+
+    # trio
+    # TODO: oxygen distances instead of CD
+    ("chainID A and resid 153 and name CD", "chainID A and resid 207 and name NH1",
+     "A:Glu153-CD ↔ A:Arg207-NH1", 'BS_1'),
+    ("chainID A and resid 155 and name CD", "chainID A and resid 207 and name NH2",
+     "A:Glu155-CD ↔ A:Arg207-NH2", 'BS_1'),
+
     # loop C vs F45
+    ("chainID A and resid 205 and name CA", "chainID B and resid 46 and name CA",
+     "A:X205-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 204 and name CA", "chainID B and resid 46 and name CA",
+     "A:X204-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 203 and name CA", "chainID B and resid 46 and name CA",
+     "A:X203-CA ↔ B:Phe46-CA", "BS_1"),
     ("chainID A and resid 202 and name CA", "chainID B and resid 46 and name CA",
      "A:X202-CA ↔ B:Phe46-CA", "BS_1"),
     ("chainID A and resid 201 and name CA", "chainID B and resid 46 and name CA",
@@ -30,6 +47,8 @@ PAIRS = [
      "A:Lys196-CA ↔ B:Phe46-CA", "BS_1"),
     ("chainID A and resid 195 and name CA", "chainID B and resid 46 and name CA",
      "A:X195-CA ↔ B:Phe46-CA", "BS_1"),
+    ("chainID A and resid 194 and name CA", "chainID B and resid 46 and name CA",
+     "A:X194-CA ↔ B:Phe46-CA", "BS_1"),
 
     # K196 and K196 s-bridges
     ("chainID A and resid 197 and name NZ", "chainID A and resid 165 and name OE1",
@@ -55,9 +74,53 @@ PAIRS = [
     # h-bond loop C cap
     ("chainID A and resid 205 and name OH", "chainID A and resid 202 and name OG1",
      "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
+    ("chainID A and resid 162 and name CG", "chainID A and resid 202 and name OG1",
+     "A:Asp162-CG ↔ A:Thr202-OG1", "BS_1"),
+
+
+    ("chainID A and resid 205 and name OH", "chainID A and resid 156 and name O",
+     "A:Tyr205-OH ↔ A:Ser156-O", "BS_1"),
+    ("chainID A and resid 205 and name OH", "chainID A and resid 159 and name O",
+     "A:Tyr205-OH ↔ A:Tyr159-O", "BS_1"),
+    ("chainID A and resid 205 and name OH", "chainID B and resid 120 and name CZ",
+     "A:Tyr205-OH ↔ B:Arg120-CZ", "BS_1"),
+
+
+
+    # GABA contacts
+    ("chainID A and resid 202 and name OG1", "chainID H and resname ABU and name C4",
+     "A:Thr202-OG1 ↔ H:ABU-C4", "BS_1"),
+    ("chainID B and resid 67 and name CZ", "chainID H and resname ABU and name C4",
+     "B:Arg67-CZ ↔ H:ABU-C4", "BS_1"),
+    ("chainID B and resid 130 and name OG1", "chainID H and resname ABU and name C4",
+     "B:Thr130-OG1 ↔ H:ABU-C4", "BS_1"),
+    ("chainID A and resid 155 and name CD", "chainID H and resname ABU and name N",
+     "A:Glu155-CD ↔ H:ABU-N", "BS_1"),
+    ("chainID A and resid 97 and name OH", "chainID H and resname ABU and name N",
+     "A:Tyr97-OH ↔ H:ABU-N", "BS_1"),
+    ("chainID A and resid 156 and name O", "chainID H and resname ABU and name N",
+     "A:Ser156-O ↔ H:ABU-N", "BS_1"),
+
 
     # BS2
+
+    ('chainID C and resid 2 and name O', 'chainID C and resid 196 and name NZ',
+     'C:glyc2-O ↔ C:Lys197-NZ', 'BS_2'),
+
+    # trio
+    # TODO: oxygen distances instead of CD
+    ("chainID C and resid 153 and name CD", "chainID C and resid 207 and name NH1",
+     "C:Glu153-CD ↔ C:Arg207-NH1", 'BS_2'),
+    ("chainID C and resid 155 and name CD", "chainID C and resid 207 and name NH2",
+     "C:Glu155-CD ↔ C:Arg207-NH2", 'BS_2'),
+
     # loop C vs F45
+    ("chainID C and resid 205 and name CA", "chainID D and resid 46 and name CA",
+     "C:X205-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 204 and name CA", "chainID D and resid 46 and name CA",
+     "C:X204-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 203 and name CA", "chainID D and resid 46 and name CA",
+     "C:X203-CA ↔ D:Phe46-CA", "BS_2"),
     ("chainID C and resid 202 and name CA", "chainID D and resid 46 and name CA",
      "C:X202-CA ↔ D:Phe46-CA", "BS_2"),
     ("chainID C and resid 201 and name CA", "chainID D and resid 46 and name CA",
@@ -74,6 +137,8 @@ PAIRS = [
      "C:Lys196-CA ↔ D:Phe46-CA", "BS_2"),
     ("chainID C and resid 195 and name CA", "chainID D and resid 46 and name CA",
      "C:X195-CA ↔ D:Phe46-CA", "BS_2"),
+    ("chainID C and resid 194 and name CA", "chainID D and resid 46 and name CA",
+     "C:X194-CA ↔ D:Phe46-CA", "BS_2"),
 
     # K196 and K196 s-bridges
     ("chainID C and resid 197 and name NZ", "chainID C and resid 165 and name OE1",
@@ -99,6 +164,29 @@ PAIRS = [
     # h-bond loop C cap
     ("chainID C and resid 205 and name OH", "chainID C and resid 202 and name OG1",
      "C:Tyr205-OH ↔ C:Thr202-OG1", "BS_2"),
+    ("chainID C and resid 162 and name CG", "chainID C and resid 202 and name OG1",
+     "C:Asp162-CG ↔ C:Thr202-OG1", "BS_2"),
+
+    ("chainID C and resid 205 and name OH", "chainID C and resid 156 and name O",
+     "C:Tyr205-OH ↔ C:Ser156-O", "BS_2"),
+    ("chainID C and resid 205 and name OH", "chainID C and resid 159 and name O",
+     "C:Tyr205-OH ↔ C:Tyr159-O", "BS_2"),
+    ("chainID C and resid 205 and name OH", "chainID D and resid 120 and name CZ",
+     "C:Tyr205-OH ↔ D:Arg120-CZ", "BS_2"),
+
+    # GABA contacts
+    ("chainID C and resid 202 and name OG1", "chainID I and resname ABU and name C4",
+     "C:Thr202-OG1 ↔ I:ABU-C4", "BS_2"),
+    ("chainID D and resid 67 and name CZ", "chainID I and resname ABU and name C4",
+     "D:Arg67-CZ ↔ I:ABU-C4", "BS_2"),
+    ("chainID D and resid 130 and name OG1", "chainID I and resname ABU and name C4",
+     "D:Thr130-OG1 ↔ I:ABU-C4", "BS_2"),
+    ("chainID C and resid 155 and name CD", "chainID I and resname ABU and name N",
+     "C:Glu155-CD ↔ I:ABU-N", "BS_2"),
+    ("chainID C and resid 97 and name OH", "chainID I and resname ABU and name N",
+     "C:Tyr97-OH ↔ I:ABU-N", "BS_2"),
+    ("chainID C and resid 156 and name O", "chainID I and resname ABU and name N",
+     "C:Ser156-O ↔ I:ABU-N", "BS_2"),
 
     # interface a/b
     ("chainID B and resid 205 and name CA", "chainID C and resid 43 and name CA",

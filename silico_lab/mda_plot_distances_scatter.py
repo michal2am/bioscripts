@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+"""Plot x-y scatters of selected distance pairs from a CSV produced by
+distances_calc.py.
+
+Layout: rows = scatter pairs (defined in SCATTER_PAIRS), columns = replicas.
+Each frame is one point, colored by simulation time so the trajectory through
+state space is visible.
+"""
+
 import argparse
 import csv
 from collections import defaultdict
@@ -9,22 +18,61 @@ from plotly.subplots import make_subplots
 # Each entry: (x_label, y_label, panel_title)
 # Labels must match the "label" portion of the CSV column headers.
 SCATTER_PAIRS = [
+
+    ("A:Phe200-CA ↔ B:Phe46-CA", "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
+    ("A:Phe200-CA ↔ B:Phe46-CA", "A:Asp162-CG ↔ A:Thr202-OG1", "BS_1"),
+
+    #("C:Phe200-CA ↔ D:Phe46-CA", "C:Tyr205-OH ↔ C:Thr202-OG1", "BS_2"),
+    #("C:Phe200-CA ↔ D:Phe46-CA", "C:Asp162-CG ↔ C:Thr202-OG1", "BS_2"),
+
+
     # ("A:Phe200-CA ↔ B:Phe46-CA", "A:Lys197-NZ ↔ A:Glu165-OE1", "xxx"),
     # ("C:Phe200-CA ↔ D:Phe46-CA", "C:Lys197-NZ ↔ C:Glu165-OE1", "yyy"),
     # ("A:Phe200-CA ↔ B:Phe46-CA", "A:Lys196-NZ ↔ A:Glu153-OE1", "xxx"),
     # ("C:Phe200-CA ↔ D:Phe46-CA", "C:Lys196-NZ ↔ C:Glu153-OE1", "yyy"),
+    #
+    # ('A:glyc2-O ↔ A:Lys196-NZ', "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ('C:glyc2-O ↔ C:Lys196-NZ', "C:Phe200-CA ↔ C:Phe46-CA", "BS_2"),
 
-    ("A:X195-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    ("C:X195-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    # ('A:glyc2-O ↔ A:Lys196-NZ', "A:Lys196-NZ ↔ A:Glu153-OE1", "BS_1"),
+    # ('C:glyc2-O ↔ C:Lys196-NZ', "C:Lys196-NZ ↔ C:Glu153-OE1", "BS_2"),
 
-    ("A:Lys196-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    ("C:Lys196-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
 
-    ("A:X197-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    ("C:X197-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    # loop C vs F46
 
-    ("A:X198-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    ("C:X198-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    # ("A:X194-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X194-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X195-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X195-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:Lys196-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:Lys196-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X197-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X197-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X198-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X198-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X199-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X199-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X201-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X201-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X202-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X202-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X203-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X203-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X204-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X204-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+    #
+    # ("A:X205-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    # ("C:X205-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+
 ]
 
 # ── CLI ──────────────────────────────────────────────────────────────
@@ -78,11 +126,9 @@ print(f"Layout: {n_rows} scatter pairs × {n_cols} replicas: {unique_replicas}")
 # ── Plot ─────────────────────────────────────────────────────────────
 fig = make_subplots(
     rows=n_rows, cols=n_cols,
-    # shared_xaxes="rows",  # same scatter pair → same x range across replicas
-    # shared_yaxes="rows",  # same scatter pair → same y range across replicas
-    shared_xaxes="all",
-    shared_yaxes="all",
-    vertical_spacing=0.04, horizontal_spacing=0.04,
+    shared_xaxes="rows",  # same scatter pair → same x range across replicas
+    shared_yaxes="rows",  # same scatter pair → same y range across replicas
+    vertical_spacing=0.08, horizontal_spacing=0.04,
     row_titles=[t for _, _, _, _, t in resolved],
     column_titles=unique_replicas,
 )
@@ -92,6 +138,9 @@ fig = make_subplots(
 # the same colour at the same absolute time.
 all_times = np.concatenate([replica_data[rep][0] for rep in unique_replicas])
 t_min, t_max = all_times.min(), all_times.max()
+
+# Collect R² per (replica, title, x_lbl) for the summary figure built after
+r2_data = {}
 
 for r_idx, (ix, iy, x_lbl, y_lbl, title) in enumerate(resolved):
     row = r_idx + 1
@@ -137,6 +186,7 @@ for r_idx, (ix, iy, x_lbl, y_lbl, title) in enumerate(resolved):
             ss_res = np.sum((y_vals - y_pred) ** 2)
             ss_tot = np.sum((y_vals - y_vals.mean()) ** 2)
             r2 = 1 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+            r2_data[(rep, title, x_lbl)] = r2
 
             fig.add_trace(
                 go.Scatter(
@@ -181,3 +231,66 @@ out_html = f"{args.prefix}_distances_scatter.html"
 fig.write_html(out_html, include_plotlyjs="cdn")
 print(f"Saved {out_html}")
 fig.show()
+
+# ── R² summary figure ───────────────────────────────────────────────
+# Rows = binding-site titles, columns = replicas. Each panel shows R² of
+# the linear regression for every x-label that belonged to that title.
+unique_titles = []
+title_to_xlbls = {}
+for ix, iy, x_lbl, y_lbl, title in resolved:
+    if title not in unique_titles:
+        unique_titles.append(title)
+        title_to_xlbls[title] = []
+    if x_lbl not in title_to_xlbls[title]:
+        title_to_xlbls[title].append(x_lbl)
+
+n_r2_rows = len(unique_titles)
+n_r2_cols = len(unique_replicas)
+
+fig_r2 = make_subplots(
+    rows=n_r2_rows, cols=n_r2_cols,
+    shared_xaxes="rows",   # same binding site → same x labels across replicas
+    shared_yaxes="all",    # R² is bounded [0, 1]
+    vertical_spacing=0.16, horizontal_spacing=0.04,
+    row_titles=unique_titles,
+    column_titles=unique_replicas,
+)
+
+for r_idx, title in enumerate(unique_titles):
+    row = r_idx + 1
+    x_lbls = title_to_xlbls[title]
+    for c_idx, rep in enumerate(unique_replicas):
+        col = c_idx + 1
+        r2_values = [r2_data.get((rep, title, x_lbl), float("nan")) for x_lbl in x_lbls]
+        fig_r2.add_trace(
+            go.Bar(
+                x=x_lbls, y=r2_values,
+                text=[f"{v:.2f}" if not np.isnan(v) else "" for v in r2_values],
+                textposition="outside",
+                marker=dict(color="steelblue"),
+                showlegend=False,
+                hovertemplate="%{x}<br>R² = %{y:.3f}<extra></extra>",
+            ),
+            row=row, col=col,
+        )
+
+# y-axis: fixed 0–1 range, "R²" title on leftmost column
+for r in range(1, n_r2_rows + 1):
+    fig_r2.update_yaxes(title_text="R²", range=[0, 1.05], row=r, col=1)
+
+# x-axis: tilt labels (they can be long) on every panel
+for r in range(1, n_r2_rows + 1):
+    for c in range(1, n_r2_cols + 1):
+        fig_r2.update_xaxes(tickangle=-30, row=r, col=c)
+
+fig_r2.update_layout(
+    height=max(600, 350 * n_r2_rows),
+    width=max(900, 400 * n_r2_cols) + 160,
+    template="plotly_white",
+    title="Linear regression R² by binding site",
+)
+
+out_html_r2 = f"{args.prefix}_distances_scatter_r2.html"
+fig_r2.write_html(out_html_r2, include_plotlyjs="cdn")
+print(f"Saved {out_html_r2}")
+fig_r2.show()

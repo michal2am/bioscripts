@@ -116,7 +116,7 @@ fig = make_subplots(
     rows=n_rows, cols=n_cols,
     shared_xaxes="columns",  # all rows of a replica share its time axis
     shared_yaxes="rows",     # same group, same y across replicas
-    vertical_spacing=0.04, horizontal_spacing=0.04,
+    vertical_spacing=0.0004, horizontal_spacing=0.04,
     row_titles=all_groups, column_titles=common_reps,
 )
 
