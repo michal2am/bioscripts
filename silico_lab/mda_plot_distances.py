@@ -91,7 +91,7 @@ for j, (label, group) in enumerate(zip(labels, groups)):
 
         # Raw trace (thin, semi-transparent)
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=times, y=raw, mode="lines", name=label,
                 line=dict(width=0.5, color=color), opacity=0.3,
                 showlegend=show_in_legend,
@@ -103,7 +103,7 @@ for j, (label, group) in enumerate(zip(labels, groups)):
         # Smoothed trace (bold, on top)
         if args.window > 1:
             fig.add_trace(
-                go.Scatter(
+                go.Scattergl(
                     x=times, y=smooth(raw, args.window), mode="lines",
                     name=f"{label} (avg {args.window}f)", showlegend=False,
                     line=dict(width=2, color=color),

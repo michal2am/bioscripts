@@ -19,8 +19,8 @@ from plotly.subplots import make_subplots
 # Labels must match the "label" portion of the CSV column headers.
 SCATTER_PAIRS = [
 
-    ("A:Phe200-CA ↔ B:Phe46-CA", "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
-    ("A:Phe200-CA ↔ B:Phe46-CA", "A:Asp162-CG ↔ A:Thr202-OG1", "BS_1"),
+    #("A:Phe200-CA ↔ B:Phe46-CA", "A:Tyr205-OH ↔ A:Thr202-OG1", "BS_1"),
+    #("A:Phe200-CA ↔ B:Phe46-CA", "A:Asp162-CG ↔ A:Thr202-OG1", "BS_1"),
 
     #("C:Phe200-CA ↔ D:Phe46-CA", "C:Tyr205-OH ↔ C:Thr202-OG1", "BS_2"),
     #("C:Phe200-CA ↔ D:Phe46-CA", "C:Asp162-CG ↔ C:Thr202-OG1", "BS_2"),
@@ -42,10 +42,10 @@ SCATTER_PAIRS = [
 
     # ("A:X194-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
     # ("C:X194-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
-    # ("A:X195-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    # ("C:X195-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
+
+    ("A:X195-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    ("C:X195-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+
     # ("A:Lys196-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
     # ("C:Lys196-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
     #
@@ -54,13 +54,13 @@ SCATTER_PAIRS = [
     #
     # ("A:X198-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
     # ("C:X198-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
-    # ("A:X199-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    # ("C:X199-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
-    # ("A:X201-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    # ("C:X201-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
+
+    ("A:X199-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    ("C:X199-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+
+    ("A:X201-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    ("C:X201-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+
     # ("A:X202-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
     # ("C:X202-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
     #
@@ -69,9 +69,9 @@ SCATTER_PAIRS = [
     #
     # ("A:X204-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
     # ("C:X204-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
-    #
-    # ("A:X205-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
-    # ("C:X205-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
+
+    ("A:X205-CA ↔ B:Phe46-CA", "A:Phe200-CA ↔ B:Phe46-CA", "BS_1"),
+    ("C:X205-CA ↔ D:Phe46-CA", "C:Phe200-CA ↔ D:Phe46-CA", "BS_2"),
 
 ]
 
@@ -128,7 +128,7 @@ fig = make_subplots(
     rows=n_rows, cols=n_cols,
     shared_xaxes="rows",  # same scatter pair → same x range across replicas
     shared_yaxes="rows",  # same scatter pair → same y range across replicas
-    vertical_spacing=0.08, horizontal_spacing=0.04,
+    vertical_spacing=0.008, horizontal_spacing=0.04,
     row_titles=[t for _, _, _, _, t in resolved],
     column_titles=unique_replicas,
 )
@@ -157,7 +157,7 @@ for r_idx, (ix, iy, x_lbl, y_lbl, title) in enumerate(resolved):
         show_colorbar = (r_idx == 0 and c_idx == n_cols - 1)
 
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=x_vals, y=y_vals, mode="markers",
                 marker=dict(
                     size=args.marker_size,
@@ -189,7 +189,7 @@ for r_idx, (ix, iy, x_lbl, y_lbl, title) in enumerate(resolved):
             r2_data[(rep, title, x_lbl)] = r2
 
             fig.add_trace(
-                go.Scatter(
+                go.Scattergl(
                     x=x_line, y=y_line, mode="lines",
                     line=dict(width=2, color="crimson"),
                     showlegend=False,

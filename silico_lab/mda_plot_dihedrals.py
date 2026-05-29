@@ -124,12 +124,13 @@ for j, (label, group) in enumerate(zip(labels, groups)):
 
         # Raw scatter (markers only — no line so no wrap artefacts)
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=times, y=angles, mode="markers", name=label,
                 marker=dict(size=3, color=color), opacity=opa,
                 showlegend=show_in_legend,
                 legendgroup=label,
-                hovertemplate=f"{label} ({rep})<br>t=%{{x:.2f}} ns<br>θ=%{{y:.1f}}°<extra></extra>",
+                hoverinfo="skip",
+                #hovertemplate=f"{label} ({rep})<br>t=%{{x:.2f}} ns<br>θ=%{{y:.1f}}°<extra></extra>",
             ),
             row=row_idx, col=col_idx,
         )
@@ -138,7 +139,7 @@ for j, (label, group) in enumerate(zip(labels, groups)):
             smoothed = circular_smooth(angles, args.window)
             t_sm, y_sm = break_wraps(times, smoothed, args.threshold)
             fig.add_trace(
-                go.Scatter(
+                go.Scattergl(
                     x=t_sm, y=y_sm, mode="lines",
                     name=f"{label} (avg {args.window}f)", showlegend=False,
                     line=dict(width=2, color=color),
@@ -180,7 +181,7 @@ fig.show()
 fig_hist = make_subplots(
     rows=n_rows, cols=n_cols,
     shared_xaxes="all", shared_yaxes="rows",
-    vertical_spacing=0.004, horizontal_spacing=0.04,
+    vertical_spacing=0.006, horizontal_spacing=0.04,
     row_titles=unique_groups, column_titles=unique_replicas,
 )
 
@@ -195,17 +196,33 @@ for j, (label, group) in enumerate(zip(labels, groups)):
                 x=all_angles[j], name=label,
                 marker=dict(color=color), opacity=0.5,
                 xbins=dict(start=-180, end=180, size=360 / args.bins),
-                histnorm="probability density",
+                histnorm="probability",
                 showlegend=show_in_legend,
                 legendgroup=label,
-                hovertemplate=f"{label} ({rep})<br>θ=%{{x:.1f}}°<br>density=%{{y:.4f}}<extra></extra>",
+                hovertemplate=f"{label} ({rep})<br>θ=%{{x:.1f}}°<br>p=%{{y:.3f}}<extra></extra>",
             ),
             row=row_idx, col=col_idx,
         )
 
-# Y-axis title on leftmost column; x-axis fixed to [-180, 180] with rotamer ticks
+# Per-group max bar height → tight y-range. Plotly's autorange is far too
+# broad for these flat distributions, so set it explicitly using the same
+# bins the histograms are drawn with.
+bin_edges = np.linspace(-180, 180, args.bins + 1)
+group_ymax = {g: 0.0 for g in unique_groups}
+for j, (label, group) in enumerate(zip(labels, groups)):
+    for rep in unique_replicas:
+        _, all_angles = replica_data[rep]
+        counts, _ = np.histogram(all_angles[j], bins=bin_edges)
+        if counts.sum() > 0:
+            group_ymax[group] = max(group_ymax[group], (counts / counts.sum()).max())
+
+# Y-axis: tight per-row range + title on leftmost column
+for g in unique_groups:
+    fig_hist.update_yaxes(title_text="Probability",
+                          range=[0, group_ymax[g] * 1.1],
+                          row=group_to_row[g], col=1)
+# X-axis fixed to [-180, 180] with rotamer ticks
 for r in range(1, n_rows + 1):
-    fig_hist.update_yaxes(title_text="Density", row=r, col=1)
     for c in range(1, n_cols + 1):
         fig_hist.update_xaxes(range=[-180, 180],
                               tickvals=[-180, -120, -60, 0, 60, 120, 180],
