@@ -6,6 +6,5 @@ equisteps=$1
 outname=$2
 
 gmx trjconv -f step7_production.xtc -o step7_production_timestamp.xtc -t0 100300   # in ps
-#1000350
 
-gmx trjcat -f "$equisteps" step7_production_timestamp.xtc -o "$outname" -cat
+gmx trjcat -f "$equisteps" step7_production_timestamp.xtc -o "$outname" -cat  && rm -f step7_production_timestamp.xtc

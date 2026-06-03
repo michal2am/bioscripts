@@ -24,7 +24,7 @@ $center
 $select
 EOF
 
-rm view1.xtc view2.xtc
+rm view1.xtc view2.xtc "$inname_xtc"
 
 
 #gmx trjconv -f view2.xtc -s $inname_tpr -pbc mol -ur compact -center -n $indexfile -o $outname <<EOF

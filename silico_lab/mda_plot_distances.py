@@ -62,9 +62,20 @@ for rep, (t, _) in replica_data.items():
 
 # ── Time-series figure ──────────────────────────────────────────────
 def smooth(y, window=50):
-    """Running average with edge handling."""
-    kernel = np.ones(window) / window
-    return np.convolve(y, kernel, mode="same")
+    """Running mean with proper edge handling.
+
+    `np.convolve(..., mode='same')` implicitly pads with zeros, which pulls
+    the smoothed line toward 0 over the first/last window/2 frames. Here we
+    divide by the *actual* number of samples that fell inside the kernel at
+    each position (computed by convolving a unit signal with the same
+    kernel). At the edges the window effectively shrinks; in the interior
+    it's identical to a plain running mean."""
+    if window <= 1:
+        return y
+    kernel = np.ones(window)
+    summed = np.convolve(y, kernel, mode="same")
+    counts = np.convolve(np.ones_like(y, dtype=float), kernel, mode="same")
+    return summed / counts
 
 
 fig = make_subplots(
@@ -86,7 +97,7 @@ for j, (label, group) in enumerate(zip(labels, groups)):
         ref_d = all_dists[j, 0]
         # TODO: toggle initial value substraction
         raw = all_dists[j] - ref_d
-        # raw = all_dists[j]
+        #raw = all_dists[j]
         show_in_legend = (col_idx == 1)  # one legend entry per pair, in first replica column
 
         # Raw trace (thin, semi-transparent)
@@ -112,6 +123,12 @@ for j, (label, group) in enumerate(zip(labels, groups)):
                 ),
                 row=row_idx, col=col_idx,
             )
+
+# Reference line at 4 Å — typical salt-bridge / strong polar contact threshold
+for r in range(1, n_rows + 1):
+    for c in range(1, n_cols + 1):
+        fig.add_hline(y=1.0, line=dict(width=1, color="gray", dash="dot"),
+                      row=r, col=c)
 
 # y-axis title only on leftmost column; x-axis title only on bottom row
 for r in range(1, n_rows + 1):
@@ -167,6 +184,11 @@ for r in range(1, n_rows + 1):
     fig_hist.update_yaxes(title_text="Density", row=r, col=1)
 for c in range(1, n_cols + 1):
     fig_hist.update_xaxes(title_text="Distance (Å)", row=n_rows, col=c)
+
+for r in range(1, n_rows + 1):
+    for c in range(1, n_cols + 1):
+        fig_hist.add_vline(x=4.0, line=dict(width=1, color="gray", dash="dot"),
+                           row=r, col=c)
 
 fig_hist.update_layout(
     barmode="overlay",
