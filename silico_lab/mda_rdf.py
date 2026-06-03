@@ -53,7 +53,7 @@ ATOMS = [
 # naming convention if you see warnings about missing residues.
 GLYCAN_RESNAMES = ["NAG", "BMA", "MAN", "AMA", "BGC", "FUC", "AFUC",
                    "SIA", "NANA", "NGA", "GAL", "BGAL", "AGAL",
-                   "GLC", "AGLC", "BGLC"]
+                   "GLC", "AGLC", "BGLC", "ABU"]
 
 # Target: protein + glycan heavy atoms except carbons and hydrogens
 TARGET_SELECTION = (
