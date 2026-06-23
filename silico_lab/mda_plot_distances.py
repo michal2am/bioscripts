@@ -94,10 +94,10 @@ for j, (label, group) in enumerate(zip(labels, groups)):
     color = colors[j % len(colors)]
     for col_idx, rep in enumerate(unique_replicas, start=1):
         times, all_dists = replica_data[rep]
-        ref_d = all_dists[j, 0]
+        ref_d = all_dists[j, 200]
         # TODO: toggle initial value substraction
-        #raw = all_dists[j] - ref_d
-        raw = all_dists[j]
+        raw = all_dists[j] - ref_d
+        #raw = all_dists[j]
         show_in_legend = (col_idx == 1)  # one legend entry per pair, in first replica column
 
         # Raw trace (thin, semi-transparent)
@@ -127,7 +127,9 @@ for j, (label, group) in enumerate(zip(labels, groups)):
 # Reference line at 4 Å — typical salt-bridge / strong polar contact threshold
 for r in range(1, n_rows + 1):
     for c in range(1, n_cols + 1):
-        fig.add_hline(y=4.0, line=dict(width=1, color="gray", dash="dot"),
+        fig.add_hline(y=1.5, line=dict(width=1, color="gray", dash="dot"),
+                      row=r, col=c)
+        fig.add_hline(y=-1.5, line=dict(width=1, color="gray", dash="dot"),
                       row=r, col=c)
 
 # y-axis title only on leftmost column; x-axis title only on bottom row
