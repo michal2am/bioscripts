@@ -17,6 +17,10 @@ p = argparse.ArgumentParser(description="Plot atom-pair distances from CSV")
 p.add_argument("-i", "--input", required=True, help="Input CSV (from distances_calc.py)")
 p.add_argument("-w", "--window", type=int, default=50, help="Smoothing window in frames (default: 50, 0=off)")
 p.add_argument("-b", "--bins", type=int, default=60, help="Histogram bin count (default: 60)")
+p.add_argument("--mean-range", type=float, nargs=2, default=[100.0, 200.0],
+               metavar=("START_NS", "END_NS"),
+               help="Time window (ns) over which the mean distance is taken "
+                    "for the summary table (default: 100 200)")
 p.add_argument("-o", "--prefix", default="distances", help="Output file prefix")
 args = p.parse_args()
 
@@ -94,7 +98,7 @@ for j, (label, group) in enumerate(zip(labels, groups)):
     color = colors[j % len(colors)]
     for col_idx, rep in enumerate(unique_replicas, start=1):
         times, all_dists = replica_data[rep]
-        ref_d = all_dists[j, 200]
+        ref_d = all_dists[j, 0]
         # TODO: toggle initial value substraction
         raw = all_dists[j] - ref_d
         #raw = all_dists[j]
@@ -206,3 +210,168 @@ out_html_hist = f"{args.prefix}_distances_histograms.html"
 fig_hist.write_html(out_html_hist, include_plotlyjs="cdn")
 print(f"Saved {out_html_hist}")
 fig_hist.show()
+
+# ── Summary table ────────────────────────────────────────────────────
+# Per pair × replica:    Δ = ⟨d⟩(MEAN_START..MEAN_END ns)  −  d(t=0)
+# Include pairs where |Δ| > THRESHOLD in at least one replica.
+# Δ is signed: positive = the pair drifted apart on average; negative = it
+# moved closer. BS_1 (chains A/B) and BS_2 (chains C/D) versions of the same
+# interaction share a row (canonical = chain prefixes stripped).
+THRESHOLD = 1.25    # Å — minimum |Δ| to include in table
+MEAN_START, MEAN_END = args.mean_range   # ns; from CLI --mean-range
+
+# Per-pair × per-replica signed shift; NaN if window has no frames for a replica
+delta = np.full((len(labels), len(unique_replicas)), np.nan)
+start_times = []
+for ci, rep in enumerate(unique_replicas):
+    times_arr, dists = replica_data[rep]
+    start_times.append(times_arr[0])
+    mask = (times_arr >= MEAN_START) & (times_arr <= MEAN_END)
+    if not mask.any():
+        print(f"  warning: {rep} has no frames in {MEAN_START}-{MEAN_END} ns window")
+        continue
+    delta[:, ci] = dists[:, mask].mean(axis=1) - dists[:, 0]
+
+if any(abs(t) > 1e-3 for t in start_times):
+    print(f"  note: 'd(t=0)' uses first frame in CSV; per-replica start times = "
+          f"{', '.join(f'{t:.1f}' for t in start_times)} ns")
+
+
+def site_of(label):
+    """Classify by chain identifiers in the label: {A,B}→BS_1, {C,D}→BS_2,
+    anything else → None (e.g. cross-site interface pairs)."""
+    if " ↔ " not in label:
+        return None
+    chains = set()
+    for side in label.split(" ↔ "):
+        if len(side) >= 2 and side[1] == ":":
+            chains.add(side[0])
+    if chains and chains <= {"A", "B"}:
+        return "BS_1"
+    if chains and chains <= {"C", "D"}:
+        return "BS_2"
+    return None
+
+
+def canonical(label):
+    """Strip leading 'X:' chain prefix from each side of the pair label so
+    BS_1 and BS_2 variants of the same interaction collapse to one key."""
+    if " ↔ " not in label:
+        return label
+    return " ↔ ".join(
+        s[2:] if len(s) >= 2 and s[1] == ":" else s
+        for s in label.split(" ↔ ")
+    )
+
+
+# Group pairs by canonical → {site: original_index}; track insertion order
+pair_by_canonical = {}
+canonical_order = []
+unclassified = []   # pairs whose chains don't fit BS_1 or BS_2 — not in table
+
+for j, label in enumerate(labels):
+    s = site_of(label)
+    if s is None:
+        unclassified.append(j)
+        continue
+    can = canonical(label)
+    if can not in pair_by_canonical:
+        pair_by_canonical[can] = {}
+        canonical_order.append(can)
+    pair_by_canonical[can][s] = j
+
+
+def _canonical_abs_peak(can):
+    """Largest |Δ| across all sites × replicas of a canonical pair."""
+    m = 0.0
+    for j in pair_by_canonical[can].values():
+        x = np.abs(delta[j])
+        if np.any(~np.isnan(x)):
+            m = max(m, np.nanmax(x))
+    return m
+
+
+# Filter: keep canonicals where any (site, replica) had |Δ| > threshold
+sig_canonicals = [
+    can for can in canonical_order if _canonical_abs_peak(can) > THRESHOLD
+]
+print(f"\n{len(sig_canonicals)}/{len(pair_by_canonical)} canonical pair(s) "
+      f"with |⟨d⟩({MEAN_START:.0f}–{MEAN_END:.0f} ns) − d(t=0)| > {THRESHOLD} Å in ≥1 replica")
+if unclassified:
+    print(f"  {len(unclassified)} pair(s) not classifiable as BS_1 / BS_2 "
+          f"(chains outside {{A,B}} and {{C,D}}) — omitted from table:")
+    for j in unclassified:
+        print(f"    skip: {labels[j]}")
+
+if len(sig_canonicals) > 0:
+    # Sort by peak |Δ| across both sites, descending
+    sig_canonicals.sort(key=lambda c: -_canonical_abs_peak(c))
+
+    SITE_ORDER = ["BS_1", "BS_2"]
+    DASH = "—"
+    NAN  = "n/a"
+    HIT  = "#ffe0e0"   # light red for cells over threshold (either sign)
+    BG   = "white"
+
+    def fmt(v):
+        """Signed Δ with explicit +/- sign; (parens) if below threshold; n/a if NaN."""
+        if np.isnan(v):
+            return NAN
+        s = f"{v:+.2f}"
+        return s if abs(v) > THRESHOLD else f"({s})"
+
+    # Build per-(site, replica) value and colour columns, in display order
+    rep_columns = []
+    rep_color_cols = []
+    for site in SITE_ORDER:
+        for ci in range(len(unique_replicas)):
+            col_vals, col_cols = [], []
+            for can in sig_canonicals:
+                if site in pair_by_canonical[can]:
+                    j = pair_by_canonical[can][site]
+                    v = delta[j, ci]
+                    col_vals.append(fmt(v))
+                    col_cols.append(
+                        HIT if (not np.isnan(v) and abs(v) > THRESHOLD) else BG
+                    )
+                else:
+                    col_vals.append(DASH)
+                    col_cols.append(BG)
+            rep_columns.append(col_vals)
+            rep_color_cols.append(col_cols)
+
+    cell_values = [sig_canonicals] + rep_columns
+    cell_colors = [[BG] * len(sig_canonicals)] + rep_color_cols
+    header_values = ["Pair"] + [f"{s} {r}" for s in SITE_ORDER for r in unique_replicas]
+
+    fig_table = go.Figure(data=[go.Table(
+        columnwidth=[260] + [70] * (len(unique_replicas) * len(SITE_ORDER)),
+        header=dict(
+            values=header_values,
+            fill_color="#d0d0d0",
+            align="left",
+            font=dict(size=12),
+        ),
+        cells=dict(
+            values=cell_values,
+            fill_color=cell_colors,
+            align="left",
+            font=dict(size=11, family="monospace"),
+            height=22,
+        ),
+    )])
+
+    fig_table.update_layout(
+        title=(f"Pairs with |⟨d⟩({MEAN_START:.0f}–{MEAN_END:.0f} ns) − d(t=0)| > {THRESHOLD} Å "
+               f"in ≥1 replica  ({len(sig_canonicals)} canonical pair(s)).  "
+               f"BS_1 = chains A/B, BS_2 = chains C/D.  "
+               f"Cells: signed Δ in Å; (parens) = below threshold; — = site absent; n/a = empty window."),
+        height=max(300, 50 * len(sig_canonicals) + 120),
+        width=max(1100, 260 + 80 * len(unique_replicas) * len(SITE_ORDER)),
+        template="plotly_white",
+    )
+
+    out_html_table = f"{args.prefix}_distances_summary.html"
+    fig_table.write_html(out_html_table, include_plotlyjs="cdn")
+    print(f"Saved {out_html_table}")
+    fig_table.show()
