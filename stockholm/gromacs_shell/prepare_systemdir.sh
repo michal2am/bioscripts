@@ -16,4 +16,4 @@ cp full_system/gromacs/step5* .
 cp full_system/gromacs/*.itp .
 
 mkdir mdp
-mkdir sys1 sys2 sys3 sys4
+# mkdir sys1 sys2 sys3 sys4
