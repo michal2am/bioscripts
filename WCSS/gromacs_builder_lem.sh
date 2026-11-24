@@ -37,7 +37,10 @@ SRC=$HOME/src
 PREFIX=$HOME/software/gromacs-$VER
 CUDA_ARCH=90        # H100 = sm_90
 SIMD=""             # empty = auto-detect (AVX_512 on Sapphire Rapids); AVX2_256 is worth a benchmark
-MODULES="CHANGE_ME" # e.g. "GCC/<ver> CUDA/<ver> CMake/<ver> OpenMPI/<ver>" - exact names from module avail
+# EasyBuild 2024a-generation toolchain + CUDA 12.8 (SYSTEM module, works with any GCC; needs driver >= 570)
+MODULES="GCC/13.3.0 CMake/3.29.3-GCCcore-13.3.0 OpenMPI/5.0.3-GCC-13.3.0 CUDA/12.8.0"
+# Alternative (GCC 14 host compiler is supported from CUDA 12.8 on):
+# MODULES="GCC/14.3.0 CMake/3.31.8-GCCcore-14.3.0 OpenMPI/5.0.8-GCC-14.3.0 CUDA/12.8.0"
 ### ---------------------------------------------------------------------------
 
 if [ "$MODULES" = "CHANGE_ME" ]; then
