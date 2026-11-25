@@ -3,9 +3,9 @@
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # one MPI rank per system
-#SBATCH --cpus-per-task=10         # adjust to WCSS node core count
-#SBATCH --gpus-per-node=1          # 1 = all 4 share a GPU; 4 = one GPU each
-##SBATCH --partition=XXX           # TODO: WCSS GPU partition
+#SBATCH --cpus-per-task=16
+#SBATCH --gpus-per-node=4          # 1 = all 4 share a GPU; 4 = one GPU each
+##SBATCH --partition=lem-gpu
 #SBATCH -o %x-%j.out
 #
 # Same script for the first run and every restart: grompp only if .tpr is missing,
@@ -15,8 +15,8 @@ cd "$SLURM_SUBMIT_DIR" || exit 1
 source ./wcss_env.sh
 nvidia-smi
 
-WALL_H=24
-MARGIN_H=0.25
+WALL_H=24          # keep in sync with -t above
+MARGIN_H=0.25      # time left for writing checkpoints/outputs
 
 prod=step7_production
 prev=step6.6_equilibration

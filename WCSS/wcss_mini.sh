@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH -J mini
-#SBATCH -t 02:00:00
+#SBATCH -J mini_test
+#SBATCH -t 08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # one MPI rank per system
-#SBATCH --cpus-per-task=10         # adjust to WCSS node core count
-##SBATCH --partition=XXX           # TODO: WCSS CPU partition
+#SBATCH --cpus-per-task=32
+##SBATCH --partition=lem-cpu
 #SBATCH -o %x-%j.out
 
 cd "$SLURM_SUBMIT_DIR" || exit 1

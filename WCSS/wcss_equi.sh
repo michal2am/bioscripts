@@ -3,9 +3,9 @@
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # one MPI rank per system
-#SBATCH --cpus-per-task=10         # adjust to WCSS node core count
-#SBATCH --gpus-per-node=1          # 1 = all 4 share a GPU; 4 = one GPU each (GROMACS assigns automatically)
-##SBATCH --partition=XXX           # TODO: WCSS GPU partition
+#SBATCH --cpus-per-task=16
+#SBATCH --gpus-per-node=4          # 1 = all 4 share a GPU; 4 = one GPU each (GROMACS assigns automatically)
+##SBATCH --partition=lem-gpu
 #SBATCH -o %x-%j.out
 
 cd "$SLURM_SUBMIT_DIR" || exit 1

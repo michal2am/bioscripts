@@ -1,15 +1,11 @@
 #!/bin/bash
 # Common environment for all WCSS jobs - sourced by wcss_mini.sh / wcss_equi.sh / wcss_prod.sh
-# TODO: fill in module names once you have WCSS access (check: module avail gcc cuda mpi gromacs)
 
 module purge
-# module load gcc/XXX
-# module load cuda/XXX
-# module load <intel-oneapi-mpi | openmpi>/XXX
-# Either your own build:
-# source $HOME/software/gromacs_2026_gpu/bin/GMXRC
-# ...or a site module:
-# module load gromacs/XXX
+module load GCC/13.3.0
+module load cuda/12.8.0
+module load OpenMPI/5.0.3-GCC-13.3.0
+source $HOME/software/gromacs-2026.4/bin/GMXRC
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 
