@@ -20,7 +20,7 @@ rvdw                    = 1.2
 coulombtype             = pme
 rcoulomb                = 1.2
 ;
-tcoupl                  = berendsen
+tcoupl                  = v-rescale
 tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0 1.0 1.0
 ref_t                   = 303.15 303.15 303.15

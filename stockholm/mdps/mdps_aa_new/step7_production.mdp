@@ -20,7 +20,7 @@ coulombtype             = pme
 rcoulomb                = 1.2
 ;
 tcoupl                  = v-rescale
-tc_grps                 = SYSTEM
+tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0
 ref_t                   = 303.15
 ;
@@ -36,6 +36,6 @@ continuation            = yes
 ;
 nstcomm                 = 100
 comm_mode               = linear
-comm_grps               = SYSTEM
+comm_grps               = SOLU_MEMB SOLV
 ;
 refcoord_scaling        = all

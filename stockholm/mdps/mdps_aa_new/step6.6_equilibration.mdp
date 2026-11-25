@@ -11,7 +11,7 @@ nstenergy               = 1000
 nstlog                  = 1000
 ;
 cutoff-scheme           = Verlet
-nstlist                 = 20
+nstlist                 = 100
 rlist                   = 1.5
 vdwtype                 = Cut-off
 vdw-modifier            = Force-switch
@@ -20,7 +20,7 @@ rvdw                    = 1.2
 coulombtype             = pme
 rcoulomb                = 1.2
 ;
-tcoupl                  = berendsen
+tcoupl                  = v-rescale
 tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0 1.0 1.0
 ref_t                   = 303.15 303.15 303.15
