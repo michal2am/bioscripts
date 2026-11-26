@@ -10,7 +10,8 @@ source $HOME/software/gromacs-2026.4/bin/GMXRC
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 
 GMX=gmx_mpi                       # MPI build is required for -multidir
-LAUNCH="srun --cpu-bind=none"     # GROMACS does the pinning (-pin on); alternative: "mpirun -np $SLURM_NTASKS"
+#LAUNCH="srun --cpu-bind=none"     # GROMACS does the pinning (-pin on); alternative: "mpirun -np $SLURM_NTASKS"
+LAUNCH="srun --mpi=pmix --cpu-bind=none" #trying to fix rank setting
 MAXWARN=2                         # check which warnings these are, ideally go to 0
 
 SYSTEMS=(sys1 sys2 sys3 sys4)     # each: step5_input.gro, topol.top, index.ndx, toppar/
