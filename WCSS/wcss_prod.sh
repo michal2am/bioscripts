@@ -5,7 +5,7 @@
 #SBATCH --ntasks=4                 # one MPI rank per system
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus-per-node=4          # 1 = all 4 share a GPU; 4 = one GPU each
-##SBATCH --partition=lem-gpu
+#SBATCH --partition=lem-gpu
 #SBATCH -o %x-%j.out
 #
 # Same script for the first run and every restart: grompp only if .tpr is missing,

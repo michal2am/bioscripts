@@ -5,7 +5,7 @@
 #SBATCH --ntasks=4                 # one MPI rank per system
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus-per-node=1
-##SBATCH --partition=lem-gpu       # on GPU because CUDA libs are needed for GPU-compiled gmx
+#SBATCH --partition=lem-gpu       # on GPU because CUDA libs are needed for GPU-compiled gmx
 #SBATCH -o %x-%j.out
 
 cd "$SLURM_SUBMIT_DIR" || exit 1
