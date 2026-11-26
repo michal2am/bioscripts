@@ -5,6 +5,7 @@
 #SBATCH --ntasks=4                 # one MPI rank per system
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:hopper:4          # 1 = all 4 share a GPU; 4 = one GPU each (GROMACS assigns automatically)
+#SBATCH --mem=64G
 #SBATCH --partition=lem-gpu
 #SBATCH -o %x-%j.out
 
