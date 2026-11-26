@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # one MPI rank per system
 #SBATCH --cpus-per-task=16
-#SBATCH --gpus-per-node=1
+#SBATCH --gres=gpu:hopper:1
 #SBATCH --partition=lem-gpu       # on GPU because CUDA libs are needed for GPU-compiled gmx
 #SBATCH -o %x-%j.out
 
