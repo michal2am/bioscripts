@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 #SBATCH -J equi
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1
