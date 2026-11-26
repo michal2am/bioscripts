@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -J mini_test
-#SBATCH -t 08:00:00
+#SBATCH -t 02:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # one MPI rank per system
 #SBATCH --cpus-per-task=16
